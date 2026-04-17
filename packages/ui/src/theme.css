@@ -1,0 +1,253 @@
+:root {
+  --wb-bg: #0b1020;
+  --wb-panel: #121a33;
+  --wb-border: rgba(255, 255, 255, 0.08);
+  --wb-text: rgba(255, 255, 255, 0.92);
+  --wb-muted: rgba(255, 255, 255, 0.65);
+  --wb-accent: #6ea8fe;
+  --wb-danger: #ff6b6b;
+  --wb-radius: 10px;
+  --wb-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+}
+
+.wb {
+  font-family: var(--wb-font);
+  color: var(--wb-text);
+  background: var(--wb-bg);
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-radius);
+  overflow: hidden;
+}
+
+.wb__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(110, 168, 254, 0.12), transparent);
+  border-bottom: 1px solid var(--wb-border);
+}
+
+.wb__title {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  font-weight: 650;
+}
+
+.wb__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+}
+
+@media (max-width: 980px) {
+  .wb__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wb__panel {
+  background: var(--wb-panel);
+  border: 1px solid var(--wb-border);
+  border-radius: 12px;
+  min-height: 220px;
+  overflow: hidden;
+}
+
+.wb__panelHeader {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--wb-border);
+  font-size: 12px;
+  color: var(--wb-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.wb__panelBody {
+  padding: 10px 12px;
+}
+
+.wb__muted {
+  color: var(--wb-muted);
+  font-size: 12px;
+}
+
+.wb__btnRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wb__btn {
+  appearance: none;
+  border: 1px solid var(--wb-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--wb-text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.wb__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.wb__btn--primary {
+  border-color: rgba(110, 168, 254, 0.45);
+  background: rgba(110, 168, 254, 0.12);
+}
+
+.wb__btn--danger {
+  border-color: rgba(255, 107, 107, 0.45);
+  background: rgba(255, 107, 107, 0.10);
+}
+
+.wb__textarea,
+.wb__select {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--wb-border);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--wb-text);
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  outline: none;
+}
+
+.wb__textarea {
+  min-height: 220px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+}
+
+.wb__timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 360px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.wb__event {
+  border: 1px solid var(--wb-border);
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.wb__eventTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--wb-muted);
+}
+
+.wb__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--wb-border);
+  font-size: 11px;
+  color: var(--wb-text);
+}
+
+.wb__ruleRow {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--wb-border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.wb__ruleGrip {
+  cursor: grab;
+  user-select: none;
+  color: var(--wb-muted);
+  text-align: center;
+}
+
+.wb__ruleMain {
+  min-width: 0;
+}
+
+.wb__ruleTitle {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wb__ruleSub {
+  font-size: 11px;
+  color: var(--wb-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wb__ruleActions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.wb__iconBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid var(--wb-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--wb-text);
+  cursor: pointer;
+}
+
+.wb__iconBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.wbModal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.wbModal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.wbModal__card {
+  position: relative;
+  width: min(720px, 100%);
+  border-radius: 14px;
+  border: 1px solid var(--wb-border);
+  background: var(--wb-panel);
+  padding: 14px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+}
+
+.wbModal__title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
