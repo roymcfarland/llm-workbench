@@ -90,6 +90,12 @@ export class WorkbenchRuntime {
 
   startRun(input: StartRunInput): { runId: string } {
     const runId = newId("run");
+    if (this.runs.has(runId)) {
+      throw new WorkbenchError(
+        "RUN_ID_COLLISION",
+        `Generated runId ${runId} already exists in this runtime; refusing to overwrite.`,
+      );
+    }
     const startedAt = nowIso();
     let workflowSnapshot;
     try {
@@ -195,6 +201,18 @@ export class WorkbenchRuntime {
 
   importState(state: RunStoreState) {
     this.runs.set(state.run.id, state);
+  }
+
+  /** Returns true if the run was present and removed. */
+  deleteRun(runId: string): boolean {
+    const had = this.runs.delete(runId);
+    this.listeners.delete(runId);
+    return had;
+  }
+
+  /** Stable iterator over run ids currently held by this runtime. */
+  listRuns(): string[] {
+    return [...this.runs.keys()];
   }
 
   /**
