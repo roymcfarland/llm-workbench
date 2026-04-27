@@ -7,16 +7,23 @@
   },
   "workspaces": [
     "packages/*",
-    "examples/*"
+    "examples/*",
+    "apps/*"
   ],
   "scripts": {
-    "build": "npm run build -w @llm-workbench/runtime -w @llm-workbench/ui -w @llm-workbench/adapters-react",
-    "test": "npm test -w @llm-workbench/runtime && npm test -w @llm-workbench/adapters-react",
+    "build": "npm run build -w @llm-workbench/runtime -w @llm-workbench/ui -w @llm-workbench/adapters-react -w @llm-workbench/ai-sdk",
+    "test": "npm test -w @llm-workbench/runtime && npm test -w @llm-workbench/adapters-react && npm test -w @llm-workbench/ai-sdk && npm test -w @llm-workbench/ui",
     "demo": "npm run dev -w job-search-demo",
-    "demo:http-server": "npm run start -w run-repo-server"
+    "demo:http-server": "npm run start -w run-repo-server",
+    "dev:web": "npm run dev -w apps/web",
+    "build:web": "npm run build -w apps/web"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
     "vitest": "^3.2.4"
+  },
+  "overrides": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
   }
 }

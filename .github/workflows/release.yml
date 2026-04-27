@@ -1,0 +1,106 @@
+name: Release
+
+# Publish the four OSS packages to npm under their Apache-2.0 license.
+# Triggered by pushing an annotated tag of the form `vX.Y.Z` (the version
+# in each package's `package.json` MUST already match the tag — that is
+# the source of truth, not the tag itself).
+#
+# Required repo secrets:
+#   NPM_TOKEN — automation token with publish access for the
+#               @llm-workbench scope (https://docs.npmjs.com/about-access-tokens)
+#
+# Notes:
+# - `provenance` is enabled so each publish carries a Sigstore attestation
+#   pinned to this workflow run.
+# - We refuse to publish unless the commit is reachable from `main` to
+#   prevent accidental publishes from feature branches.
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run a dry-run only (no publish)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  guard:
+    name: Tag points at main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify commit is reachable from main
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          if ! git merge-base --is-ancestor "${{ github.sha }}" origin/main; then
+            echo "::error::Tagged commit ${{ github.sha }} is not reachable from origin/main; refusing to publish."
+            exit 1
+          fi
+
+  publish:
+    needs: guard
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build all OSS packages
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Verify package versions match tag
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#v}"
+          for pkg in packages/runtime packages/adapters-react packages/ai-sdk packages/ui; do
+            pkg_version="$(node -p "require('./${pkg}/package.json').version")"
+            if [ "$pkg_version" != "$tag_version" ]; then
+              echo "::error::${pkg}: package.json version (${pkg_version}) does not match tag (${tag_version})"
+              exit 1
+            fi
+          done
+
+      - name: Publish (dry-run)
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run
+        run: |
+          set -euo pipefail
+          for pkg in packages/runtime packages/adapters-react packages/ai-sdk packages/ui; do
+            (cd "$pkg" && npm publish --access public --provenance --dry-run)
+          done
+
+      - name: Publish to npm
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          for pkg in packages/runtime packages/adapters-react packages/ai-sdk packages/ui; do
+            echo "Publishing ${pkg}..."
+            (cd "$pkg" && npm publish --access public --provenance)
+          done
