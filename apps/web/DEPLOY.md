@@ -3,6 +3,15 @@
 A focused, copy-pasteable runbook for getting the hosted reference plane
 into production on Vercel + Supabase + Clerk + Vercel AI Gateway.
 
+> **TL;DR — one command instead of this checklist.** From the repo root,
+> run `npm run bootstrap`. With `MCP=1` (or `--mcp`) it emits a plan file
+> for a Cursor agent that has the Vercel + Supabase + Clerk MCP plugins
+> available; otherwise it drives the public REST APIs using
+> `VERCEL_TOKEN`, `SUPABASE_ACCESS_TOKEN`, and `CLERK_API_KEY` from the
+> environment. See `scripts/bootstrap.mjs` for flags. The manual
+> checklist below remains authoritative for users without Node access or
+> who want to understand what the script does.
+
 > **License reminder.** `apps/web` is **PolyForm Noncommercial 1.0.0**.
 > You may host it internally and let your team poke at it for free, but
 > a commercial deployment requires a paid license — see
