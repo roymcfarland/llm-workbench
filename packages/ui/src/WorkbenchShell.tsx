@@ -1,4 +1,22 @@
 import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useWorkbenchRunRevision } from "@llm-workbench/adapters-react";
+import {
   formatAjvErrors,
   type RuleRecord,
   type RuleSet,
@@ -7,14 +25,27 @@ import {
   type TraceEvent,
   WorkbenchError,
   type WorkbenchRuntime,
+  type WorkbenchSession,
 } from "@llm-workbench/runtime";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
+
+const LazyMonacoArtifactEditor = lazy(() => import("./MonacoArtifactEditor.js"));
 
 export type WorkbenchShellProps = {
   runtime: WorkbenchRuntime;
   runId: string;
   registry: SchemaRegistry;
-  /** Optional persistence hook for “Save run” */
+  /** Optional persistence hook for "Save run" */
   repo?: RunRepository;
   /** Which artifacts appear in the editor dropdown */
   artifactKeys?: string[];
@@ -22,18 +53,15 @@ export type WorkbenchShellProps = {
   ruleSetId?: string;
   /** Called after a successful bundle import selects a new active run id */
   onActiveRunChange?: (runId: string) => void;
+  /**
+   * Opt-in: render the artifact JSON editor with Monaco instead of a plain
+   * textarea. Defaults to `false` so that consumers who don't need Monaco
+   * don't pay the bundle / runtime cost.
+   */
+  useMonacoEditor?: boolean;
 };
 
-function useRunRevision(runtime: WorkbenchRuntime, runId: string | null) {
-  return useSyncExternalStore(
-    (cb) => {
-      if (!runId) return () => {};
-      return runtime.subscribe(runId, cb);
-    },
-    () => (runId ? (runtime.getState(runId)?.revision ?? -1) : -1),
-    () => -1,
-  );
-}
+const VIRTUALIZE_TRACE_THRESHOLD = 100;
 
 function summarizeEvent(e: TraceEvent): string {
   switch (e.type) {
@@ -62,9 +90,224 @@ function summarizeEvent(e: TraceEvent): string {
 
 type RuleModalMode = { type: "create" } | { type: "edit"; rule: RuleRecord };
 
+/**
+ * Pure helper used by the rule reorder handler. Exported so unit tests can
+ * verify the new ordering produced from a drag interaction without driving
+ * @dnd-kit's keyboard sensor end-to-end (which is flaky in jsdom).
+ */
+export function computeReorderedRuleIds(
+  currentIds: readonly string[],
+  activeId: string,
+  overId: string,
+): string[] | null {
+  if (activeId === overId) return null;
+  const fromIdx = currentIds.indexOf(activeId);
+  const toIdx = currentIds.indexOf(overId);
+  if (fromIdx < 0 || toIdx < 0) return null;
+  return arrayMove([...currentIds], fromIdx, toIdx);
+}
+
+/**
+ * Build the callback wired into `<DndContext onDragEnd>` for the rule list.
+ * Exposed so tests can pass a mock session and confirm `reorderRules` is
+ * called with the expected `orderedRuleIds`.
+ */
+export function buildRuleReorderHandler(opts: {
+  ruleSet: Pick<RuleSet, "id" | "rules"> | undefined;
+  session: Pick<WorkbenchSession, "reorderRules"> | null;
+}): (event: DragEndEvent) => void {
+  return (event) => {
+    const { active, over } = event;
+    if (!over || !opts.ruleSet || !opts.session) return;
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const currentIds = [...opts.ruleSet.rules]
+      .sort((a, b) => a.priority - b.priority)
+      .map((r) => r.id);
+    const next = computeReorderedRuleIds(currentIds, activeId, overId);
+    if (!next) return;
+    opts.session.reorderRules({
+      ruleSetId: opts.ruleSet.id,
+      orderedRuleIds: next,
+    });
+  };
+}
+
+type SortableRuleRowProps = {
+  rule: RuleRecord;
+  onToggle: (rule: RuleRecord) => void;
+  onEdit: (rule: RuleRecord) => void;
+  onDelete: (ruleId: string) => void;
+};
+
+function SortableRuleRow(props: SortableRuleRowProps) {
+  const { rule, onToggle, onEdit, onDelete } = props;
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: rule.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const label = rule.label ?? rule.id;
+  const summary = JSON.stringify(rule.payload);
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`lwb-rule-row${isDragging ? " lwb-rule-row--dragging" : ""}`}
+      aria-label={`Rule ${label}`}
+      data-rule-id={rule.id}
+    >
+      <button
+        type="button"
+        className="lwb-rule-row__grip"
+        aria-label={`Drag to reorder rule ${label}. Press space or enter to lift, arrow keys to move, space or enter to drop, escape to cancel.`}
+        title="Drag to reorder"
+        {...attributes}
+        {...listeners}
+      >
+        ⋮⋮
+      </button>
+      <div className="lwb-rule-row__main">
+        <div className="lwb-rule-row__title">{label}</div>
+        <div className="lwb-rule-row__sub">{summary}</div>
+      </div>
+      <div className="lwb-rule-row__actions">
+        <button
+          type="button"
+          className="lwb-icon-btn"
+          onClick={() => onToggle(rule)}
+          title={rule.enabled ? "Disable rule" : "Enable rule"}
+          aria-pressed={rule.enabled}
+        >
+          {rule.enabled ? "✓" : "○"}
+        </button>
+        <button
+          type="button"
+          className="lwb-icon-btn"
+          onClick={() => onEdit(rule)}
+          title="Edit rule"
+          aria-label={`Edit rule ${label}`}
+        >
+          ✎
+        </button>
+        <button
+          type="button"
+          className="lwb-icon-btn"
+          onClick={() => onDelete(rule.id)}
+          title="Delete rule"
+          aria-label={`Delete rule ${label}`}
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
+type TraceListProps = {
+  trace: TraceEvent[];
+  workflowTitle: string;
+};
+
+function TraceList({ trace, workflowTitle }: TraceListProps) {
+  const [autoScroll, setAutoScroll] = useState(true);
+  const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+  const simpleRef = useRef<HTMLDivElement | null>(null);
+
+  const useVirtuoso = trace.length > VIRTUALIZE_TRACE_THRESHOLD;
+
+  // Keep the latest event pinned when auto-scroll is on and new events arrive.
+  useLayoutEffect(() => {
+    if (!autoScroll || trace.length === 0) return;
+    if (useVirtuoso) {
+      virtuosoRef.current?.scrollToIndex({
+        index: trace.length - 1,
+        align: "end",
+      });
+    } else if (simpleRef.current) {
+      simpleRef.current.scrollTop = simpleRef.current.scrollHeight;
+    }
+  }, [autoScroll, trace.length, useVirtuoso]);
+
+  return (
+    <>
+      <div className="lwb-timeline__toolbar">
+        <span aria-hidden="true">{workflowTitle}</span>
+        <label
+          style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+          title="When enabled, the trace stays pinned to the most recent event."
+        >
+          <input
+            type="checkbox"
+            checked={autoScroll}
+            onChange={(e) => setAutoScroll(e.target.checked)}
+            aria-label="Auto-scroll to latest trace event"
+          />
+          Auto-scroll to latest
+        </label>
+      </div>
+      {useVirtuoso ? (
+        <Virtuoso
+          ref={virtuosoRef}
+          className="lwb-timeline__virtual"
+          totalCount={trace.length}
+          followOutput={autoScroll ? "smooth" : false}
+          atBottomStateChange={(atBottom) => {
+            if (!atBottom && autoScroll) setAutoScroll(false);
+          }}
+          itemContent={(index) => {
+            const event = trace[index];
+            if (!event) return null;
+            return <TraceRow event={event} />;
+          }}
+        />
+      ) : (
+        <div
+          ref={simpleRef}
+          className="lwb-timeline"
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            const atBottom =
+              el.scrollHeight - el.scrollTop - el.clientHeight < 16;
+            if (!atBottom && autoScroll) setAutoScroll(false);
+          }}
+        >
+          {trace.map((e) => (
+            <TraceRow key={e.id} event={e} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function TraceRow({ event }: { event: TraceEvent }) {
+  return (
+    <div className="lwb-trace-row" data-event-id={event.id}>
+      <div className="lwb-trace-row__top">
+        <span>{event.ts}</span>
+        <span className="lwb-pill">{event.type}</span>
+      </div>
+      <div className="lwb-trace-row__body">{summarizeEvent(event)}</div>
+    </div>
+  );
+}
+
 export function WorkbenchShell(props: WorkbenchShellProps) {
-  const { runtime, runId, registry, repo, ruleSetId = "default", onActiveRunChange } = props;
-  const revision = useRunRevision(runtime, runId);
+  const {
+    runtime,
+    runId,
+    registry,
+    repo,
+    ruleSetId = "default",
+    onActiveRunChange,
+    useMonacoEditor = false,
+  } = props;
+  const revision = useWorkbenchRunRevision(runtime, runId);
   const state = runId ? runtime.getState(runId) : undefined;
   void revision;
 
@@ -79,7 +322,8 @@ export function WorkbenchShell(props: WorkbenchShellProps) {
   }, [props.artifactKeys, state]);
 
   const [selectedArtifactKey, setSelectedArtifactKey] = useState<string>("");
-  const selectedArtifact = state && selectedArtifactKey ? state.artifactsByKey.get(selectedArtifactKey) : undefined;
+  const selectedArtifact =
+    state && selectedArtifactKey ? state.artifactsByKey.get(selectedArtifactKey) : undefined;
 
   const [draftJson, setDraftJson] = useState<string>("{}");
   const [error, setError] = useState<string | null>(null);
@@ -151,10 +395,17 @@ export function WorkbenchShell(props: WorkbenchShellProps) {
       if (!file) return;
       const text = await file.text();
       try {
-        const { runId: imported } = await runtime.importRunBundle({ json: text, verifyIntegrity: true });
+        const { runId: imported } = await runtime.importRunBundle({
+          json: text,
+          verifyIntegrity: true,
+        });
         onActiveRunChange?.(imported);
       } catch (e) {
-        const msg = WorkbenchError.is(e) ? `${e.code}: ${e.message}` : e instanceof Error ? e.message : String(e);
+        const msg = WorkbenchError.is(e)
+          ? `${e.code}: ${e.message}`
+          : e instanceof Error
+          ? e.message
+          : String(e);
         setError(`Import failed: ${msg}`);
       } finally {
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -168,28 +419,29 @@ export function WorkbenchShell(props: WorkbenchShellProps) {
     await repo.save(state);
   }, [repo, state]);
 
-  const [dragId, setDragId] = useState<string | null>(null);
+  const sortedRules = useMemo(() => {
+    if (!ruleSet) return [];
+    return [...ruleSet.rules].sort((a, b) => a.priority - b.priority);
+  }, [ruleSet]);
 
-  const moveRule = useCallback(
-    (ruleId: string, dir: -1 | 1) => {
-      if (!session || !ruleSet) return;
-      const ids = [...ruleSet.rules].sort((a, b) => a.priority - b.priority).map((r) => r.id);
-      const idx = ids.indexOf(ruleId);
-      const j = idx + dir;
-      if (idx < 0 || j < 0 || j >= ids.length) return;
-      const swapped = [...ids];
-      const t = swapped[idx]!;
-      swapped[idx] = swapped[j]!;
-      swapped[j] = t;
-      session.reorderRules({ ruleSetId: ruleSet.id, orderedRuleIds: swapped });
-    },
+  const sortableIds = useMemo(() => sortedRules.map((r) => r.id), [sortedRules]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const onDragEnd = useMemo(
+    () => buildRuleReorderHandler({ ruleSet, session }),
     [ruleSet, session],
   );
 
   const toggleRule = useCallback(
     (rule: RuleRecord) => {
       if (!session || !ruleSet) return;
-      const nextRules = ruleSet.rules.map((r) => (r.id === rule.id ? { ...r, enabled: !r.enabled } : r));
+      const nextRules = ruleSet.rules.map((r) =>
+        r.id === rule.id ? { ...r, enabled: !r.enabled } : r,
+      );
       session.replaceRuleSet({ ...ruleSet, rules: nextRules });
     },
     [ruleSet, session],
@@ -198,27 +450,17 @@ export function WorkbenchShell(props: WorkbenchShellProps) {
   const deleteRule = useCallback(
     (ruleId: string) => {
       if (!session || !ruleSet) return;
-      const nextRules = ruleSet.rules.filter((r) => r.id !== ruleId).map((r, idx) => ({ ...r, priority: idx }));
+      const nextRules = ruleSet.rules
+        .filter((r) => r.id !== ruleId)
+        .map((r, idx) => ({ ...r, priority: idx }));
       session.replaceRuleSet({ ...ruleSet, rules: nextRules });
     },
     [ruleSet, session],
   );
 
-  const onDropReorder = useCallback(
-    (targetRuleId: string) => {
-      if (!session || !ruleSet || !dragId || dragId === targetRuleId) return;
-      const ids = [...ruleSet.rules].sort((a, b) => a.priority - b.priority).map((r) => r.id);
-      const from = ids.indexOf(dragId);
-      const to = ids.indexOf(targetRuleId);
-      if (from < 0 || to < 0) return;
-      const next = [...ids];
-      next.splice(from, 1);
-      next.splice(to, 0, dragId);
-      session.reorderRules({ ruleSetId: ruleSet.id, orderedRuleIds: next });
-      setDragId(null);
-    },
-    [dragId, ruleSet, session],
-  );
+  const editRule = useCallback((rule: RuleRecord) => {
+    setRuleModal({ type: "edit", rule });
+  }, []);
 
   const commitRuleModal = useCallback(() => {
     if (!session || !ruleSet || !ruleModal) return;
@@ -241,8 +483,13 @@ export function WorkbenchShell(props: WorkbenchShellProps) {
         typeof globalThis.crypto?.randomUUID === "function"
           ? globalThis.crypto.randomUUID()
           : `rule_${Date.now().toString(36)}`;
-      const priority = ruleSet.rules.length ? Math.max(...ruleSet.rules.map((r) => r.priority)) + 1 : 0;
-      const nextRules = [...ruleSet.rules, { id, priority, enabled: true, label: ruleLabel || id, payload }];
+      const priority = ruleSet.rules.length
+        ? Math.max(...ruleSet.rules.map((r) => r.priority)) + 1
+        : 0;
+      const nextRules = [
+        ...ruleSet.rules,
+        { id, priority, enabled: true, label: ruleLabel || id, payload },
+      ];
       session.replaceRuleSet({ ...ruleSet, rules: nextRules });
     } else {
       const nextRules = ruleSet.rules.map((r) =>
@@ -254,13 +501,20 @@ export function WorkbenchShell(props: WorkbenchShellProps) {
   }, [registry, ruleLabel, ruleModal, rulePayloadJson, ruleSet, session]);
 
   if (!session || !state) {
-    return <div className="wb wb__muted">No active run.</div>;
+    return (
+      <div className="lwb-root">
+        <div className="lwb-workbench lwb-muted" style={{ padding: 12 }}>
+          No active run.
+        </div>
+      </div>
+    );
   }
 
-  const trace = [...state.trace].slice(-80).reverse();
+  const trace = state.trace;
+  const workflowTitle = state.run.workflowSnapshot.title ?? state.run.workflowSnapshot.id;
 
   return (
-    <div className="wb">
+    <div className="lwb-root lwb-workbench">
       <input
         ref={fileInputRef}
         type="file"
@@ -269,39 +523,48 @@ export function WorkbenchShell(props: WorkbenchShellProps) {
         onChange={(e) => void onPickImportFile(e.target.files?.[0] ?? null)}
       />
 
-      <div className="wb__header">
-        <div className="wb__title">LLM workbench</div>
-        <div className="wb__btnRow" style={{ justifyContent: "flex-end" }}>
-          <label className="wb__muted" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <div className="lwb-workbench__header">
+        <div className="lwb-workbench__title">LLM workbench</div>
+        <div className="lwb-btn-row lwb-btn-row--end">
+          <label className="lwb-muted" style={{ display: "flex", gap: 8, alignItems: "center" }}>
             Export
-            <select className="wb__select" value={exportProfile} onChange={(e) => setExportProfile(e.target.value as "full" | "user")}>
+            <select
+              className="lwb-select"
+              value={exportProfile}
+              onChange={(e) => setExportProfile(e.target.value as "full" | "user")}
+            >
               <option value="full">full (engineering)</option>
               <option value="user">user (redacted)</option>
             </select>
           </label>
-          <button type="button" className="wb__btn wb__btn--primary" onClick={() => void downloadBundle()}>
+          <button type="button" className="lwb-btn lwb-btn--primary" onClick={() => void downloadBundle()}>
             Download run bundle
           </button>
-          <button type="button" className="wb__btn" onClick={() => fileInputRef.current?.click()}>
+          <button type="button" className="lwb-btn" onClick={() => fileInputRef.current?.click()}>
             Import run bundle
           </button>
-          <button type="button" className="wb__btn" disabled={!repo} onClick={() => void saveRun()}>
+          <button type="button" className="lwb-btn" disabled={!repo} onClick={() => void saveRun()}>
             Save run
           </button>
         </div>
       </div>
 
-      <div className="wb__grid">
-        <div className="wb__panel">
-          <div className="wb__panelHeader">
-            <span>Inputs & artifacts</span>
-            <span className="wb__pill">rev {state.revision}</span>
+      <div className="lwb-workbench__grid">
+        <div className="lwb-workbench__panel">
+          <div className="lwb-workbench__panel-header">
+            <span>Inputs &amp; artifacts</span>
+            <span className="lwb-pill">rev {state.revision}</span>
           </div>
-          <div className="wb__panelBody">
-            <div className="wb__muted" style={{ marginBottom: 8 }}>
+          <div className="lwb-workbench__panel-body">
+            <div className="lwb-muted" style={{ marginBottom: 8 }}>
               Select an artifact, edit JSON, validate against the registered schema, then write.
             </div>
-            <select className="wb__select" value={selectedArtifactKey} onChange={(e) => setSelectedArtifactKey(e.target.value)}>
+            <select
+              className="lwb-select"
+              value={selectedArtifactKey}
+              onChange={(e) => setSelectedArtifactKey(e.target.value)}
+              aria-label="Select artifact to edit"
+            >
               <option value="">Select artifact…</option>
               {artifactKeys.map((k) => (
                 <option key={k} value={k}>
@@ -309,127 +572,139 @@ export function WorkbenchShell(props: WorkbenchShellProps) {
                 </option>
               ))}
             </select>
-            <div style={{ height: 10 }} />
-            <textarea className="wb__textarea" value={draftJson} onChange={(e) => setDraftJson(e.target.value)} spellCheck={false} />
-            <div style={{ height: 10 }} />
-            <div className="wb__btnRow">
-              <button type="button" className="wb__btn wb__btn--primary" disabled={!selectedArtifactKey} onClick={() => void applyArtifact()}>
+            <div className="lwb-stack-sm" />
+            {useMonacoEditor ? (
+              <Suspense
+                fallback={
+                  <div className="lwb-monaco-fallback" role="status" aria-live="polite">
+                    Loading editor…
+                  </div>
+                }
+              >
+                <LazyMonacoArtifactEditor
+                  value={draftJson}
+                  onChange={setDraftJson}
+                  ariaLabel="Artifact JSON editor"
+                />
+              </Suspense>
+            ) : (
+              <textarea
+                className="lwb-textarea"
+                value={draftJson}
+                onChange={(e) => setDraftJson(e.target.value)}
+                spellCheck={false}
+                aria-label="Artifact JSON"
+              />
+            )}
+            <div className="lwb-stack-sm" />
+            <div className="lwb-btn-row">
+              <button
+                type="button"
+                className="lwb-btn lwb-btn--primary"
+                disabled={!selectedArtifactKey}
+                onClick={() => void applyArtifact()}
+              >
                 Write artifact
               </button>
             </div>
-            {error ? (
-              <div style={{ marginTop: 10, color: "var(--wb-danger)", fontSize: 12 }}>
-                {error}
-              </div>
-            ) : null}
+            {error ? <div className="lwb-error">{error}</div> : null}
           </div>
         </div>
 
-        <div className="wb__panel">
-          <div className="wb__panelHeader">
+        <div className="lwb-workbench__panel">
+          <div className="lwb-workbench__panel-header">
             <span>Rules</span>
-            <span className="wb__btnRow">
-              <span className="wb__pill">{ruleSet ? `${ruleSet.rules.length} rules` : "no ruleset"}</span>
-              <button type="button" className="wb__btn wb__btn--primary" disabled={!ruleSet} onClick={() => setRuleModal({ type: "create" })}>
+            <span className="lwb-btn-row">
+              <span className="lwb-pill">{ruleSet ? `${ruleSet.rules.length} rules` : "no ruleset"}</span>
+              <button
+                type="button"
+                className="lwb-btn lwb-btn--primary"
+                disabled={!ruleSet}
+                onClick={() => setRuleModal({ type: "create" })}
+              >
                 Add rule
               </button>
             </span>
           </div>
-          <div className="wb__panelBody">
+          <div className="lwb-workbench__panel-body">
             {!ruleSet ? (
-              <div className="wb__muted">No rule set loaded for id `{ruleSetId}`.</div>
+              <div className="lwb-muted">No rule set loaded for id `{ruleSetId}`.</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[...ruleSet.rules]
-                  .sort((a, b) => a.priority - b.priority)
-                  .map((r) => (
-                    <div
-                      key={r.id}
-                      className="wb__ruleRow"
-                      draggable
-                      onDragStart={() => setDragId(r.id)}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={() => onDropReorder(r.id)}
-                    >
-                      <div className="wb__ruleGrip" title="Drag to reorder">
-                        ::
-                      </div>
-                      <div className="wb__ruleMain">
-                        <div className="wb__ruleTitle">{r.label ?? r.id}</div>
-                        <div className="wb__ruleSub">{JSON.stringify(r.payload)}</div>
-                      </div>
-                      <div className="wb__ruleActions">
-                        <button type="button" className="wb__iconBtn" onClick={() => moveRule(r.id, -1)} title="Move up">
-                          ↑
-                        </button>
-                        <button type="button" className="wb__iconBtn" onClick={() => moveRule(r.id, 1)} title="Move down">
-                          ↓
-                        </button>
-                        <button type="button" className="wb__iconBtn" onClick={() => toggleRule(r)} title="Toggle enabled">
-                          {r.enabled ? "✓" : "○"}
-                        </button>
-                        <button type="button" className="wb__iconBtn" onClick={() => setRuleModal({ type: "edit", rule: r })} title="Edit">
-                          ✎
-                        </button>
-                        <button type="button" className="wb__iconBtn" onClick={() => deleteRule(r.id)} title="Delete">
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-              </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={onDragEnd}
+              >
+                <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+                  <div className="lwb-rule-list" role="list" aria-label="Rule list">
+                    {sortedRules.map((r) => (
+                      <SortableRuleRow
+                        key={r.id}
+                        rule={r}
+                        onToggle={toggleRule}
+                        onEdit={editRule}
+                        onDelete={deleteRule}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </div>
 
-        <div className="wb__panel" style={{ gridColumn: "1 / -1" }}>
-          <div className="wb__panelHeader">
+        <div className="lwb-workbench__panel" style={{ gridColumn: "1 / -1" }}>
+          <div className="lwb-workbench__panel-header">
             <span>Live trace</span>
-            <span className="wb__muted">{state.run.workflowSnapshot.title ?? state.run.workflowSnapshot.id}</span>
+            <span className="lwb-muted">
+              {trace.length} event{trace.length === 1 ? "" : "s"}
+            </span>
           </div>
-          <div className="wb__panelBody">
-            <div className="wb__timeline">
-              {trace.map((e) => (
-                <div key={e.id} className="wb__event">
-                  <div className="wb__eventTop">
-                    <span>{e.ts}</span>
-                    <span className="wb__pill">{e.type}</span>
-                  </div>
-                  <div style={{ marginTop: 6, fontSize: 12 }}>{summarizeEvent(e)}</div>
-                </div>
-              ))}
-            </div>
+          <div className="lwb-workbench__panel-body">
+            <TraceList trace={trace} workflowTitle={workflowTitle} />
           </div>
         </div>
       </div>
 
       {ruleModal && ruleSet ? (
-        <div className="wbModal" role="dialog" aria-modal="true">
-          <div className="wbModal__backdrop" onClick={() => setRuleModal(null)} />
-          <div className="wbModal__card">
-            <div className="wbModal__title">{ruleModal.type === "create" ? "Add rule" : "Edit rule"}</div>
-            <div className="wb__muted" style={{ marginBottom: 10 }}>
+        <div className="lwb-modal" role="dialog" aria-modal="true" aria-label="Edit rule">
+          <div className="lwb-modal__backdrop" onClick={() => setRuleModal(null)} />
+          <div className="lwb-modal__card">
+            <div className="lwb-modal__title">
+              {ruleModal.type === "create" ? "Add rule" : "Edit rule"}
+            </div>
+            <div className="lwb-muted" style={{ marginBottom: 10 }}>
               Payload must validate against schema <code>{ruleSet.ruleSchemaId}</code>.
             </div>
-            <label className="wb__muted" style={{ display: "block", marginBottom: 6 }}>
+            <label className="lwb-muted" style={{ display: "block", marginBottom: 6 }}>
               Label
             </label>
-            <input className="wb__select" value={ruleLabel} onChange={(e) => setRuleLabel(e.target.value)} />
-            <div style={{ height: 10 }} />
-            <label className="wb__muted" style={{ display: "block", marginBottom: 6 }}>
+            <input
+              className="lwb-input"
+              value={ruleLabel}
+              onChange={(e) => setRuleLabel(e.target.value)}
+            />
+            <div className="lwb-stack-sm" />
+            <label className="lwb-muted" style={{ display: "block", marginBottom: 6 }}>
               Payload JSON
             </label>
-            <textarea className="wb__textarea" style={{ minHeight: 160 }} value={rulePayloadJson} onChange={(e) => setRulePayloadJson(e.target.value)} spellCheck={false} />
-            {ruleError ? (
-              <div style={{ marginTop: 10, color: "var(--wb-danger)", fontSize: 12 }}>
-                {ruleError}
-              </div>
-            ) : null}
-            <div className="wb__btnRow" style={{ marginTop: 12 }}>
-              <button type="button" className="wb__btn wb__btn--primary" onClick={() => void commitRuleModal()}>
+            <textarea
+              className="lwb-textarea"
+              style={{ minHeight: 160 }}
+              value={rulePayloadJson}
+              onChange={(e) => setRulePayloadJson(e.target.value)}
+              spellCheck={false}
+            />
+            {ruleError ? <div className="lwb-error">{ruleError}</div> : null}
+            <div className="lwb-btn-row" style={{ marginTop: 12 }}>
+              <button
+                type="button"
+                className="lwb-btn lwb-btn--primary"
+                onClick={() => void commitRuleModal()}
+              >
                 Save rule
               </button>
-              <button type="button" className="wb__btn" onClick={() => setRuleModal(null)}>
+              <button type="button" className="lwb-btn" onClick={() => setRuleModal(null)}>
                 Cancel
               </button>
             </div>
