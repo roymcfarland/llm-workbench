@@ -9,6 +9,7 @@ import { ZodError } from "zod";
 import { WORKBENCH_PROTOCOL_VERSION } from "../protocol/version.js";
 import type { RuleSet } from "../protocol/rules.js";
 import type { TraceEvent } from "../protocol/trace.js";
+import { TraceEventSchema } from "../protocol/trace.js";
 import { initialGateState } from "./gates.js";
 import { runStoreStateFromBundle } from "./hydrate.js";
 import { newId } from "./ids.js";
@@ -84,9 +85,18 @@ export class WorkbenchRuntime {
   }
 
   private appendTrace(state: RunStoreState, event: TraceEvent) {
+    let validated: TraceEvent;
+    try {
+      validated = TraceEventSchema.parse(event);
+    } catch (e) {
+      if (e instanceof ZodError) {
+        throw new WorkbenchError("INVALID_TRACE_EVENT", `Invalid trace event: ${formatZodError(e)}`, e);
+      }
+      throw e;
+    }
     state.revision += 1;
-    state.trace.push(event);
-    this.emit(state.run.id, event);
+    state.trace.push(validated);
+    this.emit(state.run.id, validated);
   }
 
   startRun(input: StartRunInput): { runId: string } {

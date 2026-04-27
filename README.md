@@ -31,7 +31,10 @@ run-bundle import/export support audits, reproducibility, and reuse.
   model, token usage, cost, and duration metadata. Runs can also carry a
   host-provided `subject` (`userId`, `tenantId`, `accountId`, `planId`)
   and JSON metadata, so host apps can later add quotas, tiered access, or
-  per-user billing without changing the protocol shape.
+  per-user billing without changing the protocol shape. The runtime also
+  exports `summarizeModelTelemetry` to convert raw trace events into a typed
+  usage and cost ledger grouped by provider, model, step, user, tenant, and
+  plan.
 - **Pluggable persistence.** Memory, IndexedDB, or HTTP, behind a single
   `RunRepository` interface. The HTTP adapter supports timeouts, retries,
   and abort signals.
@@ -76,6 +79,7 @@ import {
   WorkbenchRuntime,
   SchemaRegistry,
   registerDemoSchemas,
+  summarizeModelTelemetry,
 } from "@llm-workbench/runtime";
 
 const registry = new SchemaRegistry();
@@ -102,7 +106,19 @@ session.writeArtifact({
   typeId: "compiledProfile",
   data: { headline: "TS engineer", skills: ["ts"], summary: "..." },
 });
+session.logModelIO({
+  stepId: "parse",
+  direction: "response",
+  provider: "openai",
+  model: "gpt-example",
+  usage: { inputTokens: 120, outputTokens: 40 },
+  cost: { amount: 0.0012, currency: "USD" },
+  durationMs: 900,
+});
 session.completeStep("parse");
+
+const telemetry = summarizeModelTelemetry(session.snapshot());
+console.log(telemetry.totals.costByCurrency, telemetry.byProviderModel);
 ```
 
 Drop `<WorkbenchShell runtime={runtime} runId={runId} registry={registry} />`

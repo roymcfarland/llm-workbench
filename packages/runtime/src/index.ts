@@ -10,3 +10,4 @@ export * from "./runtime/types.js";
 export * from "./schema/index.js";
 export * from "./persistence/index.js";
 export * from "./host/index.js";
+export * from "./telemetry/index.js";

@@ -18,6 +18,10 @@
     "./persistence": {
       "types": "./dist/persistence/index.d.ts",
       "import": "./dist/persistence/index.js"
+    },
+    "./telemetry": {
+      "types": "./dist/telemetry/index.d.ts",
+      "import": "./dist/telemetry/index.js"
     }
   },
   "files": [

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { WorkbenchError } from "../errors.js";
 import { attachRunBundleIntegrity, deserializeRunBundle, serializeRunBundle, verifyRunBundleIntegrity } from "../protocol/bundle.js";
 import { SchemaRegistry } from "../schema/registry.js";
 import { WorkbenchRuntime } from "./workbench.js";
@@ -192,6 +193,26 @@ describe("model I/O telemetry", () => {
       cost: { amount: 0.001, currency: "USD" },
       durationMs: 125,
     });
+  });
+
+  it("rejects malformed model telemetry before it enters the trace", () => {
+    const rt = new WorkbenchRuntime();
+    const wf = {
+      id: "wf",
+      version: 1,
+      steps: [{ id: "a", gatePolicy: "AUTO" as const }],
+      edges: [],
+    };
+    const { runId } = rt.startRun({ workflow: wf });
+    const s = rt.session(runId);
+
+    expect(() =>
+      s.logModelIO({
+        direction: "response",
+        usage: { inputTokens: -1 } as never,
+      }),
+    ).toThrow(WorkbenchError);
+    expect(rt.getState(runId)?.trace).toEqual([]);
   });
 });
 
