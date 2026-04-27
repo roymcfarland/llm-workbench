@@ -1,14 +1,19 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { z } from "zod";
 
 import {
-  WORKBENCH_PROTOCOL_VERSION,
   WorkbenchRuntime,
+  type RunRepository,
+  type RunStoreState,
+  type SavedRunMeta,
 } from "@llm-workbench/runtime";
+import {
+  createWorkbenchMcpHttpHandler,
+  createWorkbenchMcpServer,
+} from "@llm-workbench/mcp";
 
 import { TenantAuthError, requireTenant } from "@/lib/auth/tenant";
 import {
+  deleteRunForTenant,
   listRunsForTenant,
   loadRunForTenant,
   saveRunForTenant,
@@ -23,13 +28,6 @@ type ToolError = {
   content: [{ type: "text"; text: string }];
   isError: true;
 };
-
-function unauthorized(): ToolError {
-  return {
-    content: [{ type: "text", text: "Unauthorized" }],
-    isError: true,
-  };
-}
 
 function notImplemented(reason: string): ToolError {
   return {
@@ -49,106 +47,74 @@ function asJsonText(value: unknown) {
   };
 }
 
-async function buildServer(): Promise<McpServer> {
-  const server = new McpServer(
-    {
-      name: "llm-workbench",
-      version: WORKBENCH_PROTOCOL_VERSION,
-    },
-    {
-      capabilities: { tools: {} },
-    },
-  );
+function toolError(message: string): ToolError {
+  return { content: [{ type: "text", text: message }], isError: true };
+}
 
-  server.registerTool(
-    "list_runs",
-    {
-      description: "Return SavedRunMeta[] for the caller's tenant.",
-      inputSchema: {
-        limit: z.number().int().min(1).max(500).optional(),
-      },
+/**
+ * Build a `RunRepository` view of the Supabase-backed runs table that is
+ * already scoped to the caller's tenant. The reference deployment uses the
+ * service-role key (which bypasses RLS), so this adapter is the single guard
+ * that keeps tenant data isolated. Pair with `requireTenant()` upstream.
+ */
+function tenantRepository(tenantId: string): RunRepository {
+  return {
+    async list(opts) {
+      return listRunsForTenant(tenantId, { limit: opts?.limit });
     },
-    async ({ limit }) => {
-      try {
-        const { tenantId } = await requireTenant();
-        const metas = await listRunsForTenant(tenantId, { limit });
-        return asJsonText(metas);
-      } catch (e) {
-        if (e instanceof TenantAuthError) return unauthorized();
-        return {
-          content: [
-            { type: "text", text: e instanceof Error ? e.message : "list_runs failed" },
-          ],
-          isError: true,
-        };
-      }
+    async load(runId): Promise<RunStoreState | null> {
+      const row = await loadRunForTenant(tenantId, runId);
+      if (!row) return null;
+      return serializedToState(row.state);
     },
-  );
+    async save(state) {
+      await saveRunForTenant(tenantId, state);
+    },
+    async delete(runId) {
+      await deleteRunForTenant(tenantId, runId);
+    },
+  };
+}
 
-  server.registerTool(
-    "get_run",
-    {
-      description: "Return the serialized RunStoreState for a runId.",
-      inputSchema: {
-        runId: z.string().min(1),
-      },
+async function buildHandler(tenantId: string): Promise<(req: Request) => Promise<Response>> {
+  const repo = tenantRepository(tenantId);
+  const server = createWorkbenchMcpServer({
+    runRepository: repo,
+    listRunIds: async () => {
+      const metas = await listRunsForTenant(tenantId);
+      return metas.map((m: SavedRunMeta) => m.id);
     },
-    async ({ runId }) => {
-      try {
-        const { tenantId } = await requireTenant();
-        const row = await loadRunForTenant(tenantId, runId);
-        if (!row) {
-          return {
-            content: [{ type: "text", text: `No run named ${runId}` }],
-            isError: true,
-          };
-        }
-        return asJsonText(row.state);
-      } catch (e) {
-        if (e instanceof TenantAuthError) return unauthorized();
-        return {
-          content: [
-            { type: "text", text: e instanceof Error ? e.message : "get_run failed" },
-          ],
-          isError: true,
-        };
-      }
-    },
-  );
+  });
+
+  // The package surface covers `list_runs`, `get_run`, `verify_run_integrity`,
+  // and `validate_run_bundle`. The reference deployment also exposes a few
+  // mutating tools that depend on the workflow registered at this route
+  // (`jobSearchWorkflow`); keep them registered here so external embeddings
+  // of the package don't have to ship workflow definitions they don't own.
 
   server.registerTool(
     "start_run",
     {
       description:
         "Start a new run from a workflow id. The reference deployment ships a single workflow: 'jobSearchWorkflow'.",
-      inputSchema: {
-        workflowId: z.literal("jobSearchWorkflow"),
-      },
+      inputSchema: { workflowId: z.literal("jobSearchWorkflow") },
     },
     async ({ workflowId }) => {
       try {
-        const { tenantId } = await requireTenant();
         if (workflowId !== "jobSearchWorkflow") {
           return notImplemented(
             `start_run only knows 'jobSearchWorkflow' in this reference deployment`,
           );
         }
-        const runtime = new WorkbenchRuntime();
-        const { runId } = runtime.startRun({
+        const rt = new WorkbenchRuntime();
+        const { runId } = rt.startRun({
           workflow: jobSearchWorkflow,
           ruleSets: [initialRuleSet],
         });
-        const state = runtime.getState(runId)!;
-        await saveRunForTenant(tenantId, state);
+        await repo.save(rt.getState(runId)!);
         return asJsonText({ runId, workflowId, status: "running" });
       } catch (e) {
-        if (e instanceof TenantAuthError) return unauthorized();
-        return {
-          content: [
-            { type: "text", text: e instanceof Error ? e.message : "start_run failed" },
-          ],
-          isError: true,
-        };
+        return toolError(e instanceof Error ? e.message : "start_run failed");
       }
     },
   );
@@ -167,30 +133,15 @@ async function buildServer(): Promise<McpServer> {
     },
     async ({ runId, stepId, gate, decision, note }) => {
       try {
-        const { tenantId } = await requireTenant();
-        const row = await loadRunForTenant(tenantId, runId);
-        if (!row) {
-          return {
-            content: [{ type: "text", text: `No run named ${runId}` }],
-            isError: true,
-          };
-        }
-        const state = serializedToState(row.state);
+        const state = await repo.load(runId);
+        if (!state) return toolError(`No run named ${runId}`);
         const rt = new WorkbenchRuntime();
         rt.importState(state);
-        const session = rt.session(runId);
-        session.resolveGate({ stepId, gate, decision, note });
-        const next = rt.getState(runId)!;
-        await saveRunForTenant(tenantId, next);
+        rt.session(runId).resolveGate({ stepId, gate, decision, note });
+        await repo.save(rt.getState(runId)!);
         return asJsonText({ ok: true, runId, stepId, decision });
       } catch (e) {
-        if (e instanceof TenantAuthError) return unauthorized();
-        return {
-          content: [
-            { type: "text", text: e instanceof Error ? e.message : "resolve_gate failed" },
-          ],
-          isError: true,
-        };
+        return toolError(e instanceof Error ? e.message : "resolve_gate failed");
       }
     },
   );
@@ -209,26 +160,17 @@ async function buildServer(): Promise<McpServer> {
     },
     async ({ runId, artifactKey, typeId, data, idempotencyKey }) => {
       try {
-        const { tenantId } = await requireTenant();
-        const row = await loadRunForTenant(tenantId, runId);
-        if (!row) {
-          return {
-            content: [{ type: "text", text: `No run named ${runId}` }],
-            isError: true,
-          };
-        }
-        const state = serializedToState(row.state);
+        const state = await repo.load(runId);
+        if (!state) return toolError(`No run named ${runId}`);
         const rt = new WorkbenchRuntime();
         rt.importState(state);
-        const session = rt.session(runId);
-        const artifact = session.writeArtifact({
+        const artifact = rt.session(runId).writeArtifact({
           artifactKey,
           typeId,
           data,
           idempotencyKey,
         });
-        const next = rt.getState(runId)!;
-        await saveRunForTenant(tenantId, next);
+        await repo.save(rt.getState(runId)!);
         return asJsonText({
           ok: true,
           runId,
@@ -236,13 +178,7 @@ async function buildServer(): Promise<McpServer> {
           version: artifact.version,
         });
       } catch (e) {
-        if (e instanceof TenantAuthError) return unauthorized();
-        return {
-          content: [
-            { type: "text", text: e instanceof Error ? e.message : "write_artifact failed" },
-          ],
-          isError: true,
-        };
+        return toolError(e instanceof Error ? e.message : "write_artifact failed");
       }
     },
   );
@@ -252,56 +188,40 @@ async function buildServer(): Promise<McpServer> {
     {
       description:
         "Return a tamper-evident RunBundle JSON for the run (full profile, with engine snapshot).",
-      inputSchema: {
-        runId: z.string().min(1),
-      },
+      inputSchema: { runId: z.string().min(1) },
     },
     async ({ runId }) => {
       try {
-        const { tenantId } = await requireTenant();
-        const row = await loadRunForTenant(tenantId, runId);
-        if (!row) {
-          return {
-            content: [{ type: "text", text: `No run named ${runId}` }],
-            isError: true,
-          };
-        }
-        const state = serializedToState(row.state);
+        const state = await repo.load(runId);
+        if (!state) return toolError(`No run named ${runId}`);
         const rt = new WorkbenchRuntime();
         rt.importState(state);
-        const session = rt.session(runId);
-        const bundle = await session.exportRunBundle({ profile: "full" });
+        const bundle = await rt.session(runId).exportRunBundle({ profile: "full" });
         return asJsonText(bundle);
       } catch (e) {
-        if (e instanceof TenantAuthError) return unauthorized();
-        return {
-          content: [
-            { type: "text", text: e instanceof Error ? e.message : "export_bundle failed" },
-          ],
-          isError: true,
-        };
+        return toolError(e instanceof Error ? e.message : "export_bundle failed");
       }
     },
   );
 
-  return server;
+  return createWorkbenchMcpHttpHandler({ server });
 }
 
 async function handle(req: Request): Promise<Response> {
-  // Stateless transport: every request spins up a transient server. This keeps
-  // the route compatible with serverless / edge-style deployments.
-  const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-    enableJsonResponse: true,
-  });
-  const server = await buildServer();
-  await server.connect(transport);
+  let tenantId: string;
   try {
-    return await transport.handleRequest(req);
-  } finally {
-    // Tear down so the per-request server isn't kept alive by lingering refs.
-    await transport.close();
+    ({ tenantId } = await requireTenant());
+  } catch (e) {
+    if (e instanceof TenantAuthError) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    throw e;
   }
+  const handler = await buildHandler(tenantId);
+  return handler(req);
 }
 
 export async function GET(req: Request): Promise<Response> {

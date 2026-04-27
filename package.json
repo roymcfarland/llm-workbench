@@ -11,15 +11,14 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build -w @llm-workbench/runtime -w @llm-workbench/ui -w @llm-workbench/adapters-react -w @llm-workbench/ai-sdk",
-    "test": "npm test -w @llm-workbench/runtime && npm test -w @llm-workbench/adapters-react && npm test -w @llm-workbench/ai-sdk && npm test -w @llm-workbench/ui",
+    "build": "npm run build -w @llm-workbench/runtime -w @llm-workbench/ui -w @llm-workbench/adapters-react -w @llm-workbench/ai-sdk -w @llm-workbench/mcp",
+    "test": "npm test -w @llm-workbench/runtime && npm test -w @llm-workbench/adapters-react && npm test -w @llm-workbench/ai-sdk && npm test -w @llm-workbench/ui && npm test -w @llm-workbench/mcp",
     "demo": "npm run dev -w job-search-demo",
     "demo:http-server": "npm run start -w run-repo-server",
     "dev:web": "npm run dev -w apps/web",
     "build:web": "npm run build -w apps/web"
   },
   "devDependencies": {
-    "next": "^16.0.0",
     "typescript": "^5.6.3",
     "vitest": "^3.2.4"
   },

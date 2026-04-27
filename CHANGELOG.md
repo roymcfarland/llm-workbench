@@ -6,7 +6,26 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-_Nothing yet. Open a pull request._
+### Added
+
+- **`@llm-workbench/mcp`** — new transport-agnostic Model Context Protocol
+  package that exposes the LLM Workbench runtime over MCP. Wire any
+  `RunRepository` to `createWorkbenchMcpServer({ runRepository, listRunIds?, name?, version? })`
+  to get a configured server with tools (`list_runs`, `get_run`,
+  `verify_run_integrity`, `validate_run_bundle`) and `runs://{runId}`
+  resources. `createWorkbenchMcpHttpHandler({ server })` returns a
+  Web-standard `(req: Request) => Promise<Response>` adapter for Next.js
+  Route Handlers, Hono, edge functions, etc. Apache 2.0.
+
+### Changed
+
+- **`apps/web` MCP route.** `apps/web/app/api/mcp/route.ts` now imports
+  from `@llm-workbench/mcp`. Clerk auth happens at the route boundary
+  (returns `401` when unauthenticated) and a tenant-scoped
+  `RunRepository` adapter feeds the package server. The reference
+  deployment continues to register `start_run` / `resolve_gate` /
+  `write_artifact` / `export_bundle` on top of the package's read-only
+  surface.
 
 ## 0.2.0
 

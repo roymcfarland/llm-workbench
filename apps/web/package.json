@@ -15,6 +15,7 @@
     "@clerk/nextjs": "^6.5.1",
     "@llm-workbench/adapters-react": "0.2.0",
     "@llm-workbench/ai-sdk": "0.2.0",
+    "@llm-workbench/mcp": "0.2.0",
     "@llm-workbench/runtime": "0.2.0",
     "@llm-workbench/ui": "0.2.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
