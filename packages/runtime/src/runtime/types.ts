@@ -1,5 +1,5 @@
 import type { ArtifactVersion } from "../protocol/artifacts.js";
-import type { RunContextRef, RunInstance } from "../protocol/run.js";
+import type { JsonValue, RunContextRef, RunInstance, RunSubjectRef } from "../protocol/run.js";
 import type { RuleSet } from "../protocol/rules.js";
 import type { TraceEvent } from "../protocol/trace.js";
 import type { WorkflowSpec } from "../protocol/workflow.js";
@@ -26,6 +26,10 @@ export type StartRunInput = {
   /** Initial artifacts (version 1) */
   initialArtifacts?: Array<{ artifact: Omit<ArtifactVersion, "version" | "createdAt"> }>;
   context?: RunContextRef;
+  /** Host-provided subject/account attribution for telemetry, quotas, and billing. */
+  subject?: RunSubjectRef;
+  /** JSON-only host metadata kept with the run snapshot. Avoid secrets. */
+  metadata?: Record<string, JsonValue>;
   tags?: string[];
 };
 

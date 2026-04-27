@@ -144,6 +144,57 @@ describe("WorkbenchRuntime import/export", () => {
   });
 });
 
+describe("model I/O telemetry", () => {
+  it("stores structured subject and metadata on runs", () => {
+    const rt = new WorkbenchRuntime();
+    const wf = {
+      id: "wf",
+      version: 1,
+      steps: [{ id: "a", gatePolicy: "AUTO" as const }],
+      edges: [],
+    };
+    const { runId } = rt.startRun({
+      workflow: wf,
+      subject: { userId: "user_1", tenantId: "team_1", planId: "pro" },
+      metadata: { environment: "test", seats: 3 },
+    });
+
+    expect(rt.getState(runId)?.run.subject).toEqual({ userId: "user_1", tenantId: "team_1", planId: "pro" });
+    expect(rt.getState(runId)?.run.metadata).toEqual({ environment: "test", seats: 3 });
+  });
+
+  it("persists provider, model, usage, cost, and duration on model trace events", () => {
+    const rt = new WorkbenchRuntime();
+    const wf = {
+      id: "wf",
+      version: 1,
+      steps: [{ id: "a", gatePolicy: "AUTO" as const }],
+      edges: [],
+    };
+    const { runId } = rt.startRun({ workflow: wf });
+    const s = rt.session(runId);
+
+    s.logModelIO({
+      direction: "response",
+      provider: "openai",
+      model: "gpt-example",
+      usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 },
+      cost: { amount: 0.001, currency: "USD" },
+      durationMs: 125,
+      summary: "ok",
+    });
+
+    const event = rt.getState(runId)?.trace.find((e) => e.type === "model_io");
+    expect(event).toMatchObject({
+      provider: "openai",
+      model: "gpt-example",
+      usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 },
+      cost: { amount: 0.001, currency: "USD" },
+      durationMs: 125,
+    });
+  });
+});
+
 describe("WorkbenchRuntime lifecycle", () => {
   const wf = { id: "wf", version: 1, steps: [{ id: "a", gatePolicy: "AUTO" as const }], edges: [] };
 

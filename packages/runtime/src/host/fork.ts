@@ -27,6 +27,8 @@ export function buildForkStartInput(
     initialArtifacts,
     ruleSets: [...parent.ruleSetsById.values()],
     context,
+    subject: parent.run.subject,
+    metadata: parent.run.metadata,
     tags: opts?.tags ?? [...(parent.run.tags ?? []), "fork"],
   };
 }

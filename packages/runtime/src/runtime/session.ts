@@ -2,15 +2,15 @@ import { applyPatch, type Operation } from "fast-json-patch";
 import { WorkbenchError } from "../errors.js";
 import type { ArtifactVersion } from "../protocol/artifacts.js";
 import type { RuleSet } from "../protocol/rules.js";
-import type { TraceEvent } from "../protocol/trace.js";
+import type { ModelCost, ModelUsage, TraceEvent } from "../protocol/trace.js";
 import type { RunBundle } from "../protocol/run.js";
 import { RunBundleSchema } from "../protocol/run.js";
 import { attachRunBundleIntegrity } from "../protocol/bundle.js";
 import type { SchemaRegistry } from "../schema/registry.js";
 import { buildUserExportBundle } from "../export/userBundle.js";
 import { serializeEngineFromState } from "./hydrate.js";
+import { cloneRunStoreState } from "./state.js";
 import type { RunStoreState } from "./types.js";
-import { newId } from "./ids.js";
 
 export type ExportRunBundleOptions = {
   /** `full` includes engine snapshot for faithful rehydration. `user` redacts sensitive fields and strips payloads from trace. */
@@ -24,6 +24,9 @@ export type ExportRunBundleOptions = {
 type CanStart = ReturnType<
   typeof import("./readiness.js").canStartStep
 >;
+
+/** Terminal run states managed by `WorkbenchSession` lifecycle helpers. */
+export type RunTerminalStatus = "completed" | "failed" | "cancelled";
 
 export class WorkbenchSession {
   constructor(
@@ -42,18 +45,74 @@ export class WorkbenchSession {
   }
 
   snapshot(): RunStoreState {
-    // shallow copy maps for safety
-    const s = this.ctx.state;
-    return {
-      ...s,
-      revision: s.revision,
-      artifactsByKey: new Map(s.artifactsByKey),
-      ruleSetsById: new Map(s.ruleSetsById),
-      stepStatus: new Map(s.stepStatus),
-      gateState: new Map(s.gateState),
-      idempotency: new Map(s.idempotency),
-      trace: [...s.trace],
+    return cloneRunStoreState(this.ctx.state);
+  }
+
+  private assertRunActive(action: string): void {
+    const status = this.ctx.state.run.status;
+    if (status !== "running") {
+      throw new WorkbenchError(
+        "INVALID_STATE_TRANSITION",
+        `Cannot ${action}: run ${this.runId} is ${status}`,
+      );
+    }
+  }
+
+  private transitionRun(
+    status: RunTerminalStatus,
+    input?: { reason?: string; error?: { message: string; code?: string } },
+  ): void {
+    this.assertRunActive(`mark run as ${status}`);
+    const runningSteps = [...this.ctx.state.stepStatus.entries()]
+      .filter(([, stepStatus]) => stepStatus === "running")
+      .map(([stepId]) => stepId);
+    if (runningSteps.length) {
+      throw new WorkbenchError(
+        "INVALID_STATE_TRANSITION",
+        `Cannot mark run as ${status}: running steps remain (${runningSteps.join(", ")})`,
+      );
+    }
+
+    const endedAt = this.ctx.nowIso();
+    this.ctx.state.run = {
+      ...this.ctx.state.run,
+      status,
+      endedAt,
     };
+    this.ctx.appendTrace({
+      id: this.ctx.newEventId(),
+      type: "run_status_changed",
+      runId: this.runId,
+      ts: endedAt,
+      status,
+      reason: input?.reason ?? input?.error?.message,
+    });
+    if (input?.error) {
+      this.ctx.appendTrace({
+        id: this.ctx.newEventId(),
+        type: "error",
+        runId: this.runId,
+        ts: endedAt,
+        message: input.error.message,
+        code: input.error.code,
+        fatal: true,
+      });
+    }
+  }
+
+  /** Mark the run completed and stamp `run.endedAt`; rejects while any step is still running. */
+  completeRun(input?: { reason?: string }): void {
+    this.transitionRun("completed", input);
+  }
+
+  /** Mark the run failed, append a fatal error trace event, and stamp `run.endedAt`. */
+  failRun(error: { message: string; code?: string }): void {
+    this.transitionRun("failed", { error });
+  }
+
+  /** Mark the run cancelled and stamp `run.endedAt`; rejects while any step is still running. */
+  cancelRun(input?: { reason?: string }): void {
+    this.transitionRun("cancelled", input);
   }
 
   async exportRunBundle(opts?: ExportRunBundleOptions): Promise<RunBundle> {
@@ -85,6 +144,7 @@ export class WorkbenchSession {
   }
 
   requestGate(input: { stepId: string; gate: "PAUSE_BEFORE" | "PAUSE_AFTER" | "CHECKPOINT"; reason?: string }) {
+    this.assertRunActive("request gate");
     this.ctx.appendTrace({
       id: this.ctx.newEventId(),
       type: "human_gate_requested",
@@ -102,6 +162,7 @@ export class WorkbenchSession {
     decision: "approved" | "rejected" | "edited";
     note?: string;
   }) {
+    this.assertRunActive("resolve gate");
     const gs = this.ctx.state.gateState.get(input.stepId);
     if (!gs) throw new WorkbenchError("UNKNOWN_STEP", `Unknown step: ${input.stepId}`);
 
@@ -126,6 +187,7 @@ export class WorkbenchSession {
   }
 
   resolveCheckpoint(input: { stepId: string; checkpointId: string; decision: "approved" | "rejected" }) {
+    this.assertRunActive("resolve checkpoint");
     const gs = this.ctx.state.gateState.get(input.stepId);
     if (!gs) throw new WorkbenchError("UNKNOWN_STEP", `Unknown step: ${input.stepId}`);
     gs.checkpoints[input.checkpointId] = input.decision === "rejected" ? "pending" : "approved";
@@ -152,6 +214,7 @@ export class WorkbenchSession {
   }
 
   beginStep(stepId: string) {
+    this.assertRunActive("begin step");
     const res = this.ctx.canStartStep(stepId);
     if (!res.ok) return res;
 
@@ -167,6 +230,7 @@ export class WorkbenchSession {
   }
 
   completeStep(stepId: string) {
+    this.assertRunActive("complete step");
     const spec = this.ctx.state.run.workflowSnapshot;
     const step = spec.steps.find((s) => s.id === stepId);
     if (!step) throw new WorkbenchError("UNKNOWN_STEP", `Unknown step: ${stepId}`);
@@ -197,6 +261,7 @@ export class WorkbenchSession {
   }
 
   failStep(stepId: string, error: { message: string; code?: string }) {
+    this.assertRunActive("fail step");
     const st = this.ctx.state.stepStatus.get(stepId);
     if (st === "completed" || st === "failed") {
       throw new WorkbenchError(
@@ -234,6 +299,7 @@ export class WorkbenchSession {
     idempotencyKey?: string;
     pointer?: ArtifactVersion["pointer"];
   }): ArtifactVersion {
+    this.assertRunActive("write artifact");
     if (!input.artifactKey.trim()) {
       throw new WorkbenchError("INVALID_INPUT", "artifactKey must be a non-empty string");
     }
@@ -285,6 +351,7 @@ export class WorkbenchSession {
   }
 
   patchArtifact(input: { artifactKey: string; patch: Operation[]; idempotencyKey?: string }): ArtifactVersion {
+    this.assertRunActive("patch artifact");
     if (!input.artifactKey.trim()) {
       throw new WorkbenchError("INVALID_INPUT", "artifactKey must be a non-empty string");
     }
@@ -347,6 +414,11 @@ export class WorkbenchSession {
   logModelIO(input: {
     stepId?: string;
     direction: "request" | "response" | "stream_chunk";
+    provider?: string;
+    model?: string;
+    usage?: ModelUsage;
+    cost?: ModelCost;
+    durationMs?: number;
     summary?: string;
     payload?: unknown;
     correlationId?: string;
@@ -356,6 +428,7 @@ export class WorkbenchSession {
      */
     detail?: "full" | "summary";
   }) {
+    this.assertRunActive("log model I/O");
     const detail = input.detail ?? "summary";
     const payload = detail === "full" ? input.payload : undefined;
     this.ctx.appendTrace({
@@ -366,12 +439,18 @@ export class WorkbenchSession {
       stepId: input.stepId,
       correlationId: input.correlationId,
       direction: input.direction,
+      provider: input.provider,
+      model: input.model,
+      usage: input.usage,
+      cost: input.cost,
+      durationMs: input.durationMs,
       summary: input.summary,
       payload,
     });
   }
 
   logToolCall(input: { stepId?: string; name: string; args?: unknown; result?: unknown; correlationId?: string }) {
+    this.assertRunActive("log tool call");
     if (!input.name.trim()) {
       throw new WorkbenchError("INVALID_INPUT", "logToolCall requires a non-empty tool name");
     }
@@ -389,6 +468,7 @@ export class WorkbenchSession {
   }
 
   replaceRuleSet(ruleSet: RuleSet) {
+    this.assertRunActive("replace rule set");
     this.ctx.state.ruleSetsById.set(ruleSet.id, ruleSet);
     this.ctx.appendTrace({
       id: this.ctx.newEventId(),
@@ -401,6 +481,7 @@ export class WorkbenchSession {
   }
 
   reorderRules(input: { ruleSetId: string; orderedRuleIds: string[] }) {
+    this.assertRunActive("reorder rules");
     const rs = this.ctx.state.ruleSetsById.get(input.ruleSetId);
     if (!rs) throw new WorkbenchError("UNKNOWN_RULESET", `Unknown ruleSet: ${input.ruleSetId}`);
     if (input.orderedRuleIds.length !== rs.rules.length) {
@@ -423,6 +504,7 @@ export class WorkbenchSession {
   }
 
   annotate(input: { text: string; tags?: string[] }) {
+    this.assertRunActive("annotate run");
     this.ctx.appendTrace({
       id: this.ctx.newEventId(),
       type: "annotation",
@@ -434,6 +516,7 @@ export class WorkbenchSession {
   }
 
   forkNotice(parentRunId: string, forkedFromStepId?: string) {
+    this.assertRunActive("record fork notice");
     this.ctx.appendTrace({
       id: this.ctx.newEventId(),
       type: "run_forked",

@@ -13,6 +13,7 @@ import { initialGateState } from "./gates.js";
 import { runStoreStateFromBundle } from "./hydrate.js";
 import { newId } from "./ids.js";
 import { canStartStep } from "./readiness.js";
+import { assertRunStoreStateStructuralInvariants, cloneRunStoreState } from "./state.js";
 import type { Listener, RunStoreState, StartRunInput } from "./types.js";
 import { WorkbenchSession } from "./session.js";
 
@@ -117,6 +118,8 @@ export class WorkbenchRuntime {
       startedAt,
       status: "running" as const,
       context: input.context,
+      subject: input.subject,
+      metadata: input.metadata,
       tags: input.tags,
     };
 
@@ -200,7 +203,8 @@ export class WorkbenchRuntime {
   }
 
   importState(state: RunStoreState) {
-    this.runs.set(state.run.id, state);
+    assertRunStoreStateStructuralInvariants(state);
+    this.runs.set(state.run.id, cloneRunStoreState(state));
   }
 
   /** Returns true if the run was present and removed. */

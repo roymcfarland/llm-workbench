@@ -4,6 +4,7 @@ import {
   type RuleSet,
   type RunRepository,
   type SchemaRegistry,
+  type TraceEvent,
   WorkbenchError,
   type WorkbenchRuntime,
 } from "@llm-workbench/runtime";
@@ -34,24 +35,26 @@ function useRunRevision(runtime: WorkbenchRuntime, runId: string | null) {
   );
 }
 
-function summarizeEvent(e: { type: string } & Record<string, unknown>): string {
+function summarizeEvent(e: TraceEvent): string {
   switch (e.type) {
     case "step_started":
-      return `step_started: ${String(e.stepId ?? "")}`;
+      return `step_started: ${e.stepId}`;
     case "step_completed":
-      return `step_completed: ${String(e.stepId ?? "")} ok=${String((e as { ok?: boolean }).ok ?? "")}`;
+      return `step_completed: ${e.stepId} ok=${String(e.ok)}`;
     case "artifact_written":
-      return `artifact_written: ${String((e as { artifact?: { artifactKey?: string } }).artifact?.artifactKey ?? "")}`;
+      return `artifact_written: ${e.artifact.artifactKey}`;
     case "artifact_patch":
-      return `artifact_patch: ${String(e.artifactKey ?? "")}`;
+      return `artifact_patch: ${e.artifactKey}`;
     case "model_io":
-      return `model_io: ${String((e as { direction?: string }).direction ?? "")}`;
+      return `model_io: ${e.direction} ${e.model ?? ""}`.trim();
     case "human_gate_requested":
-      return `gate_requested: ${String(e.stepId ?? "")} ${String((e as { gate?: string }).gate ?? "")}`;
+      return `gate_requested: ${e.stepId} ${e.gate}`;
     case "human_gate_resolved":
-      return `gate_resolved: ${String(e.stepId ?? "")} ${String((e as { decision?: string }).decision ?? "")}`;
+      return `gate_resolved: ${e.stepId} ${e.decision}`;
     case "rule_changed":
-      return `rule_changed: ${String((e as { ruleSetId?: string }).ruleSetId ?? "")}`;
+      return `rule_changed: ${e.ruleSetId}`;
+    case "run_status_changed":
+      return `run_status_changed: ${e.status}`;
     default:
       return e.type;
   }
@@ -392,7 +395,7 @@ export function WorkbenchShell(props: WorkbenchShellProps) {
                     <span>{e.ts}</span>
                     <span className="wb__pill">{e.type}</span>
                   </div>
-                  <div style={{ marginTop: 6, fontSize: 12 }}>{summarizeEvent(e as never)}</div>
+                  <div style={{ marginTop: 6, fontSize: 12 }}>{summarizeEvent(e)}</div>
                 </div>
               ))}
             </div>

@@ -27,6 +27,11 @@ run-bundle import/export support audits, reproducibility, and reuse.
 - **Run bundles with integrity.** Every export is SHA-256 hashed; every
   import verifies the hash by default. Two profiles: `full` for
   engineering replay, `user` for redacted, shareable bundles.
+- **Telemetry-ready traces.** Model I/O events can carry provider,
+  model, token usage, cost, and duration metadata. Runs can also carry a
+  host-provided `subject` (`userId`, `tenantId`, `accountId`, `planId`)
+  and JSON metadata, so host apps can later add quotas, tiered access, or
+  per-user billing without changing the protocol shape.
 - **Pluggable persistence.** Memory, IndexedDB, or HTTP, behind a single
   `RunRepository` interface. The HTTP adapter supports timeouts, retries,
   and abort signals.

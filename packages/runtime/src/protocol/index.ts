@@ -6,4 +6,5 @@ export * from "./rules.js";
 export * from "./artifacts.js";
 export * from "./trace.js";
 export * from "./run.js";
+export * from "./runValidate.js";
 export * from "./bundle.js";

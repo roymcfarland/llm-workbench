@@ -1,16 +1,18 @@
 import type { RunRepository, SavedRunMeta } from "./types.js";
 import type { RunStoreState } from "../runtime/types.js";
+import { assertRunStoreStateStructuralInvariants, cloneRunStoreState } from "../runtime/state.js";
 
 export class MemoryRunRepository implements RunRepository {
   private store = new Map<string, RunStoreState>();
 
   async save(state: RunStoreState): Promise<void> {
-    this.store.set(state.run.id, cloneState(state));
+    assertRunStoreStateStructuralInvariants(state);
+    this.store.set(state.run.id, cloneRunStoreState(state));
   }
 
   async load(runId: string): Promise<RunStoreState | null> {
     const s = this.store.get(runId);
-    return s ? cloneState(s) : null;
+    return s ? cloneRunStoreState(s) : null;
   }
 
   async list(opts?: { limit?: number }): Promise<SavedRunMeta[]> {
@@ -34,18 +36,5 @@ function metaFromState(s: RunStoreState): SavedRunMeta {
     endedAt: s.run.endedAt,
     status: s.run.status,
     tags: s.run.tags,
-  };
-}
-
-function cloneState(s: RunStoreState): RunStoreState {
-  return {
-    ...s,
-    revision: s.revision,
-    trace: [...s.trace],
-    artifactsByKey: new Map(s.artifactsByKey),
-    ruleSetsById: new Map(s.ruleSetsById),
-    stepStatus: new Map(s.stepStatus),
-    gateState: new Map(s.gateState),
-    idempotency: new Map(s.idempotency),
   };
 }

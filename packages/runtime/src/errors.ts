@@ -3,6 +3,7 @@ import type { ZodError } from "zod";
 export type WorkbenchErrorCode =
   | "INVALID_JSON"
   | "INVALID_RUN_BUNDLE"
+  | "INVALID_RUN_STATE"
   | "INTEGRITY_MISMATCH"
   | "MISSING_INTEGRITY"
   | "UNKNOWN_RUN"

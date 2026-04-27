@@ -6,6 +6,19 @@ import { TraceEventSchema } from "./trace.js";
 import { RunBundleEngineSchema } from "./engine.js";
 import { WORKBENCH_PROTOCOL_VERSION } from "./version.js";
 
+export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+
+export const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
+  z.union([
+    z.null(),
+    z.boolean(),
+    z.number(),
+    z.string(),
+    z.array(JsonValueSchema),
+    z.record(JsonValueSchema),
+  ]),
+);
+
 export const RunContextRefSchema = z.object({
   parentRunId: z.string().min(1),
   forkedFromStepId: z.string().optional(),
@@ -22,6 +35,17 @@ export const RunContextRefSchema = z.object({
 
 export type RunContextRef = z.infer<typeof RunContextRefSchema>;
 
+export const RunSubjectRefSchema = z
+  .object({
+    userId: z.string().min(1).optional(),
+    tenantId: z.string().min(1).optional(),
+    accountId: z.string().min(1).optional(),
+    planId: z.string().min(1).optional(),
+  })
+  .strict();
+
+export type RunSubjectRef = z.infer<typeof RunSubjectRefSchema>;
+
 export const RunInstanceSchema = z.object({
   id: z.string().min(1),
   workflowId: z.string().min(1),
@@ -32,6 +56,10 @@ export const RunInstanceSchema = z.object({
   endedAt: z.string().datetime({ offset: true }).optional(),
   status: z.enum(["running", "completed", "failed", "cancelled"]),
   context: RunContextRefSchema.optional(),
+  /** Host-provided subject/account attribution for telemetry, quotas, and billing. */
+  subject: RunSubjectRefSchema.optional(),
+  /** JSON-only host metadata kept with the run snapshot. Avoid secrets. */
+  metadata: z.record(JsonValueSchema).optional(),
   /** Tags for organizing learning iterations */
   tags: z.array(z.string()).optional(),
   annotations: z

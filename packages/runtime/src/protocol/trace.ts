@@ -10,6 +10,27 @@ const BaseTrace = z.object({
   correlationId: z.string().optional(),
 });
 
+export const ModelUsageSchema = z
+  .object({
+    inputTokens: z.number().int().nonnegative().optional(),
+    outputTokens: z.number().int().nonnegative().optional(),
+    totalTokens: z.number().int().nonnegative().optional(),
+    cachedInputTokens: z.number().int().nonnegative().optional(),
+    reasoningTokens: z.number().int().nonnegative().optional(),
+  })
+  .strict();
+
+export type ModelUsage = z.infer<typeof ModelUsageSchema>;
+
+export const ModelCostSchema = z
+  .object({
+    amount: z.number().nonnegative(),
+    currency: z.string().min(1),
+  })
+  .strict();
+
+export type ModelCost = z.infer<typeof ModelCostSchema>;
+
 export const TraceEventSchema = z.discriminatedUnion("type", [
   BaseTrace.extend({
     type: z.literal("step_started"),
@@ -39,6 +60,11 @@ export const TraceEventSchema = z.discriminatedUnion("type", [
   BaseTrace.extend({
     type: z.literal("model_io"),
     direction: z.enum(["request", "response", "stream_chunk"]),
+    provider: z.string().min(1).optional(),
+    model: z.string().min(1).optional(),
+    usage: ModelUsageSchema.optional(),
+    cost: ModelCostSchema.optional(),
+    durationMs: z.number().nonnegative().optional(),
     summary: z.string().optional(),
     /** Redacted or truncated payload */
     payload: z.unknown().optional(),
@@ -87,6 +113,11 @@ export const TraceEventSchema = z.discriminatedUnion("type", [
     type: z.literal("annotation"),
     text: z.string(),
     tags: z.array(z.string()).optional(),
+  }),
+  BaseTrace.extend({
+    type: z.literal("run_status_changed"),
+    status: z.enum(["running", "completed", "failed", "cancelled"]),
+    reason: z.string().optional(),
   }),
 ]);
 

@@ -1,6 +1,7 @@
 import { WorkbenchError } from "../errors.js";
 import type { RunRepository, SavedRunMeta } from "./types.js";
 import type { RunStoreState } from "../runtime/types.js";
+import { assertRunStoreStateStructuralInvariants } from "../runtime/state.js";
 
 const DB_NAME = "llm-workbench";
 const STORE = "runs";
@@ -63,6 +64,8 @@ export class IndexedDbRunRepository implements RunRepository {
   }
 
   async save(state: RunStoreState): Promise<void> {
+    getIndexedDb();
+    assertRunStoreStateStructuralInvariants(state);
     await withDb(async (db) => {
       const tx = db.transaction(STORE, "readwrite");
       tx.objectStore(STORE).put(serializeState(state));
@@ -148,7 +151,7 @@ function serializeState(s: RunStoreState): SerializedRun {
 }
 
 function deserializeState(row: SerializedRun): RunStoreState {
-  return {
+  const state: RunStoreState = {
     revision: row.revision ?? 0,
     run: row.run,
     trace: Array.isArray(row.trace) ? row.trace : [],
@@ -158,4 +161,6 @@ function deserializeState(row: SerializedRun): RunStoreState {
     gateState: new Map(row.gateState),
     idempotency: new Map(row.idempotency),
   };
+  assertRunStoreStateStructuralInvariants(state);
+  return state;
 }

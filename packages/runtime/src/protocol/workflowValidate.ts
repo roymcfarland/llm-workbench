@@ -32,4 +32,35 @@ export function assertWorkflowStructuralInvariants(spec: WorkflowSpec): void {
     }
     edgeIds.add(e.id);
   }
+
+  const inDegree = new Map<string, number>();
+  const successors = new Map<string, string[]>();
+  for (const id of stepIds) {
+    inDegree.set(id, 0);
+    successors.set(id, []);
+  }
+  for (const e of spec.edges) {
+    inDegree.set(e.to, (inDegree.get(e.to) ?? 0) + 1);
+    successors.get(e.from)?.push(e.to);
+  }
+
+  const ready = [...inDegree.entries()].filter(([, count]) => count === 0).map(([id]) => id);
+  let visited = 0;
+  for (let i = 0; i < ready.length; i += 1) {
+    const id = ready[i]!;
+    visited += 1;
+    for (const next of successors.get(id) ?? []) {
+      const count = (inDegree.get(next) ?? 0) - 1;
+      inDegree.set(next, count);
+      if (count === 0) ready.push(next);
+    }
+  }
+
+  if (visited !== stepIds.size) {
+    const cyclic = [...inDegree.entries()]
+      .filter(([, count]) => count > 0)
+      .map(([id]) => id)
+      .sort();
+    throw new WorkbenchError("INVALID_WORKFLOW", `Workflow graph contains a cycle involving: ${cyclic.join(", ")}`);
+  }
 }

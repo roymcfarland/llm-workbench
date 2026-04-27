@@ -18,6 +18,16 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Runtime.** `WorkbenchRuntime.startRun` rejects duplicate run ids if
   the runtime ever ends up handing one out twice (extremely unlikely,
   but cheap to guard).
+- **Runtime invariants.** Workflows now reject cyclic DAGs, imported run
+  bundles are checked for structural mismatches beyond JSON-schema shape,
+  and imported/persisted run state is validated before use.
+- **Runtime lifecycle.** `WorkbenchSession` can now mark runs completed,
+  failed, or cancelled with `endedAt` and a trace event, and terminal
+  runs reject later mutations.
+- **Telemetry.** Runs now support structured `subject` attribution and
+  JSON metadata, while `model_io` trace events accept provider, model,
+  token usage, cost, and duration metadata for future quota and billing
+  analysis.
 - **HttpRunRepository.** Now supports `signal` (AbortSignal),
   `timeoutMs`, and configurable `retry` (max attempts, base delay) for
   network errors and 5xx responses. `load()` validates the response shape

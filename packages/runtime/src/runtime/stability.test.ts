@@ -1,7 +1,7 @@
 import type { Operation } from "fast-json-patch";
 import { describe, expect, it, vi } from "vitest";
 import { WorkbenchError } from "../errors.js";
-import { parseRunBundleJson, serializeRunBundle } from "../protocol/bundle.js";
+import { attachRunBundleIntegrity, parseRunBundleJson, serializeRunBundle } from "../protocol/bundle.js";
 import { assertWorkflowStructuralInvariants } from "../protocol/workflowValidate.js";
 import { HttpRunRepository } from "../persistence/http.js";
 import { WorkbenchRuntime } from "./workbench.js";
@@ -69,6 +69,25 @@ describe("assertWorkflowStructuralInvariants", () => {
       }),
     ).toThrow(WorkbenchError);
   });
+
+  it("rejects cyclic workflow graphs", () => {
+    expect(() =>
+      assertWorkflowStructuralInvariants({
+        id: "w",
+        version: 1,
+        steps: [
+          { id: "a", gatePolicy: "AUTO" },
+          { id: "b", gatePolicy: "AUTO" },
+          { id: "c", gatePolicy: "AUTO" },
+        ],
+        edges: [
+          { id: "e1", from: "a", to: "b" },
+          { id: "e2", from: "b", to: "c" },
+          { id: "e3", from: "c", to: "a" },
+        ],
+      }),
+    ).toThrow(WorkbenchError);
+  });
 });
 
 describe("WorkbenchRuntime.importRunBundle", () => {
@@ -105,6 +124,23 @@ describe("WorkbenchRuntime.importRunBundle", () => {
     const rt2 = new WorkbenchRuntime();
     const { runId: id2 } = await rt2.importRunBundle({ json, verifyIntegrity: false });
     expect(id2).toBe(bundle.run.id);
+  });
+
+  it("rejects structurally invalid bundles after integrity verification", async () => {
+    const rt = new WorkbenchRuntime();
+    const wf = { id: "wf", version: 1, steps: [{ id: "a", gatePolicy: "AUTO" as const }], edges: [] };
+    const { runId } = rt.startRun({ workflow: wf });
+    const bundle = await rt.session(runId).exportRunBundle({ profile: "full" });
+    const invalid = structuredClone(bundle);
+    invalid.trace.push({
+      id: "evt_bad",
+      type: "step_started",
+      runId: invalid.run.id,
+      ts: new Date().toISOString(),
+      stepId: "missing",
+    });
+    const reSigned = await attachRunBundleIntegrity(invalid);
+    await expect(rt.importRunBundle({ bundle: reSigned })).rejects.toMatchObject({ code: "INVALID_RUN_BUNDLE" });
   });
 });
 
@@ -152,6 +188,17 @@ describe("WorkbenchSession invariants", () => {
     const s = rt.session(runId);
     expect(() => s.reorderRules({ ruleSetId: "rs", orderedRuleIds: [] })).toThrow(WorkbenchError);
     expect(() => s.reorderRules({ ruleSetId: "rs", orderedRuleIds: ["a", "a"] })).toThrow(WorkbenchError);
+  });
+
+  it("terminal run statuses block later mutations", () => {
+    const rt = new WorkbenchRuntime();
+    const wf = { id: "wf", version: 1, steps: [{ id: "a", gatePolicy: "AUTO" as const }], edges: [] };
+    const { runId } = rt.startRun({ workflow: wf });
+    const s = rt.session(runId);
+    s.completeRun();
+    expect(rt.getState(runId)?.run.status).toBe("completed");
+    expect(rt.getState(runId)?.run.endedAt).toBeTruthy();
+    expect(() => s.writeArtifact({ artifactKey: "x", typeId: "t", data: {} })).toThrow(WorkbenchError);
   });
 });
 
@@ -253,7 +300,7 @@ describe("HttpRunRepository", () => {
         artifactsByKey: new Map(),
         ruleSetsById: new Map(),
         stepStatus: new Map([["a", "pending"]]),
-        gateState: new Map(),
+        gateState: new Map([["a", { before: "approved", after: "approved", checkpoints: {} }]]),
         idempotency: new Map(),
       }),
     ).rejects.toMatchObject({ code: "HTTP_ERROR" });

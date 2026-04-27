@@ -5,6 +5,7 @@ import type { WorkflowSpec } from "../protocol/workflow.js";
 import type { ArtifactVersion } from "../protocol/artifacts.js";
 import type { RuleSet } from "../protocol/rules.js";
 import type { RunInstance } from "../protocol/run.js";
+import { assertRunBundleStructuralInvariants } from "../protocol/runValidate.js";
 import { initialGateState } from "./gates.js";
 import type { RunStoreState, StepRuntimeStatus } from "./types.js";
 import type { StepGateState } from "./gates.js";
@@ -101,6 +102,7 @@ function latestRuleSets(ruleSets: RuleSet[]): Map<string, RuleSet> {
 }
 
 export function runStoreStateFromBundle(bundle: RunBundle): RunStoreState {
+  assertRunBundleStructuralInvariants(bundle);
   const run: RunInstance = bundle.run;
   const workflow = run.workflowSnapshot;
   const engine = bundle.engine ?? inferEngineFromTrace(workflow, bundle.trace);

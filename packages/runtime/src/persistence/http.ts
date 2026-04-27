@@ -1,6 +1,7 @@
 import { WorkbenchError } from "../errors.js";
 import type { RunRepository, SavedRunMeta } from "./types.js";
 import type { RunStoreState } from "../runtime/types.js";
+import { assertRunStoreStateStructuralInvariants } from "../runtime/state.js";
 
 export type HttpRetryOptions = {
   /** Maximum total attempts including the first try. Default: 3. Set to 1 to disable retries. */
@@ -162,6 +163,7 @@ export class HttpRunRepository implements RunRepository {
     if (!state?.run?.id) {
       throw new WorkbenchError("INVALID_INPUT", "HttpRunRepository.save requires state.run.id");
     }
+    assertRunStoreStateStructuralInvariants(state);
     const url = this.url(`/runs/${encodeURIComponent(state.run.id)}`);
     const res = await this.request(
       url,
@@ -293,7 +295,7 @@ function deserializeState(json: unknown): RunStoreState {
     throw new WorkbenchError("HTTP_INVALID_JSON", "HttpRunRepository: response is not a serialized run");
   }
   const row = json as SerializedRun;
-  return {
+  const state: RunStoreState = {
     revision: row.revision ?? 0,
     run: row.run,
     trace: Array.isArray(row.trace) ? row.trace : [],
@@ -303,6 +305,8 @@ function deserializeState(json: unknown): RunStoreState {
     gateState: new Map(asEntries(row.gateState)) as RunStoreState["gateState"],
     idempotency: new Map(asEntries(row.idempotency)) as RunStoreState["idempotency"],
   };
+  assertRunStoreStateStructuralInvariants(state);
+  return state;
 }
 
 function asEntries<T>(v: unknown): Array<[string, T]> {
