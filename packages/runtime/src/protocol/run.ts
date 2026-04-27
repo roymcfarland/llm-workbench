@@ -19,21 +19,75 @@ export const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
   ]),
 );
 
-export const RunContextRefSchema = z.object({
-  parentRunId: z.string().min(1),
-  forkedFromStepId: z.string().optional(),
-  /** Pinned artifact versions treated as read-only context */
-  pinnedArtifacts: z
-    .array(
-      z.object({
-        artifactKey: z.string(),
-        version: z.number().int().positive(),
-      }),
-    )
-    .optional(),
-});
+/**
+ * Parent linkage for a run that is descended from one or more other runs.
+ *
+ * - **Single parent (fork):** set `parentRunId` (legacy, still supported and
+ *   still written by `buildForkStartInput`).
+ * - **Multi-parent (agent-of-agents / supervision):** set `parentRunIds` to a
+ *   non-empty array. When both are set, `parentRunIds[0]` MUST equal
+ *   `parentRunId`. New code should prefer `parentRunIds`; reading code should
+ *   prefer the helper {@link getParentRunIds}.
+ *
+ * Adding `parentRunIds` as plural is the schema's escape hatch for
+ * supervisor → child / coordinator → workers patterns where a child may have
+ * multiple supervising parents (e.g. a research agent invoked by both a
+ * planner run and a tool-call run that share state). The single
+ * `parentRunId` form remains the canonical shape for explicit human forks.
+ */
+export const RunContextRefSchema = z
+  .object({
+    /**
+     * @deprecated Prefer `parentRunIds`. Kept for back-compat and for the
+     *   common "fork from a single parent" case. When `parentRunIds` is set,
+     *   this MUST equal `parentRunIds[0]`.
+     */
+    parentRunId: z.string().min(1).optional(),
+    parentRunIds: z.array(z.string().min(1)).min(1).optional(),
+    forkedFromStepId: z.string().optional(),
+    /** Pinned artifact versions treated as read-only context */
+    pinnedArtifacts: z
+      .array(
+        z.object({
+          artifactKey: z.string(),
+          version: z.number().int().positive(),
+        }),
+      )
+      .optional(),
+  })
+  .superRefine((ctx, issue) => {
+    const hasSingular = typeof ctx.parentRunId === "string";
+    const hasPlural = Array.isArray(ctx.parentRunIds) && ctx.parentRunIds.length > 0;
+    if (!hasSingular && !hasPlural) {
+      issue.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "RunContextRef requires parentRunId or non-empty parentRunIds",
+        path: ["parentRunId"],
+      });
+      return;
+    }
+    if (hasSingular && hasPlural && ctx.parentRunIds![0] !== ctx.parentRunId) {
+      issue.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "RunContextRef.parentRunIds[0] must equal parentRunId when both are set",
+        path: ["parentRunIds", 0],
+      });
+    }
+  });
 
 export type RunContextRef = z.infer<typeof RunContextRefSchema>;
+
+/**
+ * Normalize {@link RunContextRef} parent linkage into an ordered array of
+ * parent run ids. Always returns at least one entry for any value that has
+ * passed schema validation.
+ */
+export function getParentRunIds(ctx: RunContextRef): string[] {
+  if (ctx.parentRunIds && ctx.parentRunIds.length > 0) return [...ctx.parentRunIds];
+  if (ctx.parentRunId) return [ctx.parentRunId];
+  return [];
+}
 
 export const RunSubjectRefSchema = z
   .object({

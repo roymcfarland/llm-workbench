@@ -2,6 +2,23 @@ import { z } from "zod";
 import { ArtifactVersionSchema } from "./artifacts.js";
 import { RuleSetSchema } from "./rules.js";
 
+/**
+ * Minimal RFC 6902 (JSON Patch) operation schema. We validate shape, not
+ * pointer-target reachability — that is the runtime's job at apply time. The
+ * Zod refinement guarantees the discriminator field set matches the spec so
+ * imported bundles cannot smuggle unparseable patches into the trace.
+ */
+export const JsonPatchOpSchema = z.discriminatedUnion("op", [
+  z.object({ op: z.literal("add"), path: z.string(), value: z.unknown() }).strict(),
+  z.object({ op: z.literal("remove"), path: z.string() }).strict(),
+  z.object({ op: z.literal("replace"), path: z.string(), value: z.unknown() }).strict(),
+  z.object({ op: z.literal("move"), path: z.string(), from: z.string() }).strict(),
+  z.object({ op: z.literal("copy"), path: z.string(), from: z.string() }).strict(),
+  z.object({ op: z.literal("test"), path: z.string(), value: z.unknown() }).strict(),
+]);
+
+export type JsonPatchOp = z.infer<typeof JsonPatchOpSchema>;
+
 const BaseTrace = z.object({
   id: z.string().min(1),
   runId: z.string().min(1),
@@ -22,6 +39,21 @@ export const ModelUsageSchema = z
 
 export type ModelUsage = z.infer<typeof ModelUsageSchema>;
 
+/**
+ * Per-call cost reported by an LLM gateway/provider.
+ *
+ * NOTE on precision: `amount` is a JavaScript `number`. This is fine for
+ * surfacing per-call cost in UI, exporting as approximate totals, and for any
+ * "is this run within budget?" check. **It is not suitable as a billing
+ * ledger.** If you need cent-accurate billing, pull the cost from your
+ * gateway's invoice / usage API server-side (or store amounts as integer
+ * micro-cents) — do not roll up `model_io.cost.amount` from traces for
+ * accounting purposes.
+ *
+ * Currency should normally be an ISO 4217 code; the schema only enforces
+ * non-empty so that gateways with custom denominations (e.g. provider tokens)
+ * can still surface cost.
+ */
 export const ModelCostSchema = z
   .object({
     amount: z.number().nonnegative(),
@@ -54,7 +86,7 @@ export const TraceEventSchema = z.discriminatedUnion("type", [
     artifactKey: z.string().min(1),
     fromVersion: z.number().int().positive(),
     toVersion: z.number().int().positive(),
-    patch: z.array(z.unknown()),
+    patch: z.array(JsonPatchOpSchema),
     idempotencyKey: z.string().optional(),
   }),
   BaseTrace.extend({
@@ -106,7 +138,18 @@ export const TraceEventSchema = z.discriminatedUnion("type", [
   }),
   BaseTrace.extend({
     type: z.literal("run_forked"),
+    /**
+     * The single parent run id this run forked from. Present for legacy
+     * forks. When the child has multiple supervising parents, also set
+     * `parentRunIds` and ensure `parentRunIds[0] === parentRunId`.
+     */
     parentRunId: z.string().min(1),
+    /**
+     * Optional plural list of parent run ids for agent-of-agents /
+     * multi-supervisor scenarios. When set, MUST be non-empty and
+     * `parentRunIds[0]` MUST equal `parentRunId`.
+     */
+    parentRunIds: z.array(z.string().min(1)).min(1).optional(),
     forkedFromStepId: z.string().optional(),
   }),
   BaseTrace.extend({
@@ -118,6 +161,29 @@ export const TraceEventSchema = z.discriminatedUnion("type", [
     type: z.literal("run_status_changed"),
     status: z.enum(["running", "completed", "failed", "cancelled"]),
     reason: z.string().optional(),
+  }),
+  /**
+   * Hierarchical span — opens a unit of work that can contain other span and
+   * non-span events. Modeled after OpenTelemetry GenAI semantic conventions.
+   * Convert to/from OTel via {@link traceEventsToOtelSpans}.
+   */
+  BaseTrace.extend({
+    type: z.literal("span_started"),
+    spanId: z.string().min(1),
+    parentSpanId: z.string().min(1).optional(),
+    name: z.string().min(1),
+    kind: z.enum(["internal", "client", "server", "producer", "consumer"]).optional(),
+    attributes: z.record(z.string(), z.unknown()).optional(),
+  }),
+  BaseTrace.extend({
+    type: z.literal("span_ended"),
+    spanId: z.string().min(1),
+    status: z.enum(["ok", "error"]).optional(),
+    durationMs: z.number().nonnegative().optional(),
+    attributes: z.record(z.string(), z.unknown()).optional(),
+    error: z
+      .object({ message: z.string(), code: z.string().optional() })
+      .optional(),
   }),
 ]);
 

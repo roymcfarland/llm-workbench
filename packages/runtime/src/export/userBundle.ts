@@ -27,9 +27,18 @@ function redactTraceEvent(registry: SchemaRegistry, e: TraceEvent): TraceEvent {
 
 /**
  * Produces a shareable bundle: strips engine/idempotency fidelity, removes sensitive payloads from trace,
- * and applies per-artifact JSON Pointer redactions registered on `SchemaRegistry`.
+ * applies per-artifact JSON Pointer redactions registered on `SchemaRegistry`,
+ * and drops `run.metadata` by default (the host can opt in via `keepMetadata: true`).
+ *
+ * `run.metadata` is host-controlled JSON. It is not covered by Ajv schemas or
+ * `exportRedactPaths`, so we err on the side of dropping it from user-facing
+ * exports to avoid leaking debugging hints, internal ids, or feature flags.
  */
-export function buildUserExportBundle(bundle: RunBundle, registry: SchemaRegistry): RunBundle {
+export function buildUserExportBundle(
+  bundle: RunBundle,
+  registry: SchemaRegistry,
+  options?: { keepMetadata?: boolean },
+): RunBundle {
   const artifacts = bundle.artifacts.map((a) => {
     const paths = registry.getExportRedactPaths(a.typeId);
     if (!paths.length || a.data === undefined) return a;
@@ -38,9 +47,16 @@ export function buildUserExportBundle(bundle: RunBundle, registry: SchemaRegistr
 
   const trace = bundle.trace.map((e) => redactTraceEvent(registry, e));
 
+  const run = options?.keepMetadata
+    ? bundle.run
+    : (() => {
+        const { metadata: _drop, ...rest } = bundle.run;
+        return rest;
+      })();
+
   const next: RunBundle = {
     protocolVersion: bundle.protocolVersion,
-    run: bundle.run,
+    run,
     trace,
     artifacts,
     ruleSets: bundle.ruleSets,

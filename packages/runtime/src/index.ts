@@ -7,6 +7,10 @@ export * from "./runtime/hydrate.js";
 export * from "./runtime/readiness.js";
 export * from "./runtime/graph.js";
 export * from "./runtime/types.js";
+export {
+  assertRunStoreStateStructuralInvariants,
+  cloneRunStoreState,
+} from "./runtime/state.js";
 export * from "./schema/index.js";
 export * from "./persistence/index.js";
 export * from "./host/index.js";

@@ -2,7 +2,7 @@ import { WorkbenchError, formatZodError } from "../errors.js";
 import type { ArtifactVersion } from "../protocol/artifacts.js";
 import { parseRunBundleJson, verifyRunBundleIntegrity } from "../protocol/bundle.js";
 import type { RunBundle, RunContextRef } from "../protocol/run.js";
-import { RunBundleSchema } from "../protocol/run.js";
+import { RunBundleSchema, getParentRunIds } from "../protocol/run.js";
 import { parseWorkflowSpec } from "../protocol/workflow.js";
 import { assertWorkflowStructuralInvariants } from "../protocol/workflowValidate.js";
 import { ZodError } from "zod";
@@ -17,6 +17,10 @@ import { canStartStep } from "./readiness.js";
 import { assertRunStoreStateStructuralInvariants, cloneRunStoreState } from "./state.js";
 import type { Listener, RunStoreState, StartRunInput } from "./types.js";
 import { WorkbenchSession } from "./session.js";
+import {
+  DEFAULT_ARTIFACT_EXTERNALIZATION_THRESHOLD_BYTES,
+  type ArtifactStore,
+} from "../persistence/artifactStore.js";
 
 export type TraceListenerErrorContext = {
   runId: string;
@@ -28,6 +32,19 @@ export type TraceListenerErrorHandler = (error: unknown, ctx: TraceListenerError
 
 export type WorkbenchRuntimeOptions = {
   onTraceListenerError?: TraceListenerErrorHandler;
+  /**
+   * Optional external byte store for large artifact payloads. When set,
+   * `WorkbenchSession.writeArtifactAsync` will externalize payloads whose
+   * encoded byte length is `>= artifactExternalizationThresholdBytes`.
+   * When omitted, every payload stays inline regardless of size.
+   */
+  artifactStore?: ArtifactStore;
+  /**
+   * Threshold in bytes for externalizing artifact payloads via
+   * `artifactStore`. Defaults to {@link DEFAULT_ARTIFACT_EXTERNALIZATION_THRESHOLD_BYTES}.
+   * Has no effect unless `artifactStore` is also configured.
+   */
+  artifactExternalizationThresholdBytes?: number;
 };
 
 function nowIso(): string {
@@ -38,9 +55,15 @@ export class WorkbenchRuntime {
   private runs = new Map<string, RunStoreState>();
   private listeners = new Map<string, Set<Listener>>();
   private onTraceListenerError?: TraceListenerErrorHandler;
+  private artifactStore?: ArtifactStore;
+  private artifactExternalizationThresholdBytes: number;
 
   constructor(options?: WorkbenchRuntimeOptions) {
     this.onTraceListenerError = options?.onTraceListenerError;
+    this.artifactStore = options?.artifactStore;
+    this.artifactExternalizationThresholdBytes =
+      options?.artifactExternalizationThresholdBytes ??
+      DEFAULT_ARTIFACT_EXTERNALIZATION_THRESHOLD_BYTES;
   }
 
   /**
@@ -209,6 +232,8 @@ export class WorkbenchRuntime {
           stepStatus: state.stepStatus,
           gateState: state.gateState,
         }),
+      artifactStore: this.artifactStore,
+      artifactExternalizationThresholdBytes: this.artifactExternalizationThresholdBytes,
     });
   }
 
@@ -227,6 +252,64 @@ export class WorkbenchRuntime {
   /** Stable iterator over run ids currently held by this runtime. */
   listRuns(): string[] {
     return [...this.runs.keys()];
+  }
+
+  /**
+   * Returns ids of runs in this runtime whose `RunContextRef` records the
+   * given run as a parent (singular `parentRunId` or any entry in plural
+   * `parentRunIds`). Useful for agent-of-agents cancellation, debugging
+   * supervisor trees, and rendering child-of relationships in UIs.
+   *
+   * Iteration order is insertion order (the same order as
+   * {@link listRuns}), making the result stable for a given runtime state.
+   */
+  runChildrenOf(parentRunId: string): string[] {
+    const out: string[] = [];
+    for (const [id, state] of this.runs) {
+      if (id === parentRunId) continue;
+      const ctx = state.run.context;
+      if (!ctx) continue;
+      const parents = getParentRunIds(ctx);
+      if (parents.includes(parentRunId)) out.push(id);
+    }
+    return out;
+  }
+
+  /**
+   * Cancel a run and, transitively, every descendant run held by this
+   * runtime. Each cancellation goes through {@link WorkbenchSession.cancelRun}
+   * so the standard `run_status_changed` trace event is emitted on every
+   * run. Already-terminal runs (`completed`, `failed`, `cancelled`) are
+   * skipped.
+   *
+   * Returns the ids that were actually transitioned to `cancelled`, in the
+   * order they were processed (root first, then breadth-first descendants).
+   */
+  cancelRunCascade(rootRunId: string, opts?: { reason?: string }): string[] {
+    const visited = new Set<string>();
+    const cancelled: string[] = [];
+    const queue: string[] = [rootRunId];
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      const state = this.runs.get(id);
+      if (!state) continue;
+      if (state.run.status === "running") {
+        try {
+          this.session(id).cancelRun(opts);
+          cancelled.push(id);
+        } catch {
+          // If a session refuses to cancel (e.g. a step is still running),
+          // we propagate the cascade to the rest of the tree but skip this
+          // node. The host can retry per-node cancellation if needed.
+        }
+      }
+      for (const childId of this.runChildrenOf(id)) {
+        if (!visited.has(childId)) queue.push(childId);
+      }
+    }
+    return cancelled;
   }
 
   /**

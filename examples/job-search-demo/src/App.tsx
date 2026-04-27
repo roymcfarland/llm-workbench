@@ -201,15 +201,15 @@ export function App() {
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
           <div style={{ fontSize: 13, fontWeight: 700 }}>Saved runs (memory repo)</div>
-          <button className="wb__btn" type="button" onClick={() => void refreshSaved()}>
+          <button className="lwb-btn" type="button" onClick={() => void refreshSaved()}>
             Refresh list
           </button>
         </div>
-        <div className="wb__muted" style={{ fontSize: 12, marginBottom: 10 }}>
+        <div className="lwb-muted" style={{ fontSize: 12, marginBottom: 10 }}>
           Save from the workbench shell, then load a snapshot here. Compare uses the latest <code>compiledProfile</code> artifact in each saved run.
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-          <select className="wb__select" style={{ maxWidth: 360 }} value="" onChange={(e) => void loadRun(e.target.value)}>
+          <select className="lwb-select" style={{ maxWidth: 360 }} value="" onChange={(e) => void loadRun(e.target.value)}>
             <option value="">Load saved run…</option>
             {savedRuns.map((m) => (
               <option key={m.id} value={m.id}>
@@ -217,7 +217,7 @@ export function App() {
               </option>
             ))}
           </select>
-          <select className="wb__select" style={{ maxWidth: 360 }} value={compareA} onChange={(e) => setCompareA(e.target.value)}>
+          <select className="lwb-select" style={{ maxWidth: 360 }} value={compareA} onChange={(e) => setCompareA(e.target.value)}>
             <option value="">Compare A…</option>
             {savedRuns.map((m) => (
               <option key={`a-${m.id}`} value={m.id}>
@@ -225,7 +225,7 @@ export function App() {
               </option>
             ))}
           </select>
-          <select className="wb__select" style={{ maxWidth: 360 }} value={compareB} onChange={(e) => setCompareB(e.target.value)}>
+          <select className="lwb-select" style={{ maxWidth: 360 }} value={compareB} onChange={(e) => setCompareB(e.target.value)}>
             <option value="">Compare B…</option>
             {savedRuns.map((m) => (
               <option key={`b-${m.id}`} value={m.id}>
@@ -233,7 +233,7 @@ export function App() {
               </option>
             ))}
           </select>
-          <button className="wb__btn wb__btn--primary" type="button" onClick={() => void runCompare()}>
+          <button className="lwb-btn lwb-btn--primary" type="button" onClick={() => void runCompare()}>
             Compare A vs B
           </button>
         </div>
@@ -255,19 +255,19 @@ export function App() {
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-        <button className="wb__btn wb__btn--primary" type="button" onClick={() => pseudoParser()}>
+        <button className="lwb-btn lwb-btn--primary" type="button" onClick={() => pseudoParser()}>
           Run parser1 (pseudo)
         </button>
-        <button className="wb__btn wb__btn--primary" type="button" onClick={() => pseudoSearch()}>
+        <button className="lwb-btn lwb-btn--primary" type="button" onClick={() => pseudoSearch()}>
           Run jobSearcher (pseudo)
         </button>
-        <button className="wb__btn wb__btn--primary" type="button" onClick={() => pseudoScore()}>
+        <button className="lwb-btn lwb-btn--primary" type="button" onClick={() => pseudoScore()}>
           Approve + score (pseudo)
         </button>
-        <button className="wb__btn" type="button" onClick={() => void repo.save(runtime.getState(runId)!)}>
+        <button className="lwb-btn" type="button" onClick={() => void repo.save(runtime.getState(runId)!)}>
           Persist run (memory repo)
         </button>
-        <button className="wb__btn" type="button" onClick={() => forkFromCurrent()}>
+        <button className="lwb-btn" type="button" onClick={() => forkFromCurrent()}>
           Fork new run from current snapshot
         </button>
       </div>

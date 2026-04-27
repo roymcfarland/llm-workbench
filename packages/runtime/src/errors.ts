@@ -22,7 +22,8 @@ export type WorkbenchErrorCode =
   | "HTTP_INVALID_JSON"
   | "HTTP_TIMEOUT"
   | "HTTP_ABORTED"
-  | "STORAGE_UNAVAILABLE";
+  | "STORAGE_UNAVAILABLE"
+  | "UNSUPPORTED_PROTOCOL_VERSION";
 
 export type WorkbenchErrorJson = {
   name: "WorkbenchError";

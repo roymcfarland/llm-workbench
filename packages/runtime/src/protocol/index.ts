@@ -8,3 +8,4 @@ export * from "./trace.js";
 export * from "./run.js";
 export * from "./runValidate.js";
 export * from "./bundle.js";
+export * from "./migrate.js";

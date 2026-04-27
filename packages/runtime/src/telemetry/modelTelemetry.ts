@@ -107,8 +107,17 @@ function addMetric(current: number, next: number | undefined): number {
   return current + (next ?? 0);
 }
 
+/**
+ * Derive a single tokens count for a usage record without double-counting.
+ *
+ * Many providers report `totalTokens` as the canonical number AND emit
+ * `inputTokens` + `outputTokens` whose sum equals it. We must not add both.
+ * Some legacy / partial events report only one of the two halves; we still
+ * want a sensible total then.
+ */
 function derivedTotalTokens(usage: ModelUsage): number {
-  return usage.totalTokens ?? (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0);
+  if (usage.totalTokens !== undefined) return usage.totalTokens;
+  return (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0);
 }
 
 function normalizeCurrency(currency: string): string {

@@ -1,3 +1,4 @@
+import { WorkbenchError } from "../errors.js";
 import type { RunBundleEngine } from "../protocol/engine.js";
 import type { RunBundle } from "../protocol/run.js";
 import type { TraceEvent } from "../protocol/trace.js";
@@ -49,11 +50,23 @@ export function inferEngineFromTrace(workflow: WorkflowSpec, trace: TraceEvent[]
     gateState.set(s.id, initialGateState(s.gatePolicy));
   }
 
+  const knownStepIds = new Set(workflow.steps.map((s) => s.id));
+  const requireKnownStep = (eventId: string, stepId: string) => {
+    if (!knownStepIds.has(stepId)) {
+      throw new WorkbenchError(
+        "INVALID_RUN_BUNDLE",
+        `Trace event "${eventId}" references unknown workflow step "${stepId}"`,
+      );
+    }
+  };
+
   for (const ev of trace) {
     if (ev.type === "step_started") {
+      requireKnownStep(ev.id, ev.stepId);
       stepStatus.set(ev.stepId, "running");
     }
     if (ev.type === "step_completed") {
+      requireKnownStep(ev.id, ev.stepId);
       stepStatus.set(ev.stepId, ev.ok ? "completed" : "failed");
       if (ev.ok) {
         const step = workflow.steps.find((x) => x.id === ev.stepId);
@@ -64,6 +77,7 @@ export function inferEngineFromTrace(workflow: WorkflowSpec, trace: TraceEvent[]
       }
     }
     if (ev.type === "human_gate_resolved") {
+      requireKnownStep(ev.id, ev.stepId);
       const gs = gateState.get(ev.stepId);
       if (!gs) continue;
       if (ev.gate === "PAUSE_BEFORE" && ev.decision !== "rejected") gs.before = "approved";
