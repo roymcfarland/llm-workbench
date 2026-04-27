@@ -1,0 +1,187 @@
+# Deploying `@llm-workbench/web`
+
+A focused, copy-pasteable runbook for getting the hosted reference plane
+into production on Vercel + Supabase + Clerk + Vercel AI Gateway.
+
+> **License reminder.** `apps/web` is **PolyForm Noncommercial 1.0.0**.
+> You may host it internally and let your team poke at it for free, but
+> a commercial deployment requires a paid license — see
+> [`COMMERCIAL.md`](../../COMMERCIAL.md). The four `@llm-workbench/*`
+> packages it consumes are Apache 2.0 and have no such restriction.
+
+---
+
+## 0. Prerequisites
+
+| Tool                 | Why                                                  |
+| -------------------- | ---------------------------------------------------- |
+| Node 18.18+ / 20.x   | Build + runtime                                      |
+| `npm` 10+            | Workspace install                                    |
+| `gh` CLI (optional)  | Linking the repo to Vercel via CLI                   |
+| `vercel` CLI         | `npm i -g vercel`                                    |
+| `supabase` CLI       | `brew install supabase/tap/supabase` (or equivalent) |
+| A GitHub fork/branch | Vercel deploys from a Git remote                     |
+
+Five accounts: GitHub, Vercel, Supabase, Clerk, and an org with Vercel
+AI Gateway enabled (it's part of the standard Vercel offering as of 2026
+— no extra signup beyond `vercel link`).
+
+---
+
+## 1. Supabase
+
+1. Create a new project at <https://supabase.com/dashboard>.
+   - **Region**: pick the same region you intend to deploy on Vercel.
+   - **Database password**: store it in a password manager; you only
+     need it for `supabase db push` from your laptop.
+2. From **Project Settings → API**, copy:
+   - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
+   - `service_role` secret → `SUPABASE_SERVICE_ROLE_KEY`
+3. Apply the schema. From the repo root:
+   ```bash
+   cd apps/web
+   supabase link --project-ref <ref-from-dashboard-url>
+   supabase db push
+   ```
+   This creates the `runs` table, the `tenant_id` index, and RLS policies
+   defined in `supabase/migrations/0001_init.sql`.
+
+> The reference app uses the `service_role` key on the server and
+> enforces tenancy in application code (`lib/auth/tenant.ts`). RLS is
+> enabled as defense in depth. If you'd prefer to authenticate Supabase
+> calls as the end user, swap `lib/supabase/server.ts` to use the Clerk
+> JWT template — see `supabase/README.md`.
+
+---
+
+## 2. Clerk
+
+1. Create an application at <https://clerk.com/dashboard>.
+2. Under **API Keys**, copy:
+   - Publishable key → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+   - Secret key → `CLERK_SECRET_KEY`
+3. Under **Paths**, set the reference app's expected paths so the hosted
+   sign-in/up pages and post-auth redirects line up:
+   - Sign-in path: `/sign-in`
+   - Sign-up path: `/sign-up`
+   - After-sign-in URL: `/playground`
+   - After-sign-up URL: `/playground`
+4. (Optional) Enable **Organizations** if you want true multi-tenant
+   accounts. The reference app falls back to `user:<userId>` as the
+   tenant when no organization is active.
+
+---
+
+## 3. Vercel AI Gateway
+
+The Gateway proxies model calls from your deployment to OpenAI, Anthropic,
+Google, etc., and gives you per-tenant usage tracking out of the box.
+
+- **Local dev**: copy an `AI_GATEWAY_API_KEY` from
+  <https://vercel.com/dashboard/ai/api-keys>. Put it in
+  `apps/web/.env.local` as `AI_GATEWAY_API_KEY=vck_…`.
+- **On Vercel**: prefer OIDC-based auth — the platform injects
+  `VERCEL_OIDC_TOKEN` automatically and the Gateway honors it. You do
+  *not* need to set `AI_GATEWAY_API_KEY` as a project env var when
+  deployed.
+
+---
+
+## 4. Vercel project
+
+```bash
+# From the repo root, with the Vercel CLI installed and logged in:
+vercel link                # choose the team/personal scope
+vercel env pull apps/web/.env.local   # optional, after envs are set
+```
+
+In the Vercel dashboard:
+
+1. **Build & Development Settings**
+   - Framework: `Next.js`
+   - Root directory: `apps/web`
+   - Install command: `npm install` (run at the repo root by Vercel)
+   - Build command: `npm run build` (Vercel infers from Next.js, which
+     runs Turborepo via `turbo run build` automatically when invoked
+     inside this monorepo).
+2. **Environment Variables** (Production + Preview):
+   - `NEXT_PUBLIC_SITE_ORIGIN` — e.g. `https://workbench.your-domain.com`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+   - `CLERK_SECRET_KEY`
+   - `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`
+   - `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`
+   - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/playground`
+   - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/playground`
+   - `AI_GATEWAY_API_KEY` *(omit if using OIDC)*
+3. **Domains**: attach a real domain (or use the preview URL) and set
+   `NEXT_PUBLIC_SITE_ORIGIN` to it before redeploying — sitemap.xml,
+   robots.txt, llms.txt, and the OpenAPI `servers` block all derive
+   absolute URLs from this var.
+4. Click **Deploy**.
+
+The first build will compile `@llm-workbench/runtime`, `…/adapters-react`,
+`…/ai-sdk`, `…/ui`, then `apps/web`.
+
+---
+
+## 5. Smoke test the agentic surface
+
+After deploy, the following should all return **HTTP 200** and be
+discoverable without auth:
+
+| URL                                         | What it is                              |
+| ------------------------------------------- | --------------------------------------- |
+| `/`                                         | Landing page                            |
+| `/llms.txt`                                 | LLM-friendly site map                   |
+| `/llms-full.txt`                            | Long-form description                   |
+| `/agents.md`                                | Machine-readable agent surface          |
+| `/robots.txt`                               | Crawler policy                          |
+| `/sitemap.xml`                              | XML sitemap                             |
+| `/.well-known/mcp.json`                     | MCP server discovery                    |
+| `/api/openapi.json`                         | OpenAPI 3.1 description of the run API  |
+| `/runs/demo`                                | Public read-only demo run               |
+
+Authenticated routes (`/playground`, `/runs`, `/api/runs`, `/api/llm`)
+should redirect unauthenticated visitors to `/sign-in`.
+
+---
+
+## 6. Auto-provisioning via the Vercel Marketplace MCP plugins
+
+> Optional — useful if you want the whole bootstrap driven by an agent.
+
+The `vercel`, `supabase`, and `clerk` Vercel Marketplace integrations
+expose MCP servers that an agent (Cursor, Claude Code, etc.) can call
+to provision resources without you clicking through dashboards. After
+running `vercel link`, the agent can:
+
+- Create a Supabase project and inject its connection strings as project
+  env vars.
+- Create a Clerk application and provision its publishable/secret keys
+  via the Marketplace.
+- Add `AI_GATEWAY_API_KEY` (or rely on OIDC).
+
+We document this so your bootstrap can be reduced to a single agent
+prompt; the manual steps above remain authoritative.
+
+---
+
+## 7. Operational tips
+
+- **Body limits.** API routes cap PUT bodies at 25 MB. Large
+  `RunStoreState` payloads should externalize artifacts before
+  persistence — see `ArtifactStore` in `@llm-workbench/runtime`.
+- **Custom artifact storage.** Wire any S3-compatible bucket (or Vercel
+  Blob, Cloudflare R2, Supabase Storage) into a `ArtifactStore`
+  implementation and pass it to `new WorkbenchRuntime({ artifactStore })`.
+- **Observability.** Convert traces to OTLP via
+  `traceEventsToOtelSpans()` and ship to Datadog / Honeycomb / Tempo.
+- **Cost guardrails.** AI SDK calls go through the Gateway, which gives
+  you per-tenant spend caps in the Vercel dashboard. Use them.
+
+---
+
+If this runbook is ever wrong, that's a bug — open an issue at
+<https://github.com/roymcfarland/llm-workbench/issues>.

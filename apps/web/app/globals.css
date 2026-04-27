@@ -1,0 +1,127 @@
+@import "tailwindcss";
+@import "@llm-workbench/ui/theme.css";
+
+/* ---------------------------------------------------------------------------
+ * Tailwind v4 CSS-first theme. Mirrors the shadcn/ui "new-york" zinc preset
+ * but expressed via @theme tokens so the design system is editable in CSS.
+ * ------------------------------------------------------------------------- */
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", "Menlo", "Monaco",
+    "Cascadia Code", "Liberation Mono", monospace;
+  --font-serif: var(--font-serif), ui-serif, Georgia, "Times New Roman", serif;
+
+  --radius: 0.625rem;
+
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0.141 0.005 285.823);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.141 0.005 285.823);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.141 0.005 285.823);
+  --color-primary: oklch(0.21 0.006 285.885);
+  --color-primary-foreground: oklch(0.985 0 0);
+  --color-secondary: oklch(0.967 0.001 286.375);
+  --color-secondary-foreground: oklch(0.21 0.006 285.885);
+  --color-muted: oklch(0.967 0.001 286.375);
+  --color-muted-foreground: oklch(0.552 0.016 285.938);
+  --color-accent: oklch(0.967 0.001 286.375);
+  --color-accent-foreground: oklch(0.21 0.006 285.885);
+  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-destructive-foreground: oklch(0.985 0 0);
+  --color-border: oklch(0.92 0.004 286.32);
+  --color-input: oklch(0.92 0.004 286.32);
+  --color-ring: oklch(0.705 0.015 286.067);
+}
+
+/* Dark theme tokens, applied when the html element carries the `dark` class.
+ * `next-themes` adds/removes that class for us. */
+.dark {
+  --color-background: oklch(0.141 0.005 285.823);
+  --color-foreground: oklch(0.985 0 0);
+  --color-card: oklch(0.21 0.006 285.885);
+  --color-card-foreground: oklch(0.985 0 0);
+  --color-popover: oklch(0.21 0.006 285.885);
+  --color-popover-foreground: oklch(0.985 0 0);
+  --color-primary: oklch(0.985 0 0);
+  --color-primary-foreground: oklch(0.21 0.006 285.885);
+  --color-secondary: oklch(0.274 0.006 286.033);
+  --color-secondary-foreground: oklch(0.985 0 0);
+  --color-muted: oklch(0.274 0.006 286.033);
+  --color-muted-foreground: oklch(0.705 0.015 286.067);
+  --color-accent: oklch(0.274 0.006 286.033);
+  --color-accent-foreground: oklch(0.985 0 0);
+  --color-destructive: oklch(0.704 0.191 22.216);
+  --color-destructive-foreground: oklch(0.985 0 0);
+  --color-border: oklch(1 0 0 / 10%);
+  --color-input: oklch(1 0 0 / 12%);
+  --color-ring: oklch(0.552 0.016 285.938);
+}
+
+/* Make next-themes' `class` strategy a known dark variant for Tailwind v4. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+  body {
+    font-family: var(--font-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  pre,
+  code,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+  .landing-mesh {
+    background:
+      radial-gradient(
+        50% 60% at 18% 8%,
+        color-mix(in oklab, oklch(0.7 0.18 220) 18%, transparent) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        45% 55% at 82% 6%,
+        color-mix(in oklab, oklch(0.65 0.18 280) 14%, transparent) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        60% 60% at 50% 100%,
+        color-mix(in oklab, oklch(0.55 0.16 240) 10%, transparent) 0%,
+        transparent 70%
+      );
+  }
+  .gradient-mesh {
+    background-image:
+      radial-gradient(
+        at 20% 0%,
+        color-mix(in oklab, var(--color-primary) 18%, transparent) 0px,
+        transparent 50%
+      ),
+      radial-gradient(
+        at 80% 0%,
+        color-mix(in oklab, oklch(0.7 0.18 250) 14%, transparent) 0px,
+        transparent 50%
+      ),
+      radial-gradient(
+        at 50% 100%,
+        color-mix(in oklab, oklch(0.65 0.2 320) 12%, transparent) 0px,
+        transparent 50%
+      );
+  }
+}
