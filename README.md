@@ -1,66 +1,98 @@
 # LLM Workbench
 
-A **modular, model-agnostic GUI harness** for applications that call LLMs.
-Bolt it on to any pipeline that produces artifacts and traces, and give
-non-technical users meaningful control without rewriting the host app.
+**A source-available control plane for LLM-powered products.**
 
-The runtime is **headless and environment-agnostic** (browser, Node,
-edge). It records workflows, artifacts, rules, human gates, and traces;
-optional UI and React helpers subscribe to live state; persistence and
-run-bundle import/export support audits, reproducibility, and reuse.
+LLM Workbench gives AI applications a production-grade human interface for
+the messy parts that matter: workflow state, artifacts, rules, human review
+gates, trace history, model I/O, cost telemetry, import/export, and replay.
 
-> Source-available, not OSI open source. Free for noncommercial use under
-> PolyForm Noncommercial 1.0.0; commercial use requires a paid license.
-> See [`LICENSE`](LICENSE) and [`COMMERCIAL.md`](COMMERCIAL.md).
+It is not another chat UI. It is the layer you bolt onto an LLM pipeline when
+you want non-technical users to inspect, edit, approve, branch, audit, and
+learn from the work your system is doing.
 
-## Why bolt this on
+The runtime is headless, model-agnostic, and environment-agnostic. It does not
+call OpenAI, Anthropic, local models, or any other provider directly. Your host
+application owns prompts, tools, models, and policy. LLM Workbench records what
+happened and gives humans a clean control surface over it.
 
-- **Model-agnostic.** The runtime never talks to a model itself. The host
-  decides which provider, model, prompt strategy, and tool registry to use,
-  and reports back via `logModelIO` / `logToolCall` / `writeArtifact`.
-- **Workflow-shaped.** Workflows are a DAG of steps with explicit
-  `gatePolicy` (`AUTO`, `PAUSE_BEFORE`, `PAUSE_AFTER`, `CHECKPOINT`), so
-  you can hand non-technical users a "review before continuing" experience
-  out of the box.
-- **Schema-validated artifacts and rules.** Bring your own JSON Schemas
-  (Ajv-backed) and the runtime validates writes, patches, and exports.
-- **Run bundles with integrity.** Every export is SHA-256 hashed; every
-  import verifies the hash by default. Two profiles: `full` for
-  engineering replay, `user` for redacted, shareable bundles.
-- **Telemetry-ready traces.** Model I/O events can carry provider,
-  model, token usage, cost, and duration metadata. Runs can also carry a
-  host-provided `subject` (`userId`, `tenantId`, `accountId`, `planId`)
-  and JSON metadata, so host apps can later add quotas, tiered access, or
-  per-user billing without changing the protocol shape. The runtime also
-  exports `summarizeModelTelemetry` to convert raw trace events into a typed
-  usage and cost ledger grouped by provider, model, step, user, tenant, and
-  plan.
-- **Pluggable persistence.** Memory, IndexedDB, or HTTP, behind a single
-  `RunRepository` interface. The HTTP adapter supports timeouts, retries,
-  and abort signals.
-- **Composable UI.** `WorkbenchShell` is a single React component with
-  themeable CSS variables. Adopt it as-is, or write your own UI against
-  the runtime — the entire surface is documented in code.
+> **License in one line:** open to read, learn from, fork, modify, and use for
+> noncommercial/public-benefit work; proprietary for commercial use. See
+> [License](#license).
 
-## Repository layout
+## Why It Exists
+
+LLM apps fail in boring, expensive ways:
+
+- Outputs change and nobody knows why.
+- Prompts, rules, artifacts, and human edits drift apart.
+- Non-technical reviewers get a black box instead of useful controls.
+- Teams cannot replay what happened after a bad run.
+- Model spend is logged somewhere, but not where product decisions happen.
+- "Add AI" becomes a pile of custom debugging panels and brittle JSON editors.
+
+LLM Workbench turns that chaos into an inspectable run graph.
+
+## What You Get
+
+- **Model-agnostic runtime.** The host decides which provider, model, prompt
+  strategy, and tool registry to use. The runtime records model I/O and tool
+  calls through explicit APIs.
+- **Workflow-shaped execution.** Workflows are DAGs with step-level gate
+  policies: `AUTO`, `PAUSE_BEFORE`, `PAUSE_AFTER`, and `CHECKPOINT`.
+- **Human review gates.** Pause before or after important steps, collect
+  approvals, rejections, edits, and notes, then resume with traceable intent.
+- **Schema-validated artifacts and rules.** Bring JSON Schemas, validate data
+  through Ajv, patch artifacts safely, and export redacted user bundles.
+- **Tamper-evident run bundles.** Exports are SHA-256 signed over canonical
+  JSON. Imports verify integrity by default.
+- **Telemetry-ready traces.** Track provider, model, usage, duration, cost,
+  user, tenant, account, and plan metadata without locking into a vendor.
+- **Cost and usage summaries.** `summarizeModelTelemetry` turns raw trace
+  events into a typed ledger grouped by provider, model, step, user, tenant,
+  and plan.
+- **Pluggable persistence.** Use memory, IndexedDB, or HTTP behind one
+  `RunRepository` interface. The HTTP adapter supports auth headers, timeouts,
+  retries, and abort signals.
+- **Composable UI.** Use `WorkbenchShell` as a ready-made React control panel,
+  or build your own UI against the headless runtime.
+
+## Architecture
+
+```
+host app
+  owns models, prompts, tools, business logic
+  calls runtime APIs as work happens
+
+@llm-workbench/runtime
+  records workflow state, artifacts, rules, gates, traces, bundles, telemetry
+  runs in browser, Node, or edge-style runtimes
+
+@llm-workbench/ui
+  React shell for artifact editing, rules, trace history, gates, import/export
+
+@llm-workbench/adapters-react
+  subscription hooks for live runtime state
+```
+
+## Repository Layout
 
 ```
 packages/
-  runtime/            @llm-workbench/runtime          (no DOM, no React)
-  ui/                 @llm-workbench/ui               (React + theme.css)
-  adapters-react/     @llm-workbench/adapters-react   (React hooks)
+  runtime/            @llm-workbench/runtime
+  ui/                 @llm-workbench/ui
+  adapters-react/     @llm-workbench/adapters-react
 examples/
-  job-search-demo/    Vite app exercising the full surface
-  run-repo-server/    Reference Express server for HttpRunRepository
+  job-search-demo/    Vite demo app exercising the full surface
+  run-repo-server/    Reference REST store for HttpRunRepository
 ```
 
 | Package | What it gives you |
-|---------|-------------------|
-| `@llm-workbench/runtime` | Protocol types, `WorkbenchRuntime` / `WorkbenchSession`, `SchemaRegistry` (Ajv), persistence ports (`MemoryRunRepository`, `IndexedDbRunRepository`, `HttpRunRepository`), bundle import/export with integrity, structured `WorkbenchError`. |
-| `@llm-workbench/ui` | `WorkbenchShell`: artifact editor, rules editor, trace timeline, import/export controls. Themeable via CSS variables. |
-| `@llm-workbench/adapters-react` | `useWorkbenchRunRevision` hook for subscribing components to live run state. |
+| --- | --- |
+| `@llm-workbench/runtime` | Protocol types, `WorkbenchRuntime`, `WorkbenchSession`, `SchemaRegistry`, persistence adapters, bundle import/export, telemetry summaries, and structured `WorkbenchError`. |
+| `@llm-workbench/ui` | `WorkbenchShell`, a themeable React interface for artifacts, rules, traces, gates, and bundles. |
+| `@llm-workbench/adapters-react` | `useWorkbenchRunRevision` for subscribing React components to live run state. |
 
-## Quick start
+## Quick Start
 
 ```bash
 npm install
@@ -72,7 +104,7 @@ npm run demo:http-server   # Reference REST store for HttpRunRepository
 
 Node.js 18.18+ is required. CI runs on Node 18 and 20.
 
-### 60-second host integration
+## 60-Second Integration
 
 ```ts
 import {
@@ -96,16 +128,33 @@ const { runId } = runtime.startRun({
     ],
     edges: [{ id: "e1", from: "parse", to: "score" }],
   },
+  subject: {
+    userId: "user_123",
+    tenantId: "team_456",
+    planId: "pro",
+  },
 });
 
 const session = runtime.session(runId);
-session.resolveGate({ stepId: "parse", gate: "PAUSE_BEFORE", decision: "approved" });
+
+session.resolveGate({
+  stepId: "parse",
+  gate: "PAUSE_BEFORE",
+  decision: "approved",
+});
+
 session.beginStep("parse");
+
 session.writeArtifact({
   artifactKey: "compiledProfile",
   typeId: "compiledProfile",
-  data: { headline: "TS engineer", skills: ["ts"], summary: "..." },
+  data: {
+    headline: "TypeScript engineer",
+    skills: ["typescript", "react", "systems"],
+    summary: "Strong full-stack builder with AI workflow experience.",
+  },
 });
+
 session.logModelIO({
   stepId: "parse",
   direction: "response",
@@ -115,22 +164,64 @@ session.logModelIO({
   cost: { amount: 0.0012, currency: "USD" },
   durationMs: 900,
 });
+
 session.completeStep("parse");
 
 const telemetry = summarizeModelTelemetry(session.snapshot());
-console.log(telemetry.totals.costByCurrency, telemetry.byProviderModel);
+console.log(telemetry.totals, telemetry.byProviderModel);
 ```
 
-Drop `<WorkbenchShell runtime={runtime} runId={runId} registry={registry} />`
-anywhere in your app to get the artifact editor, rules CRUD, trace timeline,
-and bundle import/export UI for free.
+Drop the shell anywhere in your app:
+
+```tsx
+<WorkbenchShell runtime={runtime} runId={runId} registry={registry} />
+```
+
+## Runtime Principles
+
+- The runtime never hides state behind provider-specific abstractions.
+- Structured outputs should be schema-validated before they become product
+  state.
+- Human edits and approvals are first-class trace events, not side notes.
+- Exported runs should be useful for debugging, audits, demos, and learning.
+- Model telemetry should be close enough to the workflow that cost and quality
+  can be managed together.
+- The public protocol should be boring, explicit, and durable.
 
 ## License
 
-- **Default:** [PolyForm Noncommercial 1.0.0](LICENSE) — read, fork, study,
-  and use for noncommercial purposes (research, hobby, charities,
-  schools, government, public-benefit organizations).
-- **Commercial use:** requires a paid license. See
-  [`COMMERCIAL.md`](COMMERCIAL.md).
-- **Contributing:** see [`CONTRIBUTING.md`](CONTRIBUTING.md).
-- **Security reports:** see [`SECURITY.md`](SECURITY.md).
+LLM Workbench is **source-available, not OSI open source**.
+
+The public repository is licensed under
+[PolyForm Noncommercial 1.0.0](LICENSE). The project is intentionally generous
+for builders, researchers, students, public-benefit teams, and curious people:
+
+- You can read the source.
+- You can fork it.
+- You can modify it.
+- You can redistribute noncommercial forks.
+- You can use it for personal projects, research, experiments, education,
+  public-sector work, charities, and other noncommercial/public-benefit uses.
+
+Commercial use is proprietary and requires a separate paid license.
+
+You need a commercial license if you want to use LLM Workbench in a paid
+product, SaaS, internal for-profit workflow, client engagement, hosted
+offering, commercial distribution, or any revenue-generating operation.
+
+That model is deliberate: the code is open enough to inspect, trust, learn
+from, and build on for noncommercial work, while commercial rights stay
+reserved so the project can be funded like serious infrastructure.
+
+For commercial terms, see [COMMERCIAL.md](COMMERCIAL.md).
+
+## Contributing
+
+Contributions are welcome under the inbound terms in
+[CONTRIBUTING.md](CONTRIBUTING.md). Those terms preserve the maintainer's
+ability to dual-license the project publicly under PolyForm Noncommercial and
+privately under commercial agreements.
+
+## Security
+
+Please report security issues through the process in [SECURITY.md](SECURITY.md).
