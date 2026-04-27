@@ -1,0 +1,424 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildPlan > matches the deterministic snapshot for a fresh install 1`] = `
+"{
+  "version": 1,
+  "options": {
+    "supabaseProject": null,
+    "clerkApp": null,
+    "vercelProject": null,
+    "region": "us-east-1",
+    "org": "demo-org",
+    "repo": "octo/llm-workbench",
+    "siteOrigin": null,
+    "aiGatewayKey": null,
+    "rootDirectory": "apps/web",
+    "framework": "nextjs",
+    "migrationFile": "apps/web/supabase/migrations/0001_init.sql"
+  },
+  "steps": [
+    {
+      "id": "supabase.create_project",
+      "provider": "supabase",
+      "action": "create_project",
+      "description": "Create the Supabase project (or reuse the supplied ref).",
+      "inputs": {
+        "organization": "demo-org",
+        "region": "us-east-1",
+        "name": "llm-workbench-web",
+        "existingRef": null
+      },
+      "outputs": [
+        "supabase.project_ref",
+        "supabase.project_url"
+      ],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-supabase-supabase.create_project"
+    },
+    {
+      "id": "supabase.await_ready",
+      "provider": "supabase",
+      "action": "await_ready",
+      "description": "Poll project status until it leaves PROVISIONING.",
+      "inputs": {
+        "project_ref": "\${supabase.project_ref}"
+      },
+      "outputs": [],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-supabase-supabase.get_project_status"
+    },
+    {
+      "id": "supabase.apply_migrations",
+      "provider": "supabase",
+      "action": "apply_migrations",
+      "description": "Apply 0001_init.sql against the project's Postgres.",
+      "inputs": {
+        "project_ref": "\${supabase.project_ref}",
+        "migration_file": "apps/web/supabase/migrations/0001_init.sql"
+      },
+      "outputs": [],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-supabase-supabase.apply_migration"
+    },
+    {
+      "id": "supabase.run_advisors",
+      "provider": "supabase",
+      "action": "run_advisors",
+      "description": "Run the security + performance advisors and surface findings.",
+      "inputs": {
+        "project_ref": "\${supabase.project_ref}"
+      },
+      "outputs": [
+        "supabase.advisors"
+      ],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-supabase-supabase.get_advisors"
+    },
+    {
+      "id": "supabase.fetch_keys",
+      "provider": "supabase",
+      "action": "fetch_keys",
+      "description": "Surface the project URL and ask the user to copy the service_role key from the dashboard. The Supabase API never returns service_role for security reasons.",
+      "inputs": {
+        "project_ref": "\${supabase.project_ref}",
+        "dashboard_url": "https://supabase.com/dashboard/project/\${supabase.project_ref}/settings/api"
+      },
+      "outputs": [
+        "supabase.service_role_key (manual)"
+      ],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-supabase-supabase.get_project_url"
+    },
+    {
+      "id": "clerk.create_application",
+      "provider": "clerk",
+      "action": "create_application",
+      "description": "Create a Clerk application (or reuse the supplied id).",
+      "inputs": {
+        "name": "llm-workbench-web",
+        "existing_application_id": null
+      },
+      "outputs": [
+        "clerk.application_id"
+      ],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-clerk-clerk.create_application"
+    },
+    {
+      "id": "clerk.fetch_api_keys",
+      "provider": "clerk",
+      "action": "fetch_api_keys",
+      "description": "Read the publishable key and secret key for the application.",
+      "inputs": {
+        "application_id": "\${clerk.application_id}",
+        "deep_link": "https://dashboard.clerk.com/last-active?path=api-keys"
+      },
+      "outputs": [
+        "clerk.publishable_key",
+        "clerk.secret_key"
+      ],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-clerk-clerk.get_api_keys"
+    },
+    {
+      "id": "vercel.ensure_project",
+      "provider": "vercel",
+      "action": "ensure_project",
+      "description": "Import the GitHub repo as a Vercel project (or reuse the supplied name). Set Root Directory to apps/web and Framework to nextjs.",
+      "inputs": {
+        "name": "llm-workbench-web",
+        "repo": "octo/llm-workbench",
+        "root_directory": "apps/web",
+        "framework": "nextjs",
+        "existing_project_name": null
+      },
+      "outputs": [
+        "vercel.project_id",
+        "vercel.production_url"
+      ],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-vercel-plugin-vercel.create_project"
+    },
+    {
+      "id": "vercel.set_env_vars",
+      "provider": "vercel",
+      "action": "set_env_vars",
+      "description": "Push the environment variables produced by the Supabase + Clerk steps to the Vercel project (Production + Preview + Development).",
+      "inputs": {
+        "project_id": "\${vercel.project_id}",
+        "env_vars": [
+          {
+            "key": "NEXT_PUBLIC_SUPABASE_URL",
+            "from": "supabase.project_url",
+            "target": [
+              "production",
+              "preview",
+              "development"
+            ]
+          },
+          {
+            "key": "SUPABASE_SERVICE_ROLE_KEY",
+            "from": "supabase.service_role_key",
+            "target": [
+              "production",
+              "preview",
+              "development"
+            ],
+            "sensitive": true
+          },
+          {
+            "key": "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+            "from": "clerk.publishable_key",
+            "target": [
+              "production",
+              "preview",
+              "development"
+            ]
+          },
+          {
+            "key": "CLERK_SECRET_KEY",
+            "from": "clerk.secret_key",
+            "target": [
+              "production",
+              "preview",
+              "development"
+            ],
+            "sensitive": true
+          },
+          {
+            "key": "NEXT_PUBLIC_CLERK_SIGN_IN_URL",
+            "literal": "/sign-in",
+            "target": [
+              "production",
+              "preview",
+              "development"
+            ]
+          },
+          {
+            "key": "NEXT_PUBLIC_CLERK_SIGN_UP_URL",
+            "literal": "/sign-up",
+            "target": [
+              "production",
+              "preview",
+              "development"
+            ]
+          },
+          {
+            "key": "NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL",
+            "literal": "/playground",
+            "target": [
+              "production",
+              "preview",
+              "development"
+            ]
+          },
+          {
+            "key": "NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL",
+            "literal": "/playground",
+            "target": [
+              "production",
+              "preview",
+              "development"
+            ]
+          },
+          {
+            "key": "NEXT_PUBLIC_SITE_ORIGIN",
+            "from": "vercel.production_url",
+            "literal": null,
+            "target": [
+              "production",
+              "preview"
+            ]
+          }
+        ]
+      },
+      "outputs": [],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-vercel-plugin-vercel.upsert_env_vars"
+    },
+    {
+      "id": "vercel.trigger_deploy",
+      "provider": "vercel",
+      "action": "trigger_deploy",
+      "description": "Trigger a production deploy of the project.",
+      "inputs": {
+        "project_id": "\${vercel.project_id}"
+      },
+      "outputs": [
+        "vercel.deployment_id"
+      ],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-vercel-plugin-vercel.create_deployment"
+    },
+    {
+      "id": "vercel.await_deploy",
+      "provider": "vercel",
+      "action": "await_deploy",
+      "description": "Poll the deployment until status is READY (success) or ERROR/CANCELED (fail). Surface the build log URL on failure.",
+      "inputs": {
+        "deployment_id": "\${vercel.deployment_id}"
+      },
+      "outputs": [
+        "vercel.deployment_url",
+        "vercel.deployment_state"
+      ],
+      "skip": false,
+      "skipReason": null,
+      "suggestedTool": "plugin-vercel-plugin-vercel.get_deployment"
+    }
+  ],
+  "envVars": [
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_URL",
+      "from": "supabase.project_url",
+      "target": [
+        "production",
+        "preview",
+        "development"
+      ]
+    },
+    {
+      "key": "SUPABASE_SERVICE_ROLE_KEY",
+      "from": "supabase.service_role_key",
+      "target": [
+        "production",
+        "preview",
+        "development"
+      ],
+      "sensitive": true
+    },
+    {
+      "key": "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+      "from": "clerk.publishable_key",
+      "target": [
+        "production",
+        "preview",
+        "development"
+      ]
+    },
+    {
+      "key": "CLERK_SECRET_KEY",
+      "from": "clerk.secret_key",
+      "target": [
+        "production",
+        "preview",
+        "development"
+      ],
+      "sensitive": true
+    },
+    {
+      "key": "NEXT_PUBLIC_CLERK_SIGN_IN_URL",
+      "literal": "/sign-in",
+      "target": [
+        "production",
+        "preview",
+        "development"
+      ]
+    },
+    {
+      "key": "NEXT_PUBLIC_CLERK_SIGN_UP_URL",
+      "literal": "/sign-up",
+      "target": [
+        "production",
+        "preview",
+        "development"
+      ]
+    },
+    {
+      "key": "NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL",
+      "literal": "/playground",
+      "target": [
+        "production",
+        "preview",
+        "development"
+      ]
+    },
+    {
+      "key": "NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL",
+      "literal": "/playground",
+      "target": [
+        "production",
+        "preview",
+        "development"
+      ]
+    },
+    {
+      "key": "NEXT_PUBLIC_SITE_ORIGIN",
+      "from": "vercel.production_url",
+      "literal": null,
+      "target": [
+        "production",
+        "preview"
+      ]
+    }
+  ],
+  "smokeTests": [
+    {
+      "method": "GET",
+      "path": "/",
+      "expect": 200,
+      "description": "Landing page renders"
+    },
+    {
+      "method": "GET",
+      "path": "/llms.txt",
+      "expect": 200,
+      "description": "LLM-friendly site map"
+    },
+    {
+      "method": "GET",
+      "path": "/.well-known/mcp.json",
+      "expect": 200,
+      "description": "MCP discovery doc"
+    },
+    {
+      "method": "GET",
+      "path": "/api/openapi.json",
+      "expect": 200,
+      "description": "OpenAPI 3.1 description"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mcp",
+      "expect": 200,
+      "description": "MCP HTTP transport responds to tools/list",
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/list",
+        "params": {}
+      }
+    }
+  ],
+  "followUps": [
+    {
+      "title": "Stripe billing",
+      "href": "https://dashboard.stripe.com/",
+      "note": "Manual: connect a Stripe account once 0.6.0 multi-tenant billing lands."
+    },
+    {
+      "title": "Vercel AI Gateway spend caps",
+      "href": "https://vercel.com/dashboard/ai/usage",
+      "note": "Manual: set per-tenant spend caps in the AI Gateway dashboard."
+    }
+  ],
+  "dashboardUrls": {
+    "supabase": "https://supabase.com/dashboard/projects",
+    "clerk": "https://dashboard.clerk.com/last-active?path=api-keys",
+    "vercel": "https://vercel.com/new",
+    "aiGateway": "https://vercel.com/dashboard/ai"
+  },
+  "agentPrompt": "You are running inside Cursor with the Vercel, Supabase, and Clerk MCP\\nplugins available. Execute the steps in \`.bootstrap-plan.json\` in order,\\nhonoring \`skip: true\` entries (just record the supplied id/ref). For each\\nstep, prefer the \`suggestedTool\` MCP tool, fall back to the closest\\nequivalent your plugin exposes if the name has drifted. Capture every\\nvalue listed in \`outputs\` and substitute \`\${name}\` placeholders in\\ndownstream \`inputs\`.\\n\\nSensitive secrets (service_role, secret keys) must be written directly\\nto the Vercel env-vars step — never echo them into chat. service_role is\\nnot returned by the Supabase API; ask the user to paste it once when you\\nreach \`supabase.fetch_keys\`.\\n\\nWhen \`vercel.await_deploy\` returns READY, run the smoke tests listed in\\n\`.bootstrap-plan.json\` (\`smokeTests\` array) and print the production URL,\\nthe dashboard links from \`dashboardUrls\`, and any advisor warnings from\\n\`supabase.run_advisors\`. Stop on the first non-200 smoke-test response.\\n\\nGitHub repo: octo/llm-workbench\\nSupabase org slug: demo-org"
+}
+"
+`;
