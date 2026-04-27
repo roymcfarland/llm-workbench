@@ -97,13 +97,19 @@ vercel env pull apps/web/.env.local   # optional, after envs are set
 
 In the Vercel dashboard:
 
-1. **Build & Development Settings**
-   - Framework: `Next.js`
-   - Root directory: `apps/web`
-   - Install command: `npm install` (run at the repo root by Vercel)
-   - Build command: `npm run build` (Vercel infers from Next.js, which
-     runs Turborepo via `turbo run build` automatically when invoked
-     inside this monorepo).
+1. **Build & Development Settings** — these MUST match exactly, or
+   Vercel's framework detector will fail with `No Next.js version detected`:
+   - Framework Preset: **Next.js**
+   - Root Directory: **`apps/web`** (do **not** check "Include source
+     files outside of the Root Directory" — `apps/web/vercel.json`
+     already runs `npm install` from the repo root, which is what wires
+     the workspaces).
+   - Install Command: **leave blank** (defer to `apps/web/vercel.json`,
+     which runs `cd ../.. && npm install --include-workspace-root --workspaces`).
+   - Build Command: **leave blank** (defer to `apps/web/vercel.json`,
+     which runs `cd ../.. && npm run build:web`).
+   - Output Directory: **leave blank** — Next.js default (`.next`)
+     resolved relative to Root Directory works.
 2. **Environment Variables** (Production + Preview):
    - `NEXT_PUBLIC_SITE_ORIGIN` — e.g. `https://workbench.your-domain.com`
    - `NEXT_PUBLIC_SUPABASE_URL`
