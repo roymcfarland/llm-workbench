@@ -11,8 +11,10 @@
     "apps/*"
   ],
   "scripts": {
+    "bootstrap": "node scripts/bootstrap.mjs",
     "build": "npm run build -w @llm-workbench/runtime -w @llm-workbench/ui -w @llm-workbench/adapters-react -w @llm-workbench/ai-sdk -w @llm-workbench/mcp",
-    "test": "npm test -w @llm-workbench/runtime && npm test -w @llm-workbench/adapters-react && npm test -w @llm-workbench/ai-sdk && npm test -w @llm-workbench/ui && npm test -w @llm-workbench/mcp",
+    "test": "npm test -w @llm-workbench/runtime && npm test -w @llm-workbench/adapters-react && npm test -w @llm-workbench/ai-sdk && npm test -w @llm-workbench/ui && npm test -w @llm-workbench/mcp && npm run test:scripts",
+    "test:scripts": "vitest run --config scripts/vitest.config.mjs",
     "demo": "npm run dev -w job-search-demo",
     "demo:http-server": "npm run start -w run-repo-server",
     "dev:web": "npm run dev -w apps/web",
