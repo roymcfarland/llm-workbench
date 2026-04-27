@@ -2,6 +2,9 @@
   "name": "llm-workbench",
   "private": true,
   "license": "SEE LICENSE IN LICENSE",
+  "engines": {
+    "node": ">=18.18"
+  },
   "workspaces": [
     "packages/*",
     "examples/*"

@@ -1,0 +1,14 @@
+LLM Workbench
+Copyright (c) 2026 Roy McFarland. All rights reserved.
+
+This product is licensed under the PolyForm Noncommercial License 1.0.0
+(see LICENSE). It is source-available, not "open source" under the OSI
+definition: noncommercial use is free, commercial use requires a separate
+paid license. See COMMERCIAL.md for commercial licensing terms and contact.
+
+Required Notice: Copyright (c) 2026 Roy McFarland. All rights reserved.
+
+This software depends on third-party packages distributed under their own
+licenses (Ajv, fast-json-patch, zod, React, Vite, Express, etc.). Their
+licenses are preserved unchanged in their respective package directories
+under node_modules and are not affected by this notice.

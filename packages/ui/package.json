@@ -15,10 +15,11 @@
     "./theme.css": "./dist/theme.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "scripts"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && cp src/theme.css dist/theme.css"
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-theme.mjs"
   },
   "dependencies": {
     "@llm-workbench/runtime": "0.1.0"

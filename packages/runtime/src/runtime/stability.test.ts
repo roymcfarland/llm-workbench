@@ -233,7 +233,11 @@ describe("HttpRunRepository", () => {
   it("surfaces HTTP failures with body snippet", async () => {
     const fetchImpl: typeof fetch = async () =>
       new Response("nope", { status: 500, headers: { "content-type": "text/plain" } });
-    const repo = new HttpRunRepository({ baseUrl: "http://example.test", fetchImpl });
+    const repo = new HttpRunRepository({
+      baseUrl: "http://example.test",
+      fetchImpl,
+      retry: { maxAttempts: 1 },
+    });
     await expect(
       repo.save({
         revision: 0,
@@ -257,7 +261,11 @@ describe("HttpRunRepository", () => {
 
   it("throws on invalid JSON for load", async () => {
     const fetchImpl: typeof fetch = async () => new Response("not-json", { status: 200 });
-    const repo = new HttpRunRepository({ baseUrl: "http://example.test", fetchImpl });
+    const repo = new HttpRunRepository({
+      baseUrl: "http://example.test",
+      fetchImpl,
+      retry: { maxAttempts: 1 },
+    });
     await expect(repo.load("x")).rejects.toMatchObject({ code: "HTTP_INVALID_JSON" });
   });
 });

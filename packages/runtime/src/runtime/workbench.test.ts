@@ -143,3 +143,22 @@ describe("WorkbenchRuntime import/export", () => {
     expect(JSON.stringify(art?.data)).toContain("REDACTED");
   });
 });
+
+describe("WorkbenchRuntime lifecycle", () => {
+  const wf = { id: "wf", version: 1, steps: [{ id: "a", gatePolicy: "AUTO" as const }], edges: [] };
+
+  it("listRuns reflects startRun and deleteRun", () => {
+    const rt = new WorkbenchRuntime();
+    const a = rt.startRun({ workflow: wf }).runId;
+    const b = rt.startRun({ workflow: wf }).runId;
+    expect(rt.listRuns().sort()).toEqual([a, b].sort());
+    expect(rt.deleteRun(a)).toBe(true);
+    expect(rt.deleteRun(a)).toBe(false);
+    expect(rt.listRuns()).toEqual([b]);
+  });
+
+  it("session() throws UNKNOWN_RUN for missing runs", () => {
+    const rt = new WorkbenchRuntime();
+    expect(() => rt.session("nope")).toThrow(/Unknown runId/);
+  });
+});
