@@ -1,14 +1,29 @@
 LLM Workbench
-Copyright (c) 2026 Roy McFarland. All rights reserved.
+Copyright (c) 2026 Roy McFarland.
 
-This product is licensed under the PolyForm Noncommercial License 1.0.0
-(see LICENSE). It is source-available, not "open source" under the OSI
-definition: noncommercial use is free, commercial use requires a separate
-paid license. See COMMERCIAL.md for commercial licensing terms and contact.
+This repository is dual-licensed:
+
+  Open-source packages (Apache License 2.0)
+    - packages/runtime          (@llm-workbench/runtime)
+    - packages/adapters-react   (@llm-workbench/adapters-react)
+    - packages/ai-sdk           (@llm-workbench/ai-sdk)
+    - packages/ui               (@llm-workbench/ui)
+    - examples/*                (integration examples)
+    Each package contains its own LICENSE file with the full Apache-2.0 text.
+    A copy is also available at LICENSES/Apache-2.0.txt.
+
+  Source-available, noncommercial-by-default (PolyForm Noncommercial 1.0.0)
+    - apps/web                  (hosted reference deployment)
+    - any future apps/* and packages outside the OSS list above
+    The repository root LICENSE file contains the PolyForm-NC text. A copy is
+    also available at LICENSES/PolyForm-Noncommercial-1.0.0.txt. Commercial
+    use of the noncommercial portions requires a separate paid license.
+    See COMMERCIAL.md.
 
 Required Notice: Copyright (c) 2026 Roy McFarland. All rights reserved.
 
 This software depends on third-party packages distributed under their own
-licenses (Ajv, fast-json-patch, zod, React, Vite, Express, etc.). Their
-licenses are preserved unchanged in their respective package directories
-under node_modules and are not affected by this notice.
+licenses (Ajv, fast-json-patch, zod, React, Vite, Express, Next.js, Supabase
+JS, Clerk, AI SDK, etc.). Their licenses are preserved unchanged in their
+respective package directories under node_modules and are not affected by
+this notice.

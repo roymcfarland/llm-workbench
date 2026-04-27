@@ -15,9 +15,23 @@ call OpenAI, Anthropic, local models, or any other provider directly. Your host
 application owns prompts, tools, models, and policy. LLM Workbench records what
 happened and gives humans a clean control surface over it.
 
-> **License in one line:** open to read, learn from, fork, modify, and use for
-> noncommercial/public-benefit work; proprietary for commercial use. See
-> [License](#license).
+> **License in one line:** the four core packages (`@llm-workbench/runtime`,
+> `adapters-react`, `ai-sdk`, `ui`) and the examples ship under Apache 2.0
+> and are free for commercial use. The hosted reference deployment under
+> `apps/web` (and any future `apps/*` product surfaces) is source-available
+> under PolyForm Noncommercial 1.0.0; commercial use of those areas
+> requires a paid license. See [License](#license).
+
+## Status
+
+`v0.2.0` (2026-04-27): the four OSS packages relicense to **Apache 2.0**;
+the runtime adds Trace 2.0 (hierarchical spans, OTel GenAI mapper),
+hierarchical supervision (`runChildrenOf`, `cancelRunCascade`), and an
+externalizable `ArtifactStore`; a new `@llm-workbench/ai-sdk` wraps Vercel
+AI SDK v5 with automatic trace events; the UI ships scoped `lwb-` CSS,
+accessible `@dnd-kit` reorder, virtualized trace, and a `WorkflowGraph`;
+and a hosted reference deployment lands at [`apps/web`](apps/web).
+See [CHANGELOG.md](CHANGELOG.md) for the full list.
 
 ## Why It Exists
 
@@ -81,9 +95,12 @@ packages/
   runtime/            @llm-workbench/runtime
   ui/                 @llm-workbench/ui
   adapters-react/     @llm-workbench/adapters-react
+  ai-sdk/             @llm-workbench/ai-sdk
 examples/
   job-search-demo/    Vite demo app exercising the full surface
   run-repo-server/    Reference REST store for HttpRunRepository
+apps/
+  web/                Hosted reference deployment (Next.js + Supabase + AI Gateway + Clerk)
 ```
 
 | Package | What it gives you |
@@ -91,6 +108,7 @@ examples/
 | `@llm-workbench/runtime` | Protocol types, `WorkbenchRuntime`, `WorkbenchSession`, `SchemaRegistry`, persistence adapters, bundle import/export, telemetry summaries, and structured `WorkbenchError`. |
 | `@llm-workbench/ui` | `WorkbenchShell`, a themeable React interface for artifacts, rules, traces, gates, and bundles. |
 | `@llm-workbench/adapters-react` | `useWorkbenchRunRevision` for subscribing React components to live run state. |
+| `@llm-workbench/ai-sdk` | Vercel AI SDK v5 wrappers (`tracedGenerateText`, `tracedStreamText`, `tracedGenerateObject`, `tracedStreamObject`, `traceTools`) that emit correlated `model_io`, `tool_call`, and gateway-cost trace events automatically. |
 
 ## Quick Start
 
@@ -190,37 +208,45 @@ Drop the shell anywhere in your app:
 
 ## License
 
-LLM Workbench is **source-available, not OSI open source**.
+LLM Workbench is **dual-licensed**:
 
-The public repository is licensed under
-[PolyForm Noncommercial 1.0.0](LICENSE). The project is intentionally generous
-for builders, researchers, students, public-benefit teams, and curious people:
+- The four core packages and the examples are **Apache 2.0**, an
+  OSI-approved open-source license with an explicit patent grant. You can
+  use them freely, including in commercial products, with attribution and
+  the standard Apache 2.0 conditions.
+  - `packages/runtime` (`@llm-workbench/runtime`)
+  - `packages/adapters-react` (`@llm-workbench/adapters-react`)
+  - `packages/ai-sdk` (`@llm-workbench/ai-sdk`)
+  - `packages/ui` (`@llm-workbench/ui`)
+  - `examples/*`
+  - Each package contains its own `LICENSE` file with the full Apache 2.0
+    text. A reference copy lives at
+    [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt).
+- The hosted reference deployment under `apps/web` (and any future
+  `apps/*` product surfaces, e.g. `eval`, `marketplace`,
+  `cost-reconciliation`) is source-available under
+  [PolyForm Noncommercial 1.0.0](LICENSE). You can read it, fork it,
+  modify it, and use it for noncommercial / public-benefit purposes.
+  Commercial use of those areas requires a paid license.
 
-- You can read the source.
-- You can fork it.
-- You can modify it.
-- You can redistribute noncommercial forks.
-- You can use it for personal projects, research, experiments, education,
-  public-sector work, charities, and other noncommercial/public-benefit uses.
+The split is deliberate. The protocol, runtime, and UI primitives that the
+ecosystem depends on are permissively open so they can be adopted, embedded,
+and extended without friction. The hosted product surfaces — the ones that
+look like a sellable SaaS — are reserved so the project can be funded like
+serious infrastructure rather than only existing as a side project.
 
-Commercial use is proprietary and requires a separate paid license.
-
-You need a commercial license if you want to use LLM Workbench in a paid
-product, SaaS, internal for-profit workflow, client engagement, hosted
-offering, commercial distribution, or any revenue-generating operation.
-
-That model is deliberate: the code is open enough to inspect, trust, learn
-from, and build on for noncommercial work, while commercial rights stay
-reserved so the project can be funded like serious infrastructure.
-
-For commercial terms, see [COMMERCIAL.md](COMMERCIAL.md).
+For commercial terms covering the noncommercial portions, see
+[COMMERCIAL.md](COMMERCIAL.md).
 
 ## Contributing
 
 Contributions are welcome under the inbound terms in
-[CONTRIBUTING.md](CONTRIBUTING.md). Those terms preserve the maintainer's
-ability to dual-license the project publicly under PolyForm Noncommercial and
-privately under commercial agreements.
+[CONTRIBUTING.md](CONTRIBUTING.md). Inbound license matches outbound license:
+contributions to the Apache 2.0 packages come in under Apache 2.0 (DCO
+sign-off via `git commit -s` is the only paperwork required); contributions
+to the PolyForm-NC areas under `apps/*` come in under PolyForm-NC plus a
+relicense grant so the maintainer can issue paid commercial licenses for
+those product surfaces.
 
 ## Security
 
