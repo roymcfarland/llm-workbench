@@ -36,8 +36,14 @@ create index if not exists runs_tenant_started_at_idx
   on public.runs (tenant_id, started_at desc);
 
 -- Keep `updated_at` fresh on UPDATE / UPSERT.
+-- `set search_path = ''` follows Supabase's "function_search_path_mutable"
+-- linter — pin the resolution path so the trigger can't be hijacked by a
+-- caller's session search_path.
 create or replace function public.set_runs_updated_at()
-returns trigger language plpgsql as $$
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
 begin
   new.updated_at := now();
   return new;
