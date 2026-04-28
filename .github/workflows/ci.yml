@@ -53,12 +53,6 @@ jobs:
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
-      # Linux runners resolve `localhost` correctly; the Node --import DNS shim can break
-      # Next 16’s internal middleware→Node proxy (30s "socket hang up" / ECONNRESET on /api/health).
-      # Prefer IPv4 for `localhost` when Node would otherwise order ::1 first.
       - name: Playwright smoke
         working-directory: apps/web
-        run: |
-          export LLM_WB_E2E_DISABLE_DNS_SHIM=1
-          export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--dns-result-order=ipv4first"
-          npm run test:e2e
+        run: npm run test:e2e
