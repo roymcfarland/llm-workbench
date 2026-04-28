@@ -40,7 +40,11 @@ function appendNodeImportOption(
 function webServerStartCommand(port: number): string {
   const nextCli = require.resolve("next/dist/bin/next");
   const portStr = String(port);
-  const inner = `node ${JSON.stringify(nextCli)} start --hostname 127.0.0.1 --port ${portStr}`;
+  // Bind 0.0.0.0 for e2e only: with `--hostname 127.0.0.1`, Next 16 can still issue an
+  // internal middleware hop to `http://localhost:<port>/…` (ENOTFOUND / CI flakes).
+  // `0.0.0.0` makes the hop target `http://0.0.0.0:…`, which connects reliably; tests
+  // keep using `E2E_ORIGIN` (`http://127.0.0.1:<port>`).
+  const inner = `node ${JSON.stringify(nextCli)} start --hostname 0.0.0.0 --port ${portStr}`;
   if (platform() === "win32") {
     return inner;
   }
