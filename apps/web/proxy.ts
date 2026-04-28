@@ -1,14 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import type { NextFetchEvent, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { rateLimitApiIfConfigured } from "@/lib/rate-limit/edge";
-import {
-  PLAYWRIGHT_CLERK_BYPASS_COOKIE,
-  PLAYWRIGHT_CLERK_BYPASS_ENV,
-  PLAYWRIGHT_CLERK_BYPASS_HEADER,
-  resolvePlaywrightClerkBypassSecret,
-} from "@/lib/playwright-clerk-bypass";
 import { contentSecurityPolicy } from "@/lib/security/csp";
 
 // Public surface: marketing landing, sign-in/up flows, public docs/demos, and
@@ -45,19 +38,7 @@ const cspHeaders = (): HeadersInit => ({
   "Content-Security-Policy": contentSecurityPolicy(),
 });
 
-function isPlaywrightClerkBypass(req: NextRequest): boolean {
-  if (process.env[PLAYWRIGHT_CLERK_BYPASS_ENV] !== "1") return false;
-  const expected = resolvePlaywrightClerkBypassSecret();
-  const headerToken = req.headers.get(PLAYWRIGHT_CLERK_BYPASS_HEADER);
-  const cookieToken = req.cookies.get(PLAYWRIGHT_CLERK_BYPASS_COOKIE)?.value;
-  if (headerToken !== expected && cookieToken !== expected) {
-    return false;
-  }
-  if (req.method !== "GET" && req.method !== "HEAD") return false;
-  return req.nextUrl.pathname === "/";
-}
-
-const clerk = clerkMiddleware(async (auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   const rate = await rateLimitApiIfConfigured(req);
   if (rate) return rate;
 
@@ -86,15 +67,6 @@ const clerk = clerkMiddleware(async (auth, req) => {
   );
   return signInRedirect;
 });
-
-export default async function proxy(req: NextRequest, event: NextFetchEvent) {
-  if (isPlaywrightClerkBypass(req)) {
-    const rate = await rateLimitApiIfConfigured(req);
-    if (rate) return rate;
-    return NextResponse.next({ headers: cspHeaders() });
-  }
-  return clerk(req, event);
-}
 
 export const config = {
   matcher: [

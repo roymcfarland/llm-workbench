@@ -11,11 +11,6 @@ import {
   E2E_LISTEN_PORT,
   E2E_ORIGIN,
 } from "./e2e/env";
-import {
-  PLAYWRIGHT_CLERK_BYPASS_ENV,
-  PLAYWRIGHT_CLERK_BYPASS_SECRET_ENV,
-  resolvePlaywrightClerkBypassSecret,
-} from "./lib/playwright-clerk-bypass";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -81,8 +76,6 @@ function webServerEnv(): Record<string, string> {
     NEXT_PUBLIC_SITE_ORIGIN: E2E_ORIGIN,
     HOST: "localhost",
     HOSTNAME: "localhost",
-    [PLAYWRIGHT_CLERK_BYPASS_ENV]: "1",
-    [PLAYWRIGHT_CLERK_BYPASS_SECRET_ENV]: resolvePlaywrightClerkBypassSecret(),
   });
 
   if (process.env.LLM_WB_E2E_DISABLE_DNS_SHIM !== "1") {
