@@ -32,3 +32,12 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Web typecheck
+        run: npm run typecheck -w @llm-workbench/web
+
+      - name: Web lint
+        run: npm run lint -w @llm-workbench/web
+
+      - name: Web production build
+        run: npm run build:web

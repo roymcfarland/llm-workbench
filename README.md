@@ -33,6 +33,10 @@ accessible `@dnd-kit` reorder, virtualized trace, and a `WorkflowGraph`;
 and a hosted reference deployment lands at [`apps/web`](apps/web).
 See [CHANGELOG.md](CHANGELOG.md) for the full list.
 
+**Engineering handoff:** [docs/HANDOFF.md](docs/HANDOFF.md) — how the repo is
+structured, what shipped in `apps/web`, CI, deploy, security posture, and
+suggested work for the next milestone.
+
 ## Why It Exists
 
 LLM apps fail in boring, expensive ways:

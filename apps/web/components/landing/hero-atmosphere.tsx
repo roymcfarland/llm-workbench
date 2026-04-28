@@ -61,6 +61,12 @@ function PointerParallax() {
   return null;
 }
 
+/** Deterministic pseudo-random in [0,1) for stable particle placement (pure render). */
+function hash01(i: number, salt: number): number {
+  const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 function GalaxyPoints({
   count,
   spread,
@@ -78,11 +84,11 @@ function GalaxyPoints({
   const geometry = useMemo(() => {
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      const u = Math.random();
-      const v = Math.random();
+      const u = hash01(i, 0);
+      const v = hash01(i, 1);
       const theta = 2 * Math.PI * u;
       const phi = Math.acos(2 * v - 1);
-      const r = spread * Math.cbrt(Math.random());
+      const r = spread * Math.cbrt(hash01(i, 2));
       const sinPhi = Math.sin(phi);
       positions[i * 3] = r * sinPhi * Math.cos(theta);
       positions[i * 3 + 1] = r * sinPhi * Math.sin(theta);

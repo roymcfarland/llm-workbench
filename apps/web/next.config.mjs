@@ -1,4 +1,14 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { withSentryConfig } from "@sentry/nextjs";
+
+/** Monorepo root (avoids wrong Turbopack root when multiple lockfiles exist). */
+const monorepoRoot = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+);
 
 const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
@@ -38,6 +48,10 @@ const nextConfig = {
   // The pages and API routes in this app are all dynamic by intent, so the
   // current behaviour is functionally identical for the reference deployment.
   cacheComponents: false,
+
+  turbopack: {
+    root: monorepoRoot,
+  },
 
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

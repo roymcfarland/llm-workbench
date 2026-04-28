@@ -1,7 +1,7 @@
 # `@llm-workbench/web`
 
 The hosted reference deployment for [LLM Workbench](../../README.md). It is a
-Next.js 16 (App Router, Cache Components/PPR) application that proves the
+Next.js 16 (App Router) application that proves the
 runtime works end-to-end against real infrastructure: Supabase for run
 persistence, Clerk for auth, and Vercel AI Gateway for model calls via the AI
 SDK v5.
@@ -12,7 +12,7 @@ comments in the source.
 
 ## Stack
 
-- **Next.js 16** (App Router, Cache Components, React 19)
+- **Next.js 16** (App Router; Cache Components intentionally off for Clerk compatibility — see `next.config.mjs`)
 - **Tailwind CSS v4** (CSS-first `@theme` config) + **shadcn/ui** primitives
 - **Clerk** (`@clerk/nextjs`) for authentication and tenancy
 - **Supabase** (`@supabase/supabase-js`) for the `runs` table
@@ -34,7 +34,7 @@ comments in the source.
 
 ## Prerequisites
 
-- Node.js 18.18+ (the workspace minimum)
+- Node.js **20+** (matches repo `engines` and CI)
 - A Clerk application (publishable + secret key)
 - A Supabase project (URL + service-role key)
 - Vercel AI Gateway access (`AI_GATEWAY_API_KEY`, or OIDC if deployed on Vercel)
@@ -85,14 +85,17 @@ volume on the Supabase / Clerk / Vercel free tiers). End-to-end:
    → AI Gateway). When the project is deployed on Vercel, OIDC injects the
    gateway token automatically — you do **not** need `AI_GATEWAY_API_KEY`
    in production. Set it locally in `.env.local` only.
-5. **Vercel.** Import the forked repo into Vercel. Leave **Root Directory**
-   at the repo root — the included [`vercel.json`](../../vercel.json)
-   wires `npm run build:web` and `apps/web/.next` so workspace deps resolve
-   correctly. Paste the env vars from
-   [`.env.example`](./.env.example) into Project Settings → Environment
-   Variables; set `NEXT_PUBLIC_SITE_ORIGIN` to your production URL.
+5. **Vercel.** Import the repo. Set **Root
+   Directory** to `apps/web` so Vercel picks up
+   [`vercel.json`](./vercel.json) (install + build run from the monorepo root
+   via `cd ../..`). Paste env vars from [`.env.example`](./.env.example) into
+   Project Settings → Environment Variables; set `NEXT_PUBLIC_SITE_ORIGIN` to
+   your production URL. Optional: `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`,
+   `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `CSP_EXTRA_CONNECT_SRC`
+   (see root [`docs/HANDOFF.md`](../../docs/HANDOFF.md)).
 6. **Deploy.** Push to `main` (or click Deploy). The first build typically
-   takes ~2 minutes. Subsequent builds are ~30s thanks to Turbopack.
+   takes a few minutes; CI on GitHub runs `build`, `test`, web `typecheck`,
+   `lint`, and `build:web` (see `.github/workflows/ci.yml`).
 
 > Cost expectation at design-partner volume: ~$0/month. Supabase free tier
 > covers 500 MB Postgres + 2 GB egress; Clerk free tier covers 10 000 MAUs;

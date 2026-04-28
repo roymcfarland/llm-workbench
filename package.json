@@ -18,7 +18,8 @@
     "demo": "npm run dev -w job-search-demo",
     "demo:http-server": "npm run start -w run-repo-server",
     "dev:web": "npm run dev -w apps/web",
-    "build:web": "npm run build -w apps/web"
+    "build:web": "npm run build -w apps/web",
+    "ci": "npm run build && npm test && npm run typecheck -w @llm-workbench/web && npm run lint -w @llm-workbench/web && npm run build:web"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
