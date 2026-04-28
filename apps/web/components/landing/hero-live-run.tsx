@@ -26,6 +26,34 @@ function useReducedMotion(): boolean {
 
 type TraceRow = { id: string; label: string; meta?: string };
 
+const TRACE_VISIBLE_ROWS = 6;
+
+type TraceAsideSlot =
+  | { kind: "empty"; key: string }
+  | { kind: "waiting" }
+  | { kind: "row"; row: TraceRow };
+
+function buildTraceAsideSlots(trace: TraceRow[]): TraceAsideSlot[] {
+  if (trace.length === 0) {
+    return [
+      ...Array.from({ length: TRACE_VISIBLE_ROWS - 1 }, (_, i) => ({
+        kind: "empty" as const,
+        key: `pad-${i}`,
+      })),
+      { kind: "waiting" },
+    ];
+  }
+  const trimmed = trace.slice(-TRACE_VISIBLE_ROWS);
+  const pad = TRACE_VISIBLE_ROWS - trimmed.length;
+  return [
+    ...Array.from({ length: pad }, (_, i) => ({
+      kind: "empty" as const,
+      key: `pad-${i}`,
+    })),
+    ...trimmed.map((row) => ({ kind: "row" as const, row })),
+  ];
+}
+
 function summarize(e: TraceEvent): TraceRow {
   switch (e.type) {
     case "step_started":
@@ -230,9 +258,11 @@ export function HeroLiveRun() {
     ? runtime.getState(runId)
     : undefined;
 
+  const traceSlots = useMemo(() => buildTraceAsideSlots(trace), [trace]);
+
   return (
     <div
-      className="relative isolate grid w-full grid-cols-1 gap-3 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-3 shadow-[0_30px_80px_-40px_oklch(0.65_0.18_260/0.6)] backdrop-blur [overflow-anchor:none] md:grid-cols-[1fr_220px]"
+      className="relative isolate grid w-full grid-cols-1 gap-3 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-3 shadow-[0_30px_80px_-40px_oklch(0.65_0.18_260/0.6)] backdrop-blur [contain:layout] [overflow-anchor:none] md:grid-cols-[1fr_220px]"
     >
       <div className="relative isolate aspect-[4/3] min-h-[220px] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/40">
         {runId && state ? (
@@ -248,32 +278,45 @@ export function HeroLiveRun() {
           </div>
         )}
       </div>
-      <aside className="relative z-10 flex min-h-[11.5rem] flex-col gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/95 p-3 font-mono text-[10.5px] leading-snug backdrop-blur-sm">
-        <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
+      <aside className="relative z-10 flex h-[220px] min-h-[220px] flex-col gap-1 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/95 p-3 font-mono text-[10.5px] leading-snug backdrop-blur-sm md:w-[220px] md:flex-shrink-0">
+        <div className="mb-1 shrink-0 flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
           <span>trace</span>
           <span className="rounded bg-emerald-500/15 px-1 text-emerald-300">
             live
           </span>
         </div>
-        {trace.length === 0 ? (
-          <div className="text-[var(--color-muted-foreground)]">
-            waiting for events…
-          </div>
-        ) : (
-          trace.map((row) => (
-            <div
-              key={row.id}
-              className="flex items-baseline justify-between gap-2 border-b border-dashed border-[var(--color-border)]/60 py-0.5 last:border-b-0"
-            >
-              <span className="truncate text-zinc-100">{row.label}</span>
-              {row.meta ? (
-                <span className="shrink-0 text-[var(--color-muted-foreground)]">
-                  {row.meta}
-                </span>
-              ) : null}
-            </div>
-          ))
-        )}
+        <div className="flex min-h-0 flex-1 flex-col justify-end gap-0">
+          {traceSlots.map((slot) =>
+            slot.kind === "empty" ? (
+              <div
+                key={slot.key}
+                aria-hidden
+                className="flex min-h-[1.625rem] shrink-0 items-baseline justify-between gap-2 border-b border-dashed border-[var(--color-border)]/45 py-0.5 opacity-35 last:border-b-0"
+              >
+                <span className="truncate text-zinc-100">&nbsp;</span>
+              </div>
+            ) : slot.kind === "waiting" ? (
+              <div
+                key="waiting"
+                className="flex min-h-[1.625rem] shrink-0 items-center border-b border-dashed border-transparent py-0.5 text-[var(--color-muted-foreground)] last:border-b-0"
+              >
+                waiting for events…
+              </div>
+            ) : (
+              <div
+                key={slot.row.id}
+                className="flex min-h-[1.625rem] shrink-0 items-baseline justify-between gap-2 border-b border-dashed border-[var(--color-border)]/60 py-0.5 last:border-b-0"
+              >
+                <span className="truncate text-zinc-100">{slot.row.label}</span>
+                {slot.row.meta ? (
+                  <span className="shrink-0 text-[var(--color-muted-foreground)]">
+                    {slot.row.meta}
+                  </span>
+                ) : null}
+              </div>
+            ),
+          )}
+        </div>
       </aside>
     </div>
   );

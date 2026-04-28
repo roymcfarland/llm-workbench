@@ -109,14 +109,14 @@ export function CodeDiff() {
       <div className="lg:col-span-2">
         <div
           aria-live="polite"
-          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-4 font-mono text-xs"
+          className="min-h-[8.75rem] rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-4 font-mono text-xs [contain:inline-size]"
         >
           <div className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
             trace events emitted by the line above
           </div>
           {activeHint ? (
-            <ul className="flex flex-col gap-1 text-zinc-100">
+            <ul className="flex min-h-[4.75rem] flex-col gap-1 text-zinc-100">
               {activeHint.events.map((e, i) => (
                 <li key={i} className="text-emerald-300">
                   → {e}
@@ -124,7 +124,7 @@ export function CodeDiff() {
               ))}
             </ul>
           ) : (
-            <p className="text-[var(--color-muted-foreground)]">
+            <p className="min-h-[4.75rem] text-[var(--color-muted-foreground)]">
               Click a line on the right to preview which trace events the runtime
               would emit. Every event is durable, replayable, and exported in the
               run bundle.

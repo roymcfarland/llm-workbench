@@ -188,6 +188,39 @@
     animation: aurora-shift-bg 18s ease-in-out infinite;
   }
 
+  @keyframes telemetry-terminal-sheen-bg {
+    0% {
+      background-position: 100% 0%;
+    }
+    100% {
+      background-position: -100% 0%;
+    }
+  }
+
+  .telemetry-terminal-sheen {
+    background: linear-gradient(
+      118deg,
+      transparent 38%,
+      rgba(34, 211, 238, 0.14) 50%,
+      transparent 62%
+    );
+    background-size: 220% 100%;
+    mix-blend-mode: screen;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .telemetry-terminal-sheen {
+      animation: telemetry-terminal-sheen-bg 12s linear infinite;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .telemetry-terminal-sheen {
+      animation: none;
+      opacity: 0.35;
+    }
+  }
+
   @keyframes crt-sweep {
     0% {
       transform: translateY(-120%);
