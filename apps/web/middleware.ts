@@ -25,10 +25,26 @@ const isPublicRoute = createRouteMatcher([
   "/api/mcp",
 ]);
 
+// API routes that require auth must respond with JSON `401 Unauthorized`
+// instead of a sign-in redirect — JSON callers (curl, programmatic clients,
+// and the OpenAPI surface) expect a structured error, not an HTML page.
+const isApiRoute = createRouteMatcher(["/api/(.*)", "/trpc/(.*)"]);
+
 export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+  if (isPublicRoute(req)) return;
+
+  const { userId, redirectToSignIn } = await auth();
+  if (userId) return;
+
+  if (isApiRoute(req)) {
+    // Bare HTTP 401 with a JSON body — no HTML, no rewrite to /_not-found.
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // Page route: 307 redirect to /sign-in with the original URL so the user
+  // can resume after authenticating. `auth.protect()` would *rewrite* to
+  // /_not-found by default, which surfaces as a 404 to the user.
+  return redirectToSignIn({ returnBackUrl: req.url });
 });
 
 export const config = {

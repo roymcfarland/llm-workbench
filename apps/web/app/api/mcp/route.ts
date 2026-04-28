@@ -76,12 +76,96 @@ function tenantRepository(tenantId: string): RunRepository {
   };
 }
 
-async function buildHandler(tenantId: string): Promise<(req: Request) => Promise<Response>> {
-  const repo = tenantRepository(tenantId);
+/**
+ * No-op `RunRepository` used while serving unauthenticated MCP discovery
+ * requests (`initialize`, `tools/list`, `prompts/list`, `resources/list`,
+ * `ping`, and protocol notifications). The McpServer registers tools and
+ * resources eagerly; with this stub it can answer discovery without ever
+ * touching tenant data.
+ */
+function emptyRepository(): RunRepository {
+  return {
+    async list() {
+      return [];
+    },
+    async load() {
+      return null;
+    },
+    async save() {
+      // no-op; tools that need to write are gated behind auth.
+    },
+    async delete() {
+      // no-op.
+    },
+  };
+}
+
+/**
+ * JSON-RPC methods that MCP clients call before they know whether the server
+ * requires auth. Per the MCP spec these MUST be reachable unauthenticated so
+ * that headless agentic clients can discover the server's capabilities. We
+ * still register the same tool surface for everyone — `tools/list` is just a
+ * description; actual invocation goes through `tools/call` which requires
+ * auth (see `methodNeedsAuth`).
+ */
+const PUBLIC_METHODS = new Set<string>([
+  "initialize",
+  "ping",
+  "tools/list",
+  "prompts/list",
+  "resources/list",
+  "resources/templates/list",
+  "completion/complete",
+]);
+
+function methodNeedsAuth(method: unknown): boolean {
+  if (typeof method !== "string") return false;
+  // Notifications (no `id`, fire-and-forget) are always part of the
+  // transport-level handshake; gating them would break `notifications/initialized`.
+  if (method.startsWith("notifications/")) return false;
+  return !PUBLIC_METHODS.has(method);
+}
+
+type JsonRpcMessage = {
+  jsonrpc?: unknown;
+  id?: unknown;
+  method?: unknown;
+  params?: unknown;
+};
+
+function asMessages(parsed: unknown): JsonRpcMessage[] {
+  if (Array.isArray(parsed)) return parsed as JsonRpcMessage[];
+  if (parsed && typeof parsed === "object") return [parsed as JsonRpcMessage];
+  return [];
+}
+
+function jsonRpcUnauthorized(messages: JsonRpcMessage[]): Response {
+  // -32001 sits in the JSON-RPC "implementation-defined server error" range
+  // (-32000..-32099). MCP clients surface the protocol-shaped error to the
+  // caller; bare HTTP 401 would short-circuit them before they ever see it.
+  const replies = messages.map((m) => ({
+    jsonrpc: "2.0" as const,
+    id: m && typeof m === "object" && "id" in m ? (m.id ?? null) : null,
+    error: {
+      code: -32001,
+      message: "Unauthorized",
+      data: { reason: "Authentication required for this MCP method" },
+    },
+  }));
+  const body = replies.length === 1 ? replies[0] : replies;
+  return new Response(JSON.stringify(body), {
+    status: 401,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+async function buildHandler(
+  repository: RunRepository,
+): Promise<(req: Request) => Promise<Response>> {
   const server = createWorkbenchMcpServer({
-    runRepository: repo,
+    runRepository: repository,
     listRunIds: async () => {
-      const metas = await listRunsForTenant(tenantId);
+      const metas = await repository.list();
       return metas.map((m: SavedRunMeta) => m.id);
     },
   });
@@ -111,7 +195,7 @@ async function buildHandler(tenantId: string): Promise<(req: Request) => Promise
           workflow: jobSearchWorkflow,
           ruleSets: [initialRuleSet],
         });
-        await repo.save(rt.getState(runId)!);
+        await repository.save(rt.getState(runId)!);
         return asJsonText({ runId, workflowId, status: "running" });
       } catch (e) {
         return toolError(e instanceof Error ? e.message : "start_run failed");
@@ -133,12 +217,12 @@ async function buildHandler(tenantId: string): Promise<(req: Request) => Promise
     },
     async ({ runId, stepId, gate, decision, note }) => {
       try {
-        const state = await repo.load(runId);
+        const state = await repository.load(runId);
         if (!state) return toolError(`No run named ${runId}`);
         const rt = new WorkbenchRuntime();
         rt.importState(state);
         rt.session(runId).resolveGate({ stepId, gate, decision, note });
-        await repo.save(rt.getState(runId)!);
+        await repository.save(rt.getState(runId)!);
         return asJsonText({ ok: true, runId, stepId, decision });
       } catch (e) {
         return toolError(e instanceof Error ? e.message : "resolve_gate failed");
@@ -160,7 +244,7 @@ async function buildHandler(tenantId: string): Promise<(req: Request) => Promise
     },
     async ({ runId, artifactKey, typeId, data, idempotencyKey }) => {
       try {
-        const state = await repo.load(runId);
+        const state = await repository.load(runId);
         if (!state) return toolError(`No run named ${runId}`);
         const rt = new WorkbenchRuntime();
         rt.importState(state);
@@ -170,7 +254,7 @@ async function buildHandler(tenantId: string): Promise<(req: Request) => Promise
           data,
           idempotencyKey,
         });
-        await repo.save(rt.getState(runId)!);
+        await repository.save(rt.getState(runId)!);
         return asJsonText({
           ok: true,
           runId,
@@ -192,7 +276,7 @@ async function buildHandler(tenantId: string): Promise<(req: Request) => Promise
     },
     async ({ runId }) => {
       try {
-        const state = await repo.load(runId);
+        const state = await repository.load(runId);
         if (!state) return toolError(`No run named ${runId}`);
         const rt = new WorkbenchRuntime();
         rt.importState(state);
@@ -207,31 +291,85 @@ async function buildHandler(tenantId: string): Promise<(req: Request) => Promise
   return createWorkbenchMcpHttpHandler({ server });
 }
 
-async function handle(req: Request): Promise<Response> {
-  let tenantId: string;
+/**
+ * Resolve the repository to use for this request. Authenticated callers get a
+ * tenant-scoped view; unauthenticated callers either get a no-op repository
+ * (for protocol-level discovery methods) or a JSON-RPC `Unauthorized` error
+ * envelope (for method calls that read or mutate tenant data).
+ */
+async function resolveRepository(
+  needsAuth: boolean,
+  messages: JsonRpcMessage[],
+): Promise<{ repo: RunRepository } | { unauthorized: Response }> {
   try {
-    ({ tenantId } = await requireTenant());
+    const { tenantId } = await requireTenant();
+    return { repo: tenantRepository(tenantId) };
   } catch (e) {
-    if (e instanceof TenantAuthError) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "content-type": "application/json" },
-      });
+    if (!(e instanceof TenantAuthError)) throw e;
+    if (needsAuth) {
+      return { unauthorized: jsonRpcUnauthorized(messages) };
     }
-    throw e;
+    return { repo: emptyRepository() };
   }
-  const handler = await buildHandler(tenantId);
+}
+
+async function handlePost(req: Request): Promise<Response> {
+  const bodyText = await req.text();
+
+  let parsed: unknown = undefined;
+  try {
+    parsed = bodyText.length > 0 ? JSON.parse(bodyText) : undefined;
+  } catch {
+    // Defer to the MCP transport's own JSON-RPC parse error. We just need to
+    // not block the request on auth when we can't even read the method.
+  }
+
+  const messages = asMessages(parsed);
+  // Conservative: if ANY message in the (legacy) batch needs auth, the whole
+  // request is gated. Modern MCP (>= 2025-03-26) drops batches, so in practice
+  // this is a single message.
+  const needsAuth = messages.some((m) => methodNeedsAuth(m.method));
+
+  const resolved = await resolveRepository(needsAuth, messages);
+  if ("unauthorized" in resolved) return resolved.unauthorized;
+
+  const handler = await buildHandler(resolved.repo);
+  // Re-create the request because we already consumed its body. Web Standard
+  // `Request` bodies are single-shot streams.
+  const fresh = new Request(req.url, {
+    method: req.method,
+    headers: req.headers,
+    body: bodyText,
+  });
+  return handler(fresh);
+}
+
+async function handleNonPost(req: Request): Promise<Response> {
+  // GET (SSE reconnect) and DELETE (terminate session) are protocol transport
+  // operations that don't read tenant data. In stateless mode the SDK responds
+  // with method-not-allowed / 405 anyway, so it's safe to wire a no-op repo.
+  // Authenticated callers still get tenant-aware behavior if a future SDK
+  // version starts honoring these verbs.
+  let repo: RunRepository;
+  try {
+    const { tenantId } = await requireTenant();
+    repo = tenantRepository(tenantId);
+  } catch (e) {
+    if (!(e instanceof TenantAuthError)) throw e;
+    repo = emptyRepository();
+  }
+  const handler = await buildHandler(repo);
   return handler(req);
 }
 
 export async function GET(req: Request): Promise<Response> {
-  return handle(req);
+  return handleNonPost(req);
 }
 
 export async function POST(req: Request): Promise<Response> {
-  return handle(req);
+  return handlePost(req);
 }
 
 export async function DELETE(req: Request): Promise<Response> {
-  return handle(req);
+  return handleNonPost(req);
 }
