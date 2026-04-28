@@ -30,9 +30,14 @@ function appendNodeImportOption(
   return base ? `${base} ${fragment}` : fragment;
 }
 
-/** Raise soft fd limit on Unix before `next start` to reduce EMFILE during smoke runs. */
+/**
+ * Start Next without `npm run` so `NODE_OPTIONS` (DNS shim, ipv4first) reaches the same
+ * Node process as `next start`. `npm`/`sh` wrappers have caused flaky internal proxying on CI.
+ */
 function webServerStartCommand(port: number): string {
-  const inner = `npm run start -- --hostname 127.0.0.1 --port ${String(port)}`;
+  const nextCli = path.join(rootDir, "node_modules", "next", "dist", "bin", "next");
+  const portStr = String(port);
+  const inner = `node "${nextCli}" start --hostname 127.0.0.1 --port ${portStr}`;
   if (platform() === "win32") {
     return inner;
   }

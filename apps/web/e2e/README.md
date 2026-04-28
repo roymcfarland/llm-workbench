@@ -8,7 +8,7 @@ These tests assume a production build exists under `apps/web/.next`. CI runs **`
 |---------|---------|
 | `PLAYWRIGHT_WEB_PORT` | TCP port for `next start` (default **`3399`**). Used by `e2e/env.ts`. |
 | `NEXT_PUBLIC_SITE_ORIGIN` | Must be `http://127.0.0.1:<port>` matching that port (**not** `localhost` for stability). CI sets both. |
-| `LLM_WB_E2E_DISABLE_DNS_SHIM` | Set to `1` to skip the Node `--import` DNS shim (only if you know you do not need it). |
+| `LLM_WB_E2E_DISABLE_DNS_SHIM` | Set to `1` to skip the Node `--import` DNS shim (only if you know you do not need it). GitHub Actions sets this for Playwright because Linux runners do not need the shim and it can break Next 16’s internal proxy. |
 | `LLM_WB_E2E_DNS_SHIM` | Set automatically by Playwright for `next start`; rewrites `localhost` → `127.0.0.1` at DNS lookup so Next 16’s internal middleware proxy does not hit `ENOTFOUND localhost`. |
 
 ## Skip starting the server
