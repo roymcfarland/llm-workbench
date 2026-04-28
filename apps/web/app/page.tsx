@@ -6,7 +6,7 @@ import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 
 import { Button } from "@/components/ui/button";
 import { CodeDiff } from "@/components/landing/code-diff";
-import { CosmosField } from "@/components/landing/cosmos-field";
+import { HeroAtmosphereSlot } from "@/components/landing/hero-atmosphere-slot";
 import { HeroLiveRun } from "@/components/landing/hero-live-run";
 import { LandingFinalCta } from "@/components/landing/landing-final-cta";
 import { LandingHorizon } from "@/components/landing/landing-horizon";
@@ -55,7 +55,7 @@ export default async function LandingPage() {
       <div className="relative isolate overflow-hidden">
         <div className="relative min-h-[min(100dvh,56rem)]">
           <div className="absolute inset-0 -z-30 pointer-events-none">
-            <CosmosField className="h-full min-h-[min(100dvh,56rem)] w-full" />
+            <HeroAtmosphereSlot className="h-full min-h-[min(100dvh,56rem)] w-full" />
           </div>
           <div
             aria-hidden="true"
@@ -75,7 +75,10 @@ export default async function LandingPage() {
             className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-10 px-6 pb-16 pt-14 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-14 lg:pb-24 lg:pt-20"
           >
             <div className="flex flex-col gap-6">
-              <p className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/55 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)] shadow-sm backdrop-blur-md">
+              <p
+                className="landing-reveal inline-flex w-fit items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/55 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)] shadow-sm backdrop-blur-md"
+                style={{ animationDelay: "0s" }}
+              >
                 <span
                   aria-hidden="true"
                   className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"
@@ -85,7 +88,8 @@ export default async function LandingPage() {
 
               <h1
                 id="hero-heading"
-                className="font-serif text-4xl font-semibold tracking-tight text-balance drop-shadow-sm sm:text-5xl lg:text-[4.1rem] lg:leading-[1.02]"
+                className="landing-reveal font-serif text-4xl font-semibold tracking-tight text-balance drop-shadow-sm sm:text-5xl lg:text-[4.1rem] lg:leading-[1.02]"
+                style={{ animationDelay: "0.09s" }}
               >
                 Ship LLM agents you can debug,{" "}
                 <span className="bg-gradient-to-br from-cyan-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
@@ -93,13 +97,19 @@ export default async function LandingPage() {
                 </span>
               </h1>
 
-              <p className="max-w-xl text-balance text-base leading-relaxed text-[var(--color-muted-foreground)] sm:text-lg">
+              <p
+                className="landing-reveal max-w-xl text-balance text-base leading-relaxed text-[var(--color-muted-foreground)] sm:text-lg"
+                style={{ animationDelay: "0.16s" }}
+              >
                 LLM Workbench turns each run of your agent into a tamper-evident,
                 model-agnostic, human-gated bundle: trace events, artifacts, gates,
                 and cost — signed, exportable, and replayable.
               </p>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div
+                className="landing-reveal flex flex-wrap items-center gap-3"
+                style={{ animationDelay: "0.22s" }}
+              >
                 <Button asChild size="lg" className="shadow-lg shadow-cyan-500/10">
                   <Link href="/playground">
                     Open the playground
@@ -117,7 +127,10 @@ export default async function LandingPage() {
                 </Button>
               </div>
 
-              <p className="font-mono text-[11px] text-[var(--color-muted-foreground)]">
+              <p
+                className="landing-reveal font-mono text-[11px] text-[var(--color-muted-foreground)]"
+                style={{ animationDelay: "0.28s" }}
+              >
                 <span className="text-[var(--color-foreground)]">
                   {runsCount === null ? "—" : runsCount.toLocaleString()}
                 </span>{" "}
@@ -142,7 +155,7 @@ export default async function LandingPage() {
               </p>
             </div>
 
-            <div className="relative">
+            <div className="landing-reveal relative" style={{ animationDelay: "0.14s" }}>
               <div
                 data-static-fallback
                 className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/45 p-3 shadow-2xl backdrop-blur-md data-[hidden=true]:hidden"

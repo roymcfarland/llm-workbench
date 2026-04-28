@@ -50,7 +50,7 @@ export function OrbitFeatures() {
     >
       <div className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[120%] max-w-[1400px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,_oklch(0.55_0.2_260/0.14),_transparent_70%)]" />
 
-      <div className="relative mb-12 max-w-2xl">
+      <div className="relative mb-12 max-w-2xl landing-reveal" style={{ animationDelay: "0s" }}>
         <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-muted-foreground)]">
           constellation
         </p>
@@ -67,7 +67,7 @@ export function OrbitFeatures() {
       </div>
 
       <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => {
+        {items.map((item, i) => {
           const Icon = item.icon;
           const inner = (
             <>
@@ -86,7 +86,12 @@ export function OrbitFeatures() {
             "group relative overflow-hidden border-[var(--color-border)] bg-[var(--color-card)]/45 backdrop-blur-sm transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-cyan-500/25 hover:shadow-[0_28px_80px_-40px_oklch(0.55_0.18_240/0.55)]";
 
           return (
-            <Link key={item.title} href={item.href} className="block rounded-xl">
+            <Link
+              key={item.title}
+              href={item.href}
+              className="landing-reveal block rounded-xl"
+              style={{ animationDelay: `${0.06 + i * 0.065}s` }}
+            >
               <Card className={cardClass}>{inner}</Card>
             </Link>
           );
