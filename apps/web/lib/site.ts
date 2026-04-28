@@ -3,6 +3,11 @@ import { headers } from "next/headers";
 export const SITE_NAME = "LLM Workbench" as const;
 export const BRIGHTLINE_LABS_NAME = "Brightline Labs" as const;
 export const BRIGHTLINE_LABS_URL = "https://www.brightline.io" as const;
+/** Hostname displayed on share cards and in copy (no scheme). */
+export const SITE_SHARE_HOST = "www.llmworkbench.io" as const;
+/** Alt text for OG / Twitter generated image routes and metadata. */
+export const OG_IMAGE_ALT =
+  "LLM Workbench — Ship LLM agents you can debug, fork, and replay. Tamper-evident bundles, MCP & OpenAPI." as const;
 export const SITE_TAGLINE =
   "Model-agnostic LLM control plane: tamper-evident, human-gated, replayable run bundles." as const;
 // Placeholder GitHub URL — repo is not yet public at this slug. Update when it lands.

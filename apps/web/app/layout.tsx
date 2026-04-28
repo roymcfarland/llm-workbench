@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 
 import { ScrollChrome } from "@/components/landing/scroll-chrome";
+import { OG_IMAGE_ALT } from "@/lib/site";
 
 import "./globals.css";
 
@@ -63,12 +64,29 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "LLM Workbench",
     locale: "en_US",
+    url: "/",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: OG_IMAGE_ALT,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "LLM Workbench",
     description:
       "Tamper-evident, human-gated, replayable run bundles for the LLM agents you actually deploy.",
+    images: [
+      {
+        url: "/twitter-image",
+        width: 1200,
+        height: 630,
+        alt: OG_IMAGE_ALT,
+      },
+    ],
   },
 };
 
