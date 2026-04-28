@@ -82,6 +82,9 @@
     html {
       scroll-behavior: smooth;
     }
+    html.lenis {
+      scroll-behavior: auto !important;
+    }
   }
 
   ::selection {
@@ -167,6 +170,79 @@
       opacity: 1;
       transform: none;
       filter: none;
+    }
+  }
+
+  @keyframes aurora-shift-bg {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .aurora-shift {
+    background-size: 220% 220%;
+    animation: aurora-shift-bg 18s ease-in-out infinite;
+  }
+
+  @keyframes crt-sweep {
+    0% {
+      transform: translateY(-120%);
+      opacity: 0;
+    }
+    8% {
+      opacity: 1;
+    }
+    92% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(120%);
+      opacity: 0;
+    }
+  }
+
+  .crt-scan {
+    overflow: hidden;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 3px,
+      rgba(6, 182, 212, 0.035) 3px,
+      rgba(6, 182, 212, 0.035) 6px
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 18%,
+      black 82%,
+      transparent 100%
+    );
+  }
+
+  .crt-scan::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 35%,
+      rgba(34, 211, 238, 0.12) 50%,
+      transparent 65%
+    );
+    animation: crt-sweep 6.5s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aurora-shift {
+      animation: none;
+    }
+    .crt-scan::after {
+      animation: none;
+      opacity: 0;
     }
   }
 }

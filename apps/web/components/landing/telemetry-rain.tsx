@@ -45,6 +45,10 @@ export function TelemetryRain() {
             "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(34,211,238,0.03) 2px, rgba(34,211,238,0.03) 4px)",
         }}
       />
+      <div
+        aria-hidden
+        className="crt-scan pointer-events-none absolute inset-0 opacity-40 motion-reduce:opacity-25"
+      />
       <div className="relative mx-auto max-w-6xl px-6">
         <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>

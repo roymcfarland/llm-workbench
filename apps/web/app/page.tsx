@@ -11,6 +11,7 @@ import { HeroLiveRun } from "@/components/landing/hero-live-run";
 import { LandingFinalCta } from "@/components/landing/landing-final-cta";
 import { LandingHorizon } from "@/components/landing/landing-horizon";
 import { OrbitFeatures } from "@/components/landing/orbit-features";
+import { SectionReveal } from "@/components/landing/section-reveal";
 import { StaticWorkflowSvg } from "@/components/landing/static-workflow-svg";
 import { TelemetryRain } from "@/components/landing/telemetry-rain";
 import { getTotalRunsCount } from "@/lib/landing/runs-count";
@@ -92,7 +93,7 @@ export default async function LandingPage() {
                 style={{ animationDelay: "0.09s" }}
               >
                 Ship LLM agents you can debug,{" "}
-                <span className="bg-gradient-to-br from-cyan-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
+                <span className="aurora-shift bg-gradient-to-br from-cyan-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
                   fork, and replay.
                 </span>
               </h1>
@@ -181,15 +182,22 @@ export default async function LandingPage() {
           </section>
         </div>
 
-        <OrbitFeatures />
-        <TelemetryRain />
-        <LandingHorizon />
+        <SectionReveal>
+          <OrbitFeatures />
+        </SectionReveal>
+        <SectionReveal>
+          <TelemetryRain />
+        </SectionReveal>
+        <SectionReveal>
+          <LandingHorizon />
+        </SectionReveal>
 
-        <section
-          aria-labelledby="diff-heading"
-          className="mx-auto w-full max-w-6xl px-6 pb-8 pt-4 md:pt-8"
-        >
-          <div className="mb-8 flex flex-col gap-2">
+        <SectionReveal>
+          <section
+            aria-labelledby="diff-heading"
+            className="mx-auto w-full max-w-6xl px-6 pb-8 pt-4 md:pt-8"
+          >
+            <div className="mb-8 flex flex-col gap-2">
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
               one import changes
             </p>
@@ -214,9 +222,12 @@ export default async function LandingPage() {
             </p>
           </div>
           <CodeDiff />
-        </section>
+          </section>
+        </SectionReveal>
 
-        <LandingFinalCta runsCount={runsCount} />
+        <SectionReveal>
+          <LandingFinalCta runsCount={runsCount} />
+        </SectionReveal>
       </div>
     </>
   );

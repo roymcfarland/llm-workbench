@@ -1,7 +1,8 @@
 "use client";
 
-import { Sparkles } from "@react-three/drei";
+import { Float, Sparkles } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useTheme } from "next-themes";
@@ -141,11 +142,33 @@ function WireHaloRings() {
   );
 }
 
-function UniverseScene({ isDark, isMobile }: { isDark: boolean; isMobile: boolean }) {
-  const sparkleCount = isMobile ? 90 : 260;
-  const n = isMobile ? 3200 : 10500;
+function PostGlow({ enabled }: { enabled: boolean }) {
+  if (!enabled) return null;
+  return (
+    <EffectComposer enableNormalPass={false} multisampling={0}>
+      <Bloom
+        luminanceThreshold={0.11}
+        mipmapBlur
+        intensity={0.78}
+        radius={0.39}
+      />
+    </EffectComposer>
+  );
+}
+
+function UniverseScene({
+  isDark,
+  isMobile,
+}: {
+  isDark: boolean;
+  isMobile: boolean;
+}) {
+  const sparkleCount = isMobile ? 90 : 280;
+  const n = isMobile ? 3200 : 11000;
   const c1 = isDark ? "#5eead4" : "#0d9488";
   const c2 = isDark ? "#d8b4fe" : "#7c3aed";
+  const bloom = !isMobile;
+
   return (
     <>
       <PointerParallax />
@@ -163,7 +186,9 @@ function UniverseScene({ isDark, isMobile }: { isDark: boolean; isMobile: boolea
         size={isMobile ? 0.015 : 0.01}
         speed={-0.016}
       />
-      <WireHaloRings />
+      <Float speed={1.85} rotationIntensity={0.45} floatIntensity={0.62}>
+        <WireHaloRings />
+      </Float>
       <Sparkles
         count={sparkleCount}
         scale={isMobile ? 8.5 : 12.5}
@@ -172,6 +197,7 @@ function UniverseScene({ isDark, isMobile }: { isDark: boolean; isMobile: boolea
         opacity={isDark ? 0.52 : 0.34}
         color={isDark ? "#f0abfc" : "#db2777"}
       />
+      <PostGlow enabled={bloom} />
     </>
   );
 }
@@ -205,6 +231,11 @@ export function HeroAtmosphere({ className }: HeroAtmosphereProps) {
         dpr={[1, 2]}
         camera={{ fov: 54, near: 0.08, far: 55, position: [0, 0, 4.55] }}
         style={{ pointerEvents: "none" }}
+        onCreated={({ gl }) => {
+          gl.toneMapping = THREE.ACESFilmicToneMapping;
+          gl.toneMappingExposure = 1.1;
+          gl.setClearColor(0x000000, 0);
+        }}
       >
         <Suspense fallback={null}>
           <UniverseScene isDark={isDark} isMobile={mobile} />

@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 
-import { ScrollProgress } from "@/components/landing/scroll-progress";
+import { ScrollChrome } from "@/components/landing/scroll-chrome";
 
 import "./globals.css";
 
@@ -95,7 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className={`${outfit.variable} ${jetbrainsMono.variable} ${newsreader.variable}`}
       >
         <body className="min-h-screen antialiased">
-          <ScrollProgress />
+          <ScrollChrome />
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-[var(--color-primary)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--color-primary-foreground)]"
