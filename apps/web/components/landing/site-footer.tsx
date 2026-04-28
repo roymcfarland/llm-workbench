@@ -3,6 +3,7 @@ import Link from "next/link";
 import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 
 import {
+  BRIGHTLINE_LABS_NAME,
   GITHUB_URL,
   LICENSE_NAME,
   LICENSE_URL,
@@ -95,6 +96,14 @@ export function SiteFooter() {
             </li>
           </ul>
         </nav>
+      </div>
+      <div className="border-t border-[var(--color-border)] px-6 py-5">
+        <p className="text-center text-xs text-[var(--color-muted-foreground)]">
+          Built by{" "}
+          <span className="font-medium text-[var(--color-foreground)]">
+            {BRIGHTLINE_LABS_NAME}
+          </span>
+        </p>
       </div>
     </footer>
   );

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 export const SITE_NAME = "LLM Workbench" as const;
+export const BRIGHTLINE_LABS_NAME = "Brightline Labs" as const;
 export const SITE_TAGLINE =
   "Model-agnostic LLM control plane: tamper-evident, human-gated, replayable run bundles." as const;
 // Placeholder GitHub URL — repo is not yet public at this slug. Update when it lands.
