@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { platform } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -12,6 +13,7 @@ import {
 } from "./e2e/env";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
 const localhostLookupShim = path.join(
   rootDir,
@@ -32,12 +34,13 @@ function appendNodeImportOption(
 
 /**
  * Start Next without `npm run` so `NODE_OPTIONS` (DNS shim, ipv4first) reaches the same
- * Node process as `next start`. `npm`/`sh` wrappers have caused flaky internal proxying on CI.
+ * Node process as `next start`. Resolve the CLI via `createRequire` so hoisted workspaces
+ * (next under repo root) still work on CI.
  */
 function webServerStartCommand(port: number): string {
-  const nextCli = path.join(rootDir, "node_modules", "next", "dist", "bin", "next");
+  const nextCli = require.resolve("next/dist/bin/next");
   const portStr = String(port);
-  const inner = `node "${nextCli}" start --hostname 127.0.0.1 --port ${portStr}`;
+  const inner = `node ${JSON.stringify(nextCli)} start --hostname 127.0.0.1 --port ${portStr}`;
   if (platform() === "win32") {
     return inner;
   }
