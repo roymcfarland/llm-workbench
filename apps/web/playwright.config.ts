@@ -11,6 +11,11 @@ import {
   E2E_LISTEN_PORT,
   E2E_ORIGIN,
 } from "./e2e/env";
+import {
+  PLAYWRIGHT_CLERK_BYPASS_ENV,
+  PLAYWRIGHT_CLERK_BYPASS_SECRET_ENV,
+  resolvePlaywrightClerkBypassSecret,
+} from "./lib/playwright-clerk-bypass";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -72,11 +77,12 @@ function webServerEnv(): Record<string, string> {
   Object.assign(out, {
     PLAYWRIGHT_WEB_PORT: String(E2E_LISTEN_PORT),
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk,
-    CLERK_PUBLISHABLE_KEY: pk,
     CLERK_SECRET_KEY: sk,
     NEXT_PUBLIC_SITE_ORIGIN: E2E_ORIGIN,
     HOST: "localhost",
     HOSTNAME: "localhost",
+    [PLAYWRIGHT_CLERK_BYPASS_ENV]: "1",
+    [PLAYWRIGHT_CLERK_BYPASS_SECRET_ENV]: resolvePlaywrightClerkBypassSecret(),
   });
 
   if (process.env.LLM_WB_E2E_DISABLE_DNS_SHIM !== "1") {
@@ -101,15 +107,7 @@ export default defineConfig({
     baseURL: E2E_ORIGIN,
     trace: "on-first-retry",
   },
-  projects: [
-    { name: "setup", testMatch: /clerk\.setup\.ts/ },
-    {
-      name: "chromium",
-      dependencies: ["setup"],
-      testIgnore: /clerk\.setup\.ts/,
-      use: { ...devices["Desktop Chrome"] },
-    },
-  ],
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer:
     process.env.PLAYWRIGHT_SKIP_WEBSERVER === "1"
       ? undefined

@@ -16,8 +16,6 @@ jobs:
       PLAYWRIGHT_WEB_PORT: "3399"
       NEXT_PUBLIC_SITE_ORIGIN: http://localhost:3399
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk
-      # @clerk/testing `clerkSetup()` reads this name (see Clerk Playwright testing docs).
-      CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk
       CLERK_SECRET_KEY: sk_test_dGVzdCUyMF9zZWNyZXRfa2V5X2Zvcl9lMmU
     strategy:
       fail-fast: false

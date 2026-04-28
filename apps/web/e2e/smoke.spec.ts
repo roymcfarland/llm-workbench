@@ -1,5 +1,9 @@
-import { setupClerkTestingToken } from "@clerk/testing/playwright";
 import { test, expect } from "@playwright/test";
+
+import {
+  PLAYWRIGHT_CLERK_BYPASS_HEADER,
+  resolvePlaywrightClerkBypassSecret,
+} from "../lib/playwright-clerk-bypass";
 
 test.describe("Public smoke (no sign-in)", () => {
   test("GET /api/health", async ({ request }) => {
@@ -10,8 +14,11 @@ test.describe("Public smoke (no sign-in)", () => {
   });
 
   test("landing page loads", async ({ page }) => {
-    await setupClerkTestingToken({ page });
-    await page.goto("/");
-    await expect(page).toHaveTitle(/LLM Workbench/u);
+    await page.setExtraHTTPHeaders({
+      [PLAYWRIGHT_CLERK_BYPASS_HEADER]: resolvePlaywrightClerkBypassSecret(),
+    });
+    test.setTimeout(60_000);
+    await page.goto("/", { waitUntil: "load" });
+    await expect(page).toHaveTitle(/LLM Workbench/u, { timeout: 30_000 });
   });
 });

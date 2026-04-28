@@ -51,7 +51,6 @@ const env = {
   PLAYWRIGHT_WEB_PORT: String(port),
   NEXT_PUBLIC_SITE_ORIGIN: origin,
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: clerkPk,
-  CLERK_PUBLISHABLE_KEY: clerkPk,
   CLERK_SECRET_KEY: clerkSk,
   HOST: "localhost",
   HOSTNAME: "localhost",
