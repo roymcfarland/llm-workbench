@@ -1,3 +1,4 @@
+import { setupClerkTestingToken } from "@clerk/testing/playwright";
 import { test, expect } from "@playwright/test";
 
 test.describe("Public smoke (no sign-in)", () => {
@@ -9,6 +10,7 @@ test.describe("Public smoke (no sign-in)", () => {
   });
 
   test("landing page loads", async ({ page }) => {
+    await setupClerkTestingToken({ page });
     await page.goto("/");
     await expect(page).toHaveTitle(/LLM Workbench/u);
   });

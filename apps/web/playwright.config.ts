@@ -72,6 +72,7 @@ function webServerEnv(): Record<string, string> {
   Object.assign(out, {
     PLAYWRIGHT_WEB_PORT: String(E2E_LISTEN_PORT),
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk,
+    CLERK_PUBLISHABLE_KEY: pk,
     CLERK_SECRET_KEY: sk,
     NEXT_PUBLIC_SITE_ORIGIN: E2E_ORIGIN,
     HOST: "localhost",
@@ -100,7 +101,15 @@ export default defineConfig({
     baseURL: E2E_ORIGIN,
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "setup", testMatch: /clerk\.setup\.ts/ },
+    {
+      name: "chromium",
+      dependencies: ["setup"],
+      testIgnore: /clerk\.setup\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+  ],
   webServer:
     process.env.PLAYWRIGHT_SKIP_WEBSERVER === "1"
       ? undefined
