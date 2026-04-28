@@ -1,9 +1,12 @@
 import { test, expect } from "@playwright/test";
 
 import {
+  PLAYWRIGHT_CLERK_BYPASS_COOKIE,
   PLAYWRIGHT_CLERK_BYPASS_HEADER,
   resolvePlaywrightClerkBypassSecret,
 } from "../lib/playwright-clerk-bypass";
+
+import { E2E_ORIGIN } from "./env";
 
 test.describe("Public smoke (no sign-in)", () => {
   test("GET /api/health", async ({ request }) => {
@@ -14,8 +17,16 @@ test.describe("Public smoke (no sign-in)", () => {
   });
 
   test("landing page loads", async ({ page }) => {
+    const secret = resolvePlaywrightClerkBypassSecret();
+    await page.context().addCookies([
+      {
+        name: PLAYWRIGHT_CLERK_BYPASS_COOKIE,
+        value: secret,
+        url: E2E_ORIGIN,
+      },
+    ]);
     await page.setExtraHTTPHeaders({
-      [PLAYWRIGHT_CLERK_BYPASS_HEADER]: resolvePlaywrightClerkBypassSecret(),
+      [PLAYWRIGHT_CLERK_BYPASS_HEADER]: secret,
     });
     test.setTimeout(60_000);
     await page.goto("/", { waitUntil: "load" });

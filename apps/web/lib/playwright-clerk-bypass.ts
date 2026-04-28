@@ -11,6 +11,9 @@ export const PLAYWRIGHT_CLERK_BYPASS_SECRET_ENV =
 export const PLAYWRIGHT_CLERK_BYPASS_HEADER =
   "x-llm-wb-playwright-clerk-bypass";
 
+/** Cookie mirror of the header so navigations keep bypass after Clerk redirects. */
+export const PLAYWRIGHT_CLERK_BYPASS_COOKIE = "llm-wb-pw-clerk-bypass";
+
 /** Public default so local `npm run test:e2e` matches `next start` without extra env. */
 export const PLAYWRIGHT_CLERK_BYPASS_DEFAULT_SECRET =
   "llm-wb-playwright-clerk-bypass-dev-2026";

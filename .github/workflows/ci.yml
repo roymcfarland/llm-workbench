@@ -17,6 +17,9 @@ jobs:
       NEXT_PUBLIC_SITE_ORIGIN: http://localhost:3399
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk
       CLERK_SECRET_KEY: sk_test_dGVzdCUyMF9zZWNyZXRfa2V5X2Zvcl9lMmU
+      # Same contract as `lib/playwright-clerk-bypass.ts` — must reach `next build` + `next start`.
+      LLM_WB_PLAYWRIGHT_CLERK_BYPASS: "1"
+      LLM_WB_PLAYWRIGHT_CLERK_BYPASS_SECRET: llm-wb-playwright-clerk-bypass-dev-2026
     strategy:
       fail-fast: false
       matrix:
@@ -50,10 +53,12 @@ jobs:
         run: npm run build:web
 
       - name: Install Playwright Chromium
+        if: matrix.node == '22'
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
       - name: Playwright smoke
+        if: matrix.node == '22'
         working-directory: apps/web
         env:
           # Linux runners resolve localhost; the DNS shim can break Next 16’s internal proxy.

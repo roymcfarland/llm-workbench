@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 import { rateLimitApiIfConfigured } from "@/lib/rate-limit/edge";
 import {
+  PLAYWRIGHT_CLERK_BYPASS_COOKIE,
   PLAYWRIGHT_CLERK_BYPASS_ENV,
   PLAYWRIGHT_CLERK_BYPASS_HEADER,
   resolvePlaywrightClerkBypassSecret,
@@ -47,7 +48,9 @@ const cspHeaders = (): HeadersInit => ({
 function isPlaywrightClerkBypass(req: NextRequest): boolean {
   if (process.env[PLAYWRIGHT_CLERK_BYPASS_ENV] !== "1") return false;
   const expected = resolvePlaywrightClerkBypassSecret();
-  if (req.headers.get(PLAYWRIGHT_CLERK_BYPASS_HEADER) !== expected) {
+  const headerToken = req.headers.get(PLAYWRIGHT_CLERK_BYPASS_HEADER);
+  const cookieToken = req.cookies.get(PLAYWRIGHT_CLERK_BYPASS_COOKIE)?.value;
+  if (headerToken !== expected && cookieToken !== expected) {
     return false;
   }
   if (req.method !== "GET" && req.method !== "HEAD") return false;

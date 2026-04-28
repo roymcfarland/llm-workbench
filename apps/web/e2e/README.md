@@ -10,7 +10,8 @@ These tests assume a production build exists under `apps/web/.next`. CI runs **`
 | `NEXT_PUBLIC_SITE_ORIGIN` | Must be `http://localhost:<port>` matching `E2E_ORIGIN` / Playwright’s `baseURL`. CI sets both. |
 | `LLM_WB_E2E_DISABLE_DNS_SHIM` | Set to `1` to skip the Node `--import` DNS shim. CI sets this for Playwright: Linux resolves `localhost` and the shim can break Next 16’s internal proxy. |
 | `LLM_WB_E2E_DNS_SHIM` | Set automatically by Playwright for `next start`; rewrites `localhost` → `127.0.0.1` at DNS lookup so Next 16’s internal middleware proxy does not hit `ENOTFOUND localhost`. |
-| `LLM_WB_PLAYWRIGHT_CLERK_BYPASS` / `LLM_WB_PLAYWRIGHT_CLERK_BYPASS_SECRET` | Set on the Playwright `webServer` process only. With header `x-llm-wb-playwright-clerk-bypass`, `GET /` skips Clerk’s dev handshake so smoke passes with placeholder keys. Do not set in production. |
+| `LLM_WB_PLAYWRIGHT_CLERK_BYPASS` / `LLM_WB_PLAYWRIGHT_CLERK_BYPASS_SECRET` | CI sets these at the job level (and Playwright’s `webServer` repeats them) so `next build` / `next start` see the same values. Smoke sends header `x-llm-wb-playwright-clerk-bypass` and cookie `llm-wb-pw-clerk-bypass` so `GET /` skips Clerk’s dev handshake. **Never set the bypass flag on production.** |
+| GitHub Actions matrix | Playwright install + smoke run **only on Node 22**; Node 20 still builds and unit-tests the repo. |
 
 ## Skip starting the server
 
