@@ -72,7 +72,7 @@ export const config = {
   matcher: [
     // Skip Next internals, static assets, and `/api/health` (liveness must not go
     // through Next 16’s internal localhost proxy hop — breaks CI / Playwright).
+    // One pattern only: a second matcher regressed `/` in production smoke (404).
     "/((?!_next|.*\\..*|api/health$).*)",
-    "/(api/(?!health$).*|trpc)(.*)",
   ],
 };
