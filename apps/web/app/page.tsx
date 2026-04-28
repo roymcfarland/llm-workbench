@@ -6,8 +6,13 @@ import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 
 import { Button } from "@/components/ui/button";
 import { CodeDiff } from "@/components/landing/code-diff";
+import { CosmosField } from "@/components/landing/cosmos-field";
 import { HeroLiveRun } from "@/components/landing/hero-live-run";
+import { LandingFinalCta } from "@/components/landing/landing-final-cta";
+import { LandingHorizon } from "@/components/landing/landing-horizon";
+import { OrbitFeatures } from "@/components/landing/orbit-features";
 import { StaticWorkflowSvg } from "@/components/landing/static-workflow-svg";
+import { TelemetryRain } from "@/components/landing/telemetry-rain";
 import { getTotalRunsCount } from "@/lib/landing/runs-count";
 import {
   GITHUB_URL,
@@ -48,108 +53,128 @@ export default async function LandingPage() {
       />
 
       <div className="relative isolate overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="landing-mesh pointer-events-none absolute inset-0 -z-10 opacity-90"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[60vh] bg-gradient-to-b from-transparent via-transparent to-[var(--color-background)]"
-        />
-
-        <section
-          aria-labelledby="hero-heading"
-          className="mx-auto grid w-full max-w-6xl items-center gap-10 px-6 pb-20 pt-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-12 lg:pb-28 lg:pt-24"
-        >
-          <div className="flex flex-col gap-6">
-            <p className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/50 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)] backdrop-blur">
-              <span
-                aria-hidden="true"
-                className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400"
-              />
-              LLM Workbench · Protocol v{WORKBENCH_PROTOCOL_VERSION}
-            </p>
-
-            <h1
-              id="hero-heading"
-              className="font-serif text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-[3.6rem] lg:leading-[1.05]"
-            >
-              Ship LLM agents you can debug,{" "}
-              <span className="bg-gradient-to-br from-cyan-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
-                fork, and replay.
-              </span>
-            </h1>
-
-            <p className="max-w-xl text-balance text-base leading-relaxed text-[var(--color-muted-foreground)] sm:text-lg">
-              LLM Workbench turns each run of your agent into a tamper-evident,
-              model-agnostic, human-gated bundle: trace events, artifacts, gates,
-              and cost — signed, exportable, and replayable.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Button asChild size="lg">
-                <Link href="/playground">
-                  Open the playground
-                  <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/docs/protocol">
-                  <BookOpen className="mr-1 h-4 w-4" aria-hidden="true" />
-                  Read the protocol
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="ghost">
-                <Link href="/runs/demo">View a demo run</Link>
-              </Button>
-            </div>
-
-            <p className="font-mono text-[11px] text-[var(--color-muted-foreground)]">
-              <span className="text-zinc-200">
-                {runsCount === null ? "—" : runsCount.toLocaleString()}
-              </span>{" "}
-              runs persisted · v{WORKBENCH_PROTOCOL_VERSION} ·{" "}
-              <a
-                href={LICENSE_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="underline-offset-4 hover:underline"
-              >
-                {LICENSE_NAME}
-              </a>
-            </p>
+        <div className="relative min-h-[min(100dvh,56rem)]">
+          <div className="absolute inset-0 -z-30 pointer-events-none">
+            <CosmosField className="h-full min-h-[min(100dvh,56rem)] w-full" />
           </div>
+          <div
+            aria-hidden="true"
+            className="landing-mesh pointer-events-none absolute inset-0 -z-20 opacity-[0.55] mix-blend-screen dark:opacity-40 dark:mix-blend-normal"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[var(--color-background)]/45 via-[var(--color-background)]/10 to-[var(--color-background)]"
+          />
+          <div
+            aria-hidden="true"
+            className="noise-grain pointer-events-none absolute inset-0 -z-10 opacity-[0.035] dark:opacity-[0.06]"
+          />
 
-          <div className="relative">
-            {/* Static fallback for no-JS / reduced-motion. The client hero hides
-                this on mount via [data-static-fallback][data-hidden]. */}
-            <div
-              data-static-fallback
-              className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-3 data-[hidden=true]:hidden"
-            >
-              <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/40">
-                <StaticWorkflowSvg />
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-1 font-mono text-[10px] text-[var(--color-muted-foreground)]">
-                <span>step_started · parser1</span>
-                <span>model_io · 220ms</span>
-                <span>step_completed · output</span>
-              </div>
-            </div>
-            <noscript>
-              <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">
-                JavaScript is disabled — showing a static workflow snapshot.
+          <section
+            aria-labelledby="hero-heading"
+            className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-10 px-6 pb-16 pt-14 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-14 lg:pb-24 lg:pt-20"
+          >
+            <div className="flex flex-col gap-6">
+              <p className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/55 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)] shadow-sm backdrop-blur-md">
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"
+                />
+                LLM Workbench · Protocol v{WORKBENCH_PROTOCOL_VERSION}
               </p>
-            </noscript>
-            <div className="mt-0">
-              <HeroLiveRun />
+
+              <h1
+                id="hero-heading"
+                className="font-serif text-4xl font-semibold tracking-tight text-balance drop-shadow-sm sm:text-5xl lg:text-[4.1rem] lg:leading-[1.02]"
+              >
+                Ship LLM agents you can debug,{" "}
+                <span className="bg-gradient-to-br from-cyan-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
+                  fork, and replay.
+                </span>
+              </h1>
+
+              <p className="max-w-xl text-balance text-base leading-relaxed text-[var(--color-muted-foreground)] sm:text-lg">
+                LLM Workbench turns each run of your agent into a tamper-evident,
+                model-agnostic, human-gated bundle: trace events, artifacts, gates,
+                and cost — signed, exportable, and replayable.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Button asChild size="lg" className="shadow-lg shadow-cyan-500/10">
+                  <Link href="/playground">
+                    Open the playground
+                    <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/docs/protocol">
+                    <BookOpen className="mr-1 h-4 w-4" aria-hidden="true" />
+                    Read the protocol
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="ghost">
+                  <Link href="/runs/demo">View a demo run</Link>
+                </Button>
+              </div>
+
+              <p className="font-mono text-[11px] text-[var(--color-muted-foreground)]">
+                <span className="text-[var(--color-foreground)]">
+                  {runsCount === null ? "—" : runsCount.toLocaleString()}
+                </span>{" "}
+                runs persisted · v{WORKBENCH_PROTOCOL_VERSION} ·{" "}
+                <a
+                  href={LICENSE_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline-offset-4 hover:underline"
+                >
+                  {LICENSE_NAME}
+                </a>
+                {" · "}
+                <a
+                  href={GITHUB_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline-offset-4 hover:underline"
+                >
+                  Source
+                </a>
+              </p>
             </div>
-          </div>
-        </section>
+
+            <div className="relative">
+              <div
+                data-static-fallback
+                className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/45 p-3 shadow-2xl backdrop-blur-md data-[hidden=true]:hidden"
+              >
+                <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/40">
+                  <StaticWorkflowSvg />
+                </div>
+                <div className="mt-2 grid grid-cols-3 gap-1 font-mono text-[10px] text-[var(--color-muted-foreground)]">
+                  <span>step_started · parser1</span>
+                  <span>model_io · 220ms</span>
+                  <span>step_completed · output</span>
+                </div>
+              </div>
+              <noscript>
+                <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">
+                  JavaScript is disabled — showing a static workflow snapshot.
+                </p>
+              </noscript>
+              <div className="mt-0">
+                <HeroLiveRun />
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <OrbitFeatures />
+        <TelemetryRain />
+        <LandingHorizon />
 
         <section
           aria-labelledby="diff-heading"
-          className="mx-auto w-full max-w-6xl px-6 pb-24"
+          className="mx-auto w-full max-w-6xl px-6 pb-8 pt-4 md:pt-8"
         >
           <div className="mb-8 flex flex-col gap-2">
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
@@ -162,8 +187,14 @@ export default async function LandingPage() {
               What you write changes by one import.
             </h2>
             <p className="max-w-2xl text-sm text-[var(--color-muted-foreground)]">
-              Drop in <code className="rounded bg-[var(--color-muted)]/40 px-1 py-0.5 font-mono text-xs">tracedGenerateText</code>{" "}
-              from <code className="rounded bg-[var(--color-muted)]/40 px-1 py-0.5 font-mono text-xs">@llm-workbench/ai-sdk</code>{" "}
+              Drop in{" "}
+              <code className="rounded bg-[var(--color-muted)]/40 px-1 py-0.5 font-mono text-xs">
+                tracedGenerateText
+              </code>{" "}
+              from{" "}
+              <code className="rounded bg-[var(--color-muted)]/40 px-1 py-0.5 font-mono text-xs">
+                @llm-workbench/ai-sdk
+              </code>{" "}
               and every call becomes a structured trace event, persisted into
               the run bundle, gated by your workflow policy. Click any line on
               the right to preview the events.
@@ -171,6 +202,8 @@ export default async function LandingPage() {
           </div>
           <CodeDiff />
         </section>
+
+        <LandingFinalCta runsCount={runsCount} />
       </div>
     </>
   );

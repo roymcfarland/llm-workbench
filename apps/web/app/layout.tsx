@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-import { Newsreader } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { JetBrains_Mono, Newsreader, Outfit } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -9,11 +9,25 @@ import { SiteFooter } from "@/components/landing/site-footer";
 
 import "./globals.css";
 
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-outfit",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+  variable: "--font-jetbrains",
+});
+
 const newsreader = Newsreader({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
-  variable: "--font-serif",
+  variable: "--font-newsreader",
 });
 
 export const metadata: Metadata = {
@@ -23,15 +37,30 @@ export const metadata: Metadata = {
   },
   description:
     "LLM Workbench is a model-agnostic control plane for LLM-powered products. Every run becomes a tamper-evident, human-gated, replayable bundle of trace events, artifacts, and gates.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://workbench.example.com"),
-  applicationName: "LLM Workbench",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://www.llmworkbench.io",
+  ),
+  applicationName: "LLM Control Plane",
   authors: [{ name: "LLM Workbench" }],
+  keywords: [
+    "LLM",
+    "agents",
+    "observability",
+    "MCP",
+    "Model Context Protocol",
+    "human-in-the-loop",
+    "run bundles",
+    "tamper evident",
+    "AI SDK",
+    "OpenAPI",
+  ],
   openGraph: {
     title: "LLM Workbench — model-agnostic LLM control plane",
     description:
       "Tamper-evident, human-gated, replayable run bundles for the LLM agents you actually deploy.",
     type: "website",
     siteName: "LLM Workbench",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
@@ -39,6 +68,13 @@ export const metadata: Metadata = {
     description:
       "Tamper-evident, human-gated, replayable run bundles for the LLM agents you actually deploy.",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+  ],
 };
 
 // Fall back to a Clerk-provided dev publishable key shape so `next build`
@@ -51,7 +87,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || BUILD_FALLBACK_CLERK_PK;
   return (
     <ClerkProvider publishableKey={publishableKey}>
-      <html lang="en" suppressHydrationWarning className={newsreader.variable}>
+      <html
+        lang="en"
+        suppressHydrationWarning
+        className={`${outfit.variable} ${jetbrainsMono.variable} ${newsreader.variable}`}
+      >
         <body className="min-h-screen antialiased">
           <a
             href="#main-content"
