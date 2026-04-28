@@ -190,6 +190,42 @@ prompt; the manual steps above remain authoritative.
 
 ---
 
+## Optional: run-completion emails (Resend)
+
+When you want users to receive an email each time one of their runs hits a
+terminal status (`completed`, `failed`, `cancelled`), wire up Resend:
+
+1. Sign in to <https://resend.com>, then **Domains → Add Domain** and add
+   the domain you intend to send from (e.g. `your-domain.com`). Copy the
+   DKIM/SPF/Return-Path records into your DNS provider and wait for the
+   "Verified" badge — usually a few minutes. Resend rejects sends from
+   unverified domains with HTTP 403.
+2. **API Keys → Create API Key** with the **Sending access** scope and a
+   restriction to the verified domain. Copy the `re_…` value.
+3. In your Vercel project, add two environment variables for **Production
+   and Preview** scopes:
+   - `RESEND_API_KEY=re_…`
+   - `RESEND_FROM=agent@your-domain.com` *(must be on the verified domain)*
+4. Redeploy. The next run that transitions into a terminal status will
+   trigger an email. You can confirm by tailing **Logs → Functions** for
+   `[notifyRunCompletion]` events or by inspecting **Resend Dashboard →
+   Logs**.
+
+How it behaves:
+
+- The send is fire-and-forget from the Supabase runs-store hot path, so a
+  Resend outage cannot block a `PUT /api/runs/:id`.
+- Each `(runId, status)` pair carries an idempotency key, so retried
+  writes never deliver duplicate emails (Resend dedupes for 24 h).
+- Tenant scoping uses the `user:<clerkUserId>` form. Org tenants are
+  silently skipped at v0 — see the follow-up issue for org admin fan-out.
+
+To disable the feature, **unset both env vars**. The runs-store logs an
+`info`-level "skipping email send" line and proceeds. There is no warning
+because un-configuration is the supported opt-out, not an error.
+
+---
+
 ## 7. Operational tips
 
 - **Body limits.** API routes cap PUT bodies at 25 MB. Large
