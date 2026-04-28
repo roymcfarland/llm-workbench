@@ -10,7 +10,7 @@ These tests assume a production build exists under `apps/web/.next`. CI runs **`
 | `NEXT_PUBLIC_SITE_ORIGIN` | Must be `http://localhost:<port>` matching `E2E_ORIGIN` / Playwright’s `baseURL`. CI sets both. |
 | `LLM_WB_E2E_DISABLE_DNS_SHIM` | Set to `1` to skip the Node `--import` DNS shim. CI sets this for Playwright: Linux resolves `localhost` and the shim can break Next 16’s internal proxy. |
 | `LLM_WB_E2E_DNS_SHIM` | Set automatically by Playwright for `next start`; rewrites `localhost` → `127.0.0.1` at DNS lookup so Next 16’s internal middleware proxy does not hit `ENOTFOUND localhost`. |
-| GitHub Actions matrix | Playwright install + smoke run **only on Node 22**; Node 20 still builds and unit-tests the repo. |
+| GitHub Actions matrix | Playwright install + smoke run **only on Node 24**; Node 22 still builds and unit-tests the repo (second matrix leg). |
 
 Smoke uses **`request` only** (no `page.goto` to `/`). HTML navigations to `/` hit Clerk’s dev handshake with placeholder keys; `GET /llms.txt` hits a **route handler** (plain text) and still exercises `next start` + middleware without a document load.
 

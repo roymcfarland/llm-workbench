@@ -14,7 +14,7 @@ and `apps/web/README.md` with operational detail and a prioritized backlog.
   Sentry, optional Upstash-backed API rate limits, strict CSP in middleware.
 - **CI:** `.github/workflows/ci.yml` runs on `main` and PRs: `npm ci` → package
   `build` → workspace `test` → web `typecheck` → web `lint` → `build:web`
-  (Node 20 and 22 matrix).
+  (Node **22** and **24** matrix).
 
 Local parity with CI:
 

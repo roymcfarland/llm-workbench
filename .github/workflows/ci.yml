@@ -13,6 +13,8 @@ jobs:
     # Align NEXT_PUBLIC_* and PLAYWRIGHT_WEB_PORT with apps/web/e2e/env.ts + e2e/listen-port.ts
     # (default port 3399) so build output matches Playwright smoke `next start` (CI-only placeholders).
     env:
+      # Run embedded @actions/*.js scripts on Node 24 (GH is deprecating the Node 20 action runtime).
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
       PLAYWRIGHT_WEB_PORT: "3399"
       NEXT_PUBLIC_SITE_ORIGIN: http://localhost:3399
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk
@@ -20,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['20', '22']
+        node: ["22", "24"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,12 +52,12 @@ jobs:
         run: npm run build:web
 
       - name: Install Playwright Chromium
-        if: matrix.node == '22'
+        if: matrix.node == '24'
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
       - name: Playwright smoke
-        if: matrix.node == '22'
+        if: matrix.node == '24'
         working-directory: apps/web
         env:
           # Linux runners resolve localhost; the DNS shim can break Next 16’s internal proxy.
