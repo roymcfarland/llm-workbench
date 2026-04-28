@@ -70,8 +70,9 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Skip Next internals and static assets.
-    "/((?!_next|.*\\..*).*)",
-    "/(api|trpc)(.*)",
+    // Skip Next internals, static assets, and `/api/health` (liveness must not go
+    // through Next 16’s internal localhost proxy hop — breaks CI / Playwright).
+    "/((?!_next|.*\\..*|api/health$).*)",
+    "/(api/(?!health$).*|trpc)(.*)",
   ],
 };
