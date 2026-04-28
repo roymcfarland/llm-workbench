@@ -7,6 +7,12 @@ import {
   type SavedRunMeta,
 } from "@llm-workbench/runtime";
 
+import {
+  isTerminalRunStatus,
+  maybeFireRunCompletionNotification,
+  type MaybeFireArgs,
+  type RunCompletionDispatchResult,
+} from "../notifications/run-completion";
 import { getServiceSupabase } from "./server";
 
 /**
@@ -119,9 +125,19 @@ export async function loadRunForTenant(
   return (data as RunsTableRow | null) ?? null;
 }
 
+/**
+ * Test hook: the runs-store calls into this for run-completion notifications.
+ * Defaults to {@link maybeFireRunCompletionNotification}; tests inject a fake
+ * to assert the dispatch shape without exercising Clerk or Resend.
+ */
+export type RunCompletionDispatcher = (
+  args: MaybeFireArgs,
+) => Promise<RunCompletionDispatchResult>;
+
 export async function saveRunForTenant(
   tenantId: string,
   state: RunStoreState,
+  opts: { dispatchCompletion?: RunCompletionDispatcher } = {},
 ): Promise<void> {
   // Defense in depth: validate before we write, even though API routes also
   // call this. Keeps hand-rolled callers (server actions, scripts) safe.
@@ -137,10 +153,65 @@ export async function saveRunForTenant(
     tags: state.run.tags ?? null,
     state: serialized,
   };
+
+  // We need the prior row to detect terminal-state transitions for the
+  // notification hook. The select is cheap (PK lookup, status column only)
+  // and lets us fire emails idempotently per transition. Skip the lookup
+  // entirely when the incoming status isn't terminal — the common case for
+  // mid-run writes — to keep the hot path identical to before.
+  let priorStatus: string | null = null;
+  const incomingStatus = state.run.status;
+  if (isTerminalRunStatus(incomingStatus)) {
+    const { data, error: priorErr } = await getServiceSupabase()
+      .from(TABLE)
+      .select("status")
+      .eq("tenant_id", tenantId)
+      .eq("id", state.run.id)
+      .maybeSingle();
+    if (priorErr) {
+      // Non-fatal: a missing prior row is normal on the first write, but we
+      // still want to know if the select itself broke (e.g. RLS). Log and
+      // proceed — the notification hook is opt-in and must not block writes.
+      console.error("[saveRunForTenant] prior-status select failed", {
+        runId: state.run.id,
+        message: priorErr.message,
+      });
+    } else if (data && typeof data.status === "string") {
+      priorStatus = data.status;
+    }
+  }
+
   const { error } = await getServiceSupabase()
     .from(TABLE)
     .upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: "id" });
   if (error) throw new Error(`Supabase save error: ${error.message}`);
+
+  // Fire-and-forget. The dispatcher swallows its own errors and never
+  // throws, but we wrap with try/catch + a tail .catch on the returned
+  // promise so a future regression cannot tank the put caller.
+  const dispatch = opts.dispatchCompletion ?? maybeFireRunCompletionNotification;
+  try {
+    const pending = dispatch({
+      tenantId,
+      runId: state.run.id,
+      newStatus: incomingStatus,
+      priorStatus,
+      workflowId: state.run.workflowId,
+      startedAt: state.run.startedAt,
+      endedAt: state.run.endedAt,
+    });
+    void pending.catch((err) => {
+      console.error("[saveRunForTenant] notification dispatch rejected", {
+        runId: state.run.id,
+        err: err instanceof Error ? err.message : String(err),
+      });
+    });
+  } catch (err) {
+    console.error("[saveRunForTenant] notification dispatch threw", {
+      runId: state.run.id,
+      err: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 export async function deleteRunForTenant(
