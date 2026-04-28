@@ -24,6 +24,7 @@ calls explicit APIs to record what happened. Protocol v${WORKBENCH_PROTOCOL_VERS
 
 ## Important links
 
+- Blog:              ${origin}/blog (RSS feed: ${origin}/feed.xml)
 - Protocol overview: ${origin}/docs/protocol
 - OpenAPI spec:      ${origin}/api/openapi.json
 - MCP descriptor:    ${origin}/.well-known/mcp.json

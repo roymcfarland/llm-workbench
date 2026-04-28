@@ -40,6 +40,11 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
+              <Link href="/blog" className="hover:underline">
+                Blog
+              </Link>
+            </li>
+            <li>
               <Link href="/docs/protocol" className="hover:underline">
                 Docs · protocol
               </Link>

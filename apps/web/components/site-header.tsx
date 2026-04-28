@@ -24,7 +24,10 @@ export function SiteHeader() {
             reference
           </span>
         </Link>
-        <nav className="flex items-center gap-1 text-sm">
+        <nav className="flex flex-wrap items-center gap-1 text-sm md:flex-nowrap">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/blog">Blog</Link>
+          </Button>
           <SignedIn>
             <Button asChild variant="ghost" size="sm">
               <Link href="/playground">Playground</Link>

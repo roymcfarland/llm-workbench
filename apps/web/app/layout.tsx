@@ -54,8 +54,13 @@ export const metadata: Metadata = {
     "human-in-the-loop",
     "run bundles",
     "tamper evident",
+    "audit trail",
+    "AI governance",
     "AI SDK",
     "OpenAPI",
+    "blog",
+    "tracing",
+    "replay",
   ],
   openGraph: {
     title: "LLM Workbench — model-agnostic LLM control plane",
