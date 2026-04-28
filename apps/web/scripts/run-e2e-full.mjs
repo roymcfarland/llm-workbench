@@ -38,7 +38,7 @@ function runWithRaisedFdLimit(commandLine, options) {
 }
 
 const port = parseListenPortFromEnv(process.env);
-const origin = `http://127.0.0.1:${port}`;
+const origin = `http://localhost:${port}`;
 const clerkPk =
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ??
   "pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk";
@@ -52,8 +52,8 @@ const env = {
   NEXT_PUBLIC_SITE_ORIGIN: origin,
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: clerkPk,
   CLERK_SECRET_KEY: clerkSk,
-  HOST: "127.0.0.1",
-  HOSTNAME: "127.0.0.1",
+  HOST: "localhost",
+  HOSTNAME: "localhost",
 };
 
 const nextDir = join(appsWeb, ".next");

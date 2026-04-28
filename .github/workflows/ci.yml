@@ -14,7 +14,7 @@ jobs:
     # (default port 3399) so build output matches Playwright smoke `next start` (CI-only placeholders).
     env:
       PLAYWRIGHT_WEB_PORT: "3399"
-      NEXT_PUBLIC_SITE_ORIGIN: http://127.0.0.1:3399
+      NEXT_PUBLIC_SITE_ORIGIN: http://localhost:3399
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk
       CLERK_SECRET_KEY: sk_test_dGVzdCUyMF9zZWNyZXRfa2V5X2Zvcl9lMmU
     strategy:
@@ -55,4 +55,7 @@ jobs:
 
       - name: Playwright smoke
         working-directory: apps/web
+        env:
+          # Linux runners resolve localhost; the DNS shim can break Next 16’s internal proxy.
+          LLM_WB_E2E_DISABLE_DNS_SHIM: "1"
         run: npm run test:e2e

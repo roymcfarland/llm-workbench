@@ -40,10 +40,9 @@ function appendNodeImportOption(
 function webServerStartCommand(port: number): string {
   const nextCli = require.resolve("next/dist/bin/next");
   const portStr = String(port);
-  // Bind 0.0.0.0 for e2e only: with `--hostname 127.0.0.1`, Next 16 can still issue an
-  // internal middleware hop to `http://localhost:<port>/…` (ENOTFOUND / CI flakes).
-  // `0.0.0.0` makes the hop target `http://0.0.0.0:…`, which connects reliably; tests
-  // keep using `E2E_ORIGIN` (`http://127.0.0.1:<port>`).
+  // Bind 0.0.0.0 for e2e only: avoids cases where `--hostname 127.0.0.1` still triggers
+  // an internal hop to `http://localhost:<port>/…` that fails DNS on some hosts.
+  // Tests use `E2E_ORIGIN` (`http://localhost:<port>`) so the hop and browser match.
   const inner = `node ${JSON.stringify(nextCli)} start --hostname 0.0.0.0 --port ${portStr}`;
   if (platform() === "win32") {
     return inner;
@@ -54,7 +53,7 @@ function webServerStartCommand(port: number): string {
 /**
  * Variables for the child `next start` process. Keep string-only entries (Playwright typings).
  *
- * HOST/HOSTNAME reduce cases where tooling resolves `localhost` during smoke runs.
+ * HOST/HOSTNAME are set for tooling that reads them; e2e uses `localhost` in `E2E_ORIGIN`.
  *
  * LLM_WB_E2E_DNS_SHIM + NODE_OPTIONS preload rewrite `localhost` DNS to 127.0.0.1 so
  * Next.js 16's internal middleware→Node proxy (which targets `http://localhost:…`) does
@@ -75,8 +74,8 @@ function webServerEnv(): Record<string, string> {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk,
     CLERK_SECRET_KEY: sk,
     NEXT_PUBLIC_SITE_ORIGIN: E2E_ORIGIN,
-    HOST: "127.0.0.1",
-    HOSTNAME: "127.0.0.1",
+    HOST: "localhost",
+    HOSTNAME: "localhost",
   });
 
   if (process.env.LLM_WB_E2E_DISABLE_DNS_SHIM !== "1") {
