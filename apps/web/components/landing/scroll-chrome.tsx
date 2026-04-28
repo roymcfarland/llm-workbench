@@ -10,6 +10,9 @@ function useProgressWithLenis(): number {
     if (typeof window.matchMedia === "undefined") return undefined;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const coarsePointer =
+      window.matchMedia("(pointer: coarse)").matches ||
+      window.matchMedia("(hover: none)").matches;
     const onNative = () => {
       const doc = document.documentElement;
       const scroll = doc.scrollTop;
@@ -17,7 +20,9 @@ function useProgressWithLenis(): number {
       setP(height > 0 ? Math.min(1, scroll / height) : 0);
     };
 
-    if (reduced) {
+    // Touch-primary viewports: native scroll avoids jank when the DOM height
+    // changes (e.g. live trace lines) and plays nicer with iOS rubber-banding.
+    if (reduced || coarsePointer) {
       onNative();
       window.addEventListener("scroll", onNative, { passive: true });
       return () => window.removeEventListener("scroll", onNative);

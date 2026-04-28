@@ -231,17 +231,24 @@ export function HeroLiveRun() {
     : undefined;
 
   return (
-    <div className="relative grid w-full grid-cols-1 gap-3 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-3 shadow-[0_30px_80px_-40px_oklch(0.65_0.18_260/0.6)] backdrop-blur md:grid-cols-[1fr_220px]">
-      <div className="relative aspect-[4/3] min-h-[220px] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/40">
+    <div
+      className="relative isolate grid w-full grid-cols-1 gap-3 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-3 shadow-[0_30px_80px_-40px_oklch(0.65_0.18_260/0.6)] backdrop-blur [overflow-anchor:none] md:grid-cols-[1fr_220px]"
+    >
+      <div className="relative isolate aspect-[4/3] min-h-[220px] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/40">
         {runId && state ? (
-          <WorkflowGraph runtime={runtime} runId={runId} />
+          <WorkflowGraph
+            runtime={runtime}
+            runId={runId}
+            embed
+            className="!h-full min-h-0 rounded-none border-0"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-[var(--color-muted-foreground)]">
             Booting runtime…
           </div>
         )}
       </div>
-      <aside className="flex flex-col gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/40 p-3 font-mono text-[10.5px] leading-snug">
+      <aside className="relative z-10 flex min-h-[11.5rem] flex-col gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/95 p-3 font-mono text-[10.5px] leading-snug backdrop-blur-sm">
         <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
           <span>trace</span>
           <span className="rounded bg-emerald-500/15 px-1 text-emerald-300">

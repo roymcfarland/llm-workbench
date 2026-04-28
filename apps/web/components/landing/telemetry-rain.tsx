@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+type TelemetryLine = { id: number; text: string };
 
 const SAMPLES = [
   '{"type":"step_started","stepId":"parser1","t":"…"}',
@@ -15,9 +17,10 @@ const SAMPLES = [
 ] as const;
 
 export function TelemetryRain() {
-  const [lines, setLines] = useState<string[]>(() => [
-    "> ingest · workflow snapshot loaded",
-    "> trace · subscribing to run store…",
+  const lineIdRef = useRef(0);
+  const [lines, setLines] = useState<TelemetryLine[]>(() => [
+    { id: lineIdRef.current++, text: "> ingest · workflow snapshot loaded" },
+    { id: lineIdRef.current++, text: "> trace · subscribing to run store…" },
   ]);
 
   useEffect(() => {
@@ -26,8 +29,11 @@ export function TelemetryRain() {
       return undefined;
     }
     const id = window.setInterval(() => {
-      const next = SAMPLES[Math.floor(Math.random() * SAMPLES.length)];
-      setLines((prev) => [...prev.slice(-11), `> emit · ${next}`]);
+      const sample = SAMPLES[Math.floor(Math.random() * SAMPLES.length)];
+      setLines((prev) => [
+        ...prev.slice(-11),
+        { id: lineIdRef.current++, text: `> emit · ${sample}` },
+      ]);
     }, 780);
     return () => clearInterval(id);
   }, []);
@@ -73,13 +79,13 @@ export function TelemetryRain() {
               workbench://trace/session/live
             </span>
           </div>
-          <div className="max-h-[220px] overflow-y-auto scroll-smooth px-4 py-3 font-mono text-[11px] leading-relaxed md:text-xs">
-            {lines.map((line, i) => (
+          <div className="max-h-[220px] overflow-y-auto px-4 py-3 font-mono text-[11px] leading-relaxed md:text-xs">
+            {lines.map((line) => (
               <div
-                key={`${i}-${line.slice(0, 24)}`}
+                key={line.id}
                 className="border-b border-cyan-500/5 py-1 text-cyan-100/85 last:border-b-0"
               >
-                {line}
+                {line.text}
               </div>
             ))}
           </div>

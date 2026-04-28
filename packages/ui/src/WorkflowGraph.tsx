@@ -24,6 +24,11 @@ export type WorkflowGraphProps = {
   runId: string | null;
   onSelectStep?: (stepId: string) => void;
   className?: string;
+  /**
+   * Compact in-page preview (e.g. marketing hero): omit minimap and controls so
+   * the React Flow chrome cannot overlap a side-by-side trace column on narrow widths.
+   */
+  embed?: boolean;
 };
 
 type WorkflowNodeData = {
@@ -112,7 +117,7 @@ function WorkflowStepNode({ data }: NodeProps<WorkflowNode>) {
 const nodeTypes = { workflowStep: WorkflowStepNode };
 
 export function WorkflowGraph(props: WorkflowGraphProps) {
-  const { runtime, runId, onSelectStep, className } = props;
+  const { runtime, runId, onSelectStep, className, embed = false } = props;
   // Re-render whenever the run's revision counter advances.
   useWorkbenchRunRevision(runtime, runId);
   const state = runId ? runtime.getState(runId) : undefined;
@@ -152,8 +157,12 @@ export function WorkflowGraph(props: WorkflowGraphProps) {
         proOptions={{ hideAttribution: true }}
       >
         <Background />
-        <MiniMap pannable zoomable />
-        <Controls showInteractive={false} />
+        {embed ? null : (
+          <>
+            <MiniMap pannable zoomable />
+            <Controls showInteractive={false} />
+          </>
+        )}
       </ReactFlow>
     </div>
   );
