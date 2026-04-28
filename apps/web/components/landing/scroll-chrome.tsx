@@ -67,7 +67,7 @@ export function ScrollChrome() {
       className="pointer-events-none fixed left-0 top-0 z-[100] h-[2px] w-full bg-[var(--color-border)]/35"
     >
       <div
-        className="h-full origin-left bg-gradient-to-r from-cyan-400 via-violet-400 to-fuchsia-400 shadow-[0_0_24px_oklch(0.72_0.17_260_/_0.45)] transition-[transform] duration-100 ease-out motion-reduce:transition-none"
+        className="h-full origin-left will-change-transform bg-gradient-to-r from-cyan-400 via-violet-400 to-fuchsia-400 shadow-[0_0_24px_oklch(0.72_0.17_260_/_0.45)] motion-reduce:transition-none"
         style={{ transform: `scaleX(${p})` }}
       />
     </div>

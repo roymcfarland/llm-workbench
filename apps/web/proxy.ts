@@ -4,10 +4,10 @@ import { NextResponse } from "next/server";
 import { rateLimitApiIfConfigured } from "@/lib/rate-limit/edge";
 import { contentSecurityPolicy } from "@/lib/security/csp";
 
-// Public surface: marketing landing, sign-in/up flows, public docs/demos, and
-// the agentic discovery files (llms.txt / llms-full.txt / agents.md /
-// robots.txt / sitemap / mcp.json / openapi.json). Everything else (the (app)
-// group, /api/runs, /api/llm) requires an authenticated session.
+// Public surface: marketing landing, sign-in/up flows, public docs/demos,
+// discoverability (blog, RSS, robots/sitemap), and the agentic discovery files
+// (llms.txt / llms-full.txt / agents.md / openapi / mcp.json). Everything else
+// (the (app) group, /api/runs, /api/llm) requires an authenticated session.
 const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
@@ -15,6 +15,9 @@ const isPublicRoute = createRouteMatcher([
   "/api/health",
   "/docs/(.*)",
   "/runs/demo",
+  "/blog",
+  "/blog/(.*)",
+  "/feed.xml",
   "/llms.txt",
   "/llms-full.txt",
   "/agents.md",
