@@ -56,6 +56,27 @@ const nextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+
+  /** Legacy URLs from an earlier seeded blog reshaping */
+  async redirects() {
+    return [
+      {
+        source: "/blog/audit-trails-for-llm-agents",
+        destination: "/blog/what-llm-workbench-solves",
+        permanent: true,
+      },
+      {
+        source: "/blog/human-gates-and-run-bundles",
+        destination: "/blog/what-llm-workbench-solves",
+        permanent: true,
+      },
+      {
+        source: "/blog/model-agnostic-tracing-ai-sdk",
+        destination: "/blog/who-benefits-and-how-to-start",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {
