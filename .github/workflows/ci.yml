@@ -10,6 +10,13 @@ jobs:
   build-test:
     name: build & test (node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    # Align NEXT_PUBLIC_* and PLAYWRIGHT_WEB_PORT with apps/web/e2e/env.ts + e2e/listen-port.ts
+    # (default port 3399) so build output matches Playwright smoke `next start` (CI-only placeholders).
+    env:
+      PLAYWRIGHT_WEB_PORT: "3399"
+      NEXT_PUBLIC_SITE_ORIGIN: http://127.0.0.1:3399
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk
+      CLERK_SECRET_KEY: sk_test_dGVzdCUyMF9zZWNyZXRfa2V5X2Zvcl9lMmU
     strategy:
       fail-fast: false
       matrix:
@@ -41,3 +48,11 @@ jobs:
 
       - name: Web production build
         run: npm run build:web
+
+      - name: Install Playwright Chromium
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright smoke
+        working-directory: apps/web
+        run: npm run test:e2e

@@ -4,7 +4,14 @@ import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 const config = [
   ...nextCoreWebVitals,
   {
-    ignores: [".next/**", "node_modules/**", "dist/**", "coverage/**"],
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "dist/**",
+      "coverage/**",
+      "playwright-report/**",
+      "test-results/**",
+    ],
   },
   {
     rules: {

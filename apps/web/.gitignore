@@ -19,3 +19,7 @@ clerk.lock
 # misc
 *.tsbuildinfo
 .DS_Store
+
+# Playwright
+/playwright-report/
+/test-results/

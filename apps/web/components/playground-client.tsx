@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { userFacingWorkbenchMessage } from "@/lib/http/workbench-user-message";
 import { compileProfileAction } from "@/lib/runtime/server-actions";
 import {
   SAMPLE_RESUME,
@@ -139,7 +140,7 @@ export function PlaygroundClient() {
       });
       setStatus("idle");
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Unknown error";
+      const message = userFacingWorkbenchMessage(e);
       session.logModelIO({
         stepId: "parser1",
         direction: "response",
@@ -163,8 +164,7 @@ export function PlaygroundClient() {
       await repo.save(state);
       setStatus("idle");
     } catch (e) {
-      const message = e instanceof Error ? e.message : "save failed";
-      setErrorMsg(message);
+      setErrorMsg(userFacingWorkbenchMessage(e));
       setStatus("error");
     }
   }, [repo, runId, runtime]);
