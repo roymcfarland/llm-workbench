@@ -60,6 +60,12 @@ commercially under Apache 2.0 with no separate agreement required.
 
 ## How to get a commercial license
 
+The copyright holder **retains exclusive rights** to authorize commercial or
+proprietary use of PolyForm-covered portions not permitted by the noncommercial
+license alone. Agreements are negotiated individually, including participation
+by the creator in proceeds (flat fees, per-seat licenses, royalties, revenue
+share, or other structures).
+
 - **Email**: open a GitHub Issue titled `commercial license inquiry` on
   this repository, or contact the copyright holder via the email address
   listed on their GitHub profile (https://github.com/roymcfarland).

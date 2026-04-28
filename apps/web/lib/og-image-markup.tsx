@@ -107,7 +107,7 @@ export function OgImageMarkup() {
             color: "rgba(250, 250, 250, 0.4)",
           }}
         >
-          Built by {BRIGHTLINE_LABS_NAME}
+          Attributed to {BRIGHTLINE_LABS_NAME}
         </span>
       </div>
     </div>

@@ -14,6 +14,8 @@ export const SITE_TAGLINE =
 export const GITHUB_URL = "https://github.com/llmworkbench/llm-workbench" as const;
 export const LICENSE_NAME = "PolyForm Noncommercial 1.0.0" as const;
 export const LICENSE_URL = `${GITHUB_URL}/blob/main/LICENSE` as const;
+/** Plain-language licensing + commercial inquiries (dual OSS / PolyForm terms). */
+export const COMMERCIAL_URL = `${GITHUB_URL}/blob/main/COMMERCIAL.md` as const;
 export const DEFAULT_ORIGIN = "https://workbench.example.com" as const;
 
 /**
