@@ -116,7 +116,14 @@ In the Vercel dashboard:
    - Install Command: **leave blank** (defer to `apps/web/vercel.json`,
      which runs `cd ../.. && npm install --include-workspace-root --workspaces`).
    - Build Command: **leave blank** (defer to `apps/web/vercel.json`,
-     which runs `cd ../.. && npm run build:web`).
+     which runs `cd ../.. && npm run build && npm run build:web`. The
+     first half builds the five workspace packages — `runtime`, `ui`,
+     `adapters-react`, `ai-sdk`, `mcp` — into their `dist/` directories;
+     the second half runs `next build`. The workspace `dist/` outputs
+     are gitignored, so this two-phase build is required even though
+     `apps/web/package.json` declares the workspace packages as
+     dependencies — npm symlinks them but never builds them on
+     `install`.).
    - Output Directory: **leave blank** — Next.js default (`.next`)
      resolved relative to Root Directory works.
 2. **Environment Variables** (Production + Preview):
@@ -136,8 +143,8 @@ In the Vercel dashboard:
    absolute URLs from this var.
 4. Click **Deploy**.
 
-The first build will compile `@llm-workbench/runtime`, `…/adapters-react`,
-`…/ai-sdk`, `…/ui`, then `apps/web`.
+The first build will compile `@llm-workbench/runtime`, `…/ui`,
+`…/adapters-react`, `…/ai-sdk`, `…/mcp`, then `apps/web`.
 
 ---
 
