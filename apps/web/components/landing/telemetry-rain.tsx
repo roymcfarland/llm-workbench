@@ -17,10 +17,11 @@ const SAMPLES = [
 ] as const;
 
 export function TelemetryRain() {
-  const lineIdRef = useRef(0);
-  const [lines, setLines] = useState<TelemetryLine[]>(() => [
-    { id: lineIdRef.current++, text: "> ingest · workflow snapshot loaded" },
-    { id: lineIdRef.current++, text: "> trace · subscribing to run store…" },
+  /** Next id for streamed lines — starts at 2 after static seed rows above. */
+  const lineIdRef = useRef(2);
+  const [lines, setLines] = useState<TelemetryLine[]>([
+    { id: 0, text: "> ingest · workflow snapshot loaded" },
+    { id: 1, text: "> trace · subscribing to run store…" },
   ]);
 
   useEffect(() => {
