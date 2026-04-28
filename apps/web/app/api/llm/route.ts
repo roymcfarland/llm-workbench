@@ -5,13 +5,17 @@ import { WorkbenchRuntime } from "@llm-workbench/runtime";
 import { tracedStreamText } from "@llm-workbench/ai-sdk";
 
 import { TenantAuthError, requireTenant } from "@/lib/auth/tenant";
+import { publicInternalErrorMessage } from "@/lib/server/internal-error";
 import {
   loadRunForTenant,
   saveRunForTenant,
   serializedToState,
 } from "@/lib/supabase/runs-store";
+import { isValidRunIdParam } from "@/lib/validation/run-id";
 
 const DEMO_MODEL = "anthropic/claude-haiku-4-5";
+/** Cap JSON body (prompt + optional runId/stepId); avoids huge ArrayBuffer.parse. */
+const MAX_BODY_BYTES = 48 * 1024;
 
 type LlmRequestBody = {
   prompt?: unknown;
@@ -32,10 +36,35 @@ type LlmRequestBody = {
  * Without those fields the route degrades to plain `streamText` for callers
  * that just want a model surface (the common chat-style case).
  */
+function withinBodyBudget(req: Request): boolean {
+  const len = req.headers.get("content-length");
+  if (!len) return true;
+  const n = Number(len);
+  if (!Number.isFinite(n)) return true;
+  return n <= MAX_BODY_BYTES;
+}
+
 export async function POST(req: Request): Promise<Response> {
   try {
+    if (!withinBodyBudget(req)) {
+      return NextResponse.json({ error: "Request body too large" }, { status: 413 });
+    }
+
+    const buf = await req.arrayBuffer();
+    if (buf.byteLength > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: "Request body too large" }, { status: 413 });
+    }
+
     const { tenantId } = await requireTenant();
-    const body = (await req.json().catch(() => ({}))) as LlmRequestBody;
+
+    let body: LlmRequestBody;
+    try {
+      const text = new TextDecoder().decode(buf);
+      body = text.length > 0 ? (JSON.parse(text) as LlmRequestBody) : {};
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
     const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
     if (!prompt) {
       return NextResponse.json({ error: "prompt is required" }, { status: 400 });
@@ -46,6 +75,10 @@ export async function POST(req: Request): Promise<Response> {
 
     const runId = typeof body.runId === "string" ? body.runId : undefined;
     const stepId = typeof body.stepId === "string" ? body.stepId : undefined;
+
+    if (runId && !isValidRunIdParam(runId)) {
+      return NextResponse.json({ error: "Invalid runId" }, { status: 400 });
+    }
 
     if (runId && stepId) {
       const row = await loadRunForTenant(tenantId, runId);
@@ -79,7 +112,7 @@ export async function POST(req: Request): Promise<Response> {
     if (e instanceof TenantAuthError) {
       return NextResponse.json({ error: e.message }, { status: 401 });
     }
-    const message = e instanceof Error ? e.message : "Internal error";
+    const message = publicInternalErrorMessage("api/llm POST", e);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

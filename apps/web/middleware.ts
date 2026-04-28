@@ -1,4 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+
+import { rateLimitApiIfConfigured } from "@/lib/rate-limit/edge";
+import { contentSecurityPolicy } from "@/lib/security/csp";
 
 // Public surface: marketing landing, sign-in/up flows, public docs/demos, and
 // the agentic discovery files (llms.txt / llms-full.txt / agents.md /
@@ -30,21 +34,38 @@ const isPublicRoute = createRouteMatcher([
 // and the OpenAPI surface) expect a structured error, not an HTML page.
 const isApiRoute = createRouteMatcher(["/api/(.*)", "/trpc/(.*)"]);
 
+const cspHeaders = (): HeadersInit => ({
+  "Content-Security-Policy": contentSecurityPolicy(),
+});
+
 export default clerkMiddleware(async (auth, req) => {
-  if (isPublicRoute(req)) return;
+  const rate = await rateLimitApiIfConfigured(req);
+  if (rate) return rate;
 
-  const { userId, redirectToSignIn } = await auth();
-  if (userId) return;
-
-  if (isApiRoute(req)) {
-    // Bare HTTP 401 with a JSON body — no HTML, no rewrite to /_not-found.
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (isPublicRoute(req)) {
+    return NextResponse.next({ headers: cspHeaders() });
   }
 
-  // Page route: 307 redirect to /sign-in with the original URL so the user
-  // can resume after authenticating. `auth.protect()` would *rewrite* to
-  // /_not-found by default, which surfaces as a 404 to the user.
-  return redirectToSignIn({ returnBackUrl: req.url });
+  const { userId, redirectToSignIn } = await auth();
+  if (userId) {
+    return NextResponse.next({ headers: cspHeaders() });
+  }
+
+  if (isApiRoute(req)) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401, headers: cspHeaders() },
+    );
+  }
+
+  const signInRedirect = (await redirectToSignIn({
+    returnBackUrl: req.url,
+  })) as NextResponse;
+  signInRedirect.headers.set(
+    "Content-Security-Policy",
+    contentSecurityPolicy(),
+  );
+  return signInRedirect;
 });
 
 export const config = {

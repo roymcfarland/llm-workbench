@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { TenantAuthError, requireTenant } from "@/lib/auth/tenant";
+import { publicInternalErrorMessage } from "@/lib/server/internal-error";
 import { listRunsForTenant } from "@/lib/supabase/runs-store";
 
 const MAX_LIMIT = 500;
@@ -26,7 +27,7 @@ export async function GET(req: Request): Promise<Response> {
     if (e instanceof TenantAuthError) {
       return withDescribedBy(NextResponse.json({ error: e.message }, { status: 401 }));
     }
-    const message = e instanceof Error ? e.message : "Internal error";
+    const message = publicInternalErrorMessage("api/runs GET", e);
     return withDescribedBy(NextResponse.json({ error: message }, { status: 500 }));
   }
 }

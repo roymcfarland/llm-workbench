@@ -13,6 +13,10 @@ import {
 
 import { TenantAuthError, requireTenant } from "@/lib/auth/tenant";
 import {
+  publicInternalErrorMessage,
+  publicToolFailureMessage,
+} from "@/lib/server/internal-error";
+import {
   deleteRunForTenant,
   listRunsForTenant,
   loadRunForTenant,
@@ -23,6 +27,9 @@ import { initialRuleSet, jobSearchWorkflow } from "@/lib/workflow/job-search";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** JSON-RPC payloads larger than this are rejected before parsing (DoS guard). */
+const MAX_MCP_BODY_BYTES = 2 * 1024 * 1024;
 
 type ToolError = {
   content: [{ type: "text"; text: string }];
@@ -198,7 +205,9 @@ async function buildHandler(
         await repository.save(rt.getState(runId)!);
         return asJsonText({ runId, workflowId, status: "running" });
       } catch (e) {
-        return toolError(e instanceof Error ? e.message : "start_run failed");
+        return toolError(
+          publicToolFailureMessage("mcp:start_run", e, "start_run failed"),
+        );
       }
     },
   );
@@ -225,7 +234,9 @@ async function buildHandler(
         await repository.save(rt.getState(runId)!);
         return asJsonText({ ok: true, runId, stepId, decision });
       } catch (e) {
-        return toolError(e instanceof Error ? e.message : "resolve_gate failed");
+        return toolError(
+          publicToolFailureMessage("mcp:resolve_gate", e, "resolve_gate failed"),
+        );
       }
     },
   );
@@ -262,7 +273,9 @@ async function buildHandler(
           version: artifact.version,
         });
       } catch (e) {
-        return toolError(e instanceof Error ? e.message : "write_artifact failed");
+        return toolError(
+          publicToolFailureMessage("mcp:write_artifact", e, "write_artifact failed"),
+        );
       }
     },
   );
@@ -283,7 +296,9 @@ async function buildHandler(
         const bundle = await rt.session(runId).exportRunBundle({ profile: "full" });
         return asJsonText(bundle);
       } catch (e) {
-        return toolError(e instanceof Error ? e.message : "export_bundle failed");
+        return toolError(
+          publicToolFailureMessage("mcp:export_bundle", e, "export_bundle failed"),
+        );
       }
     },
   );
@@ -314,7 +329,27 @@ async function resolveRepository(
 }
 
 async function handlePost(req: Request): Promise<Response> {
+  const len = req.headers.get("content-length");
+  if (len) {
+    const n = Number(len);
+    if (Number.isFinite(n) && n > MAX_MCP_BODY_BYTES) {
+      return new Response(
+        JSON.stringify({ error: "Payload too large" }),
+        {
+          status: 413,
+          headers: { "content-type": "application/json" },
+        },
+      );
+    }
+  }
+
   const bodyText = await req.text();
+  if (bodyText.length > MAX_MCP_BODY_BYTES) {
+    return new Response(JSON.stringify({ error: "Payload too large" }), {
+      status: 413,
+      headers: { "content-type": "application/json" },
+    });
+  }
 
   let parsed: unknown = undefined;
   try {
@@ -363,13 +398,37 @@ async function handleNonPost(req: Request): Promise<Response> {
 }
 
 export async function GET(req: Request): Promise<Response> {
-  return handleNonPost(req);
+  try {
+    return await handleNonPost(req);
+  } catch (e) {
+    const msg = publicInternalErrorMessage("api/mcp GET", e);
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
+  }
 }
 
 export async function POST(req: Request): Promise<Response> {
-  return handlePost(req);
+  try {
+    return await handlePost(req);
+  } catch (e) {
+    const msg = publicInternalErrorMessage("api/mcp POST", e);
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
+  }
 }
 
 export async function DELETE(req: Request): Promise<Response> {
-  return handleNonPost(req);
+  try {
+    return await handleNonPost(req);
+  } catch (e) {
+    const msg = publicInternalErrorMessage("api/mcp DELETE", e);
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
+  }
 }

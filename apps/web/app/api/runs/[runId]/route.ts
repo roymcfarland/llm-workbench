@@ -6,6 +6,7 @@ import {
 } from "@llm-workbench/runtime";
 
 import { TenantAuthError, requireTenant } from "@/lib/auth/tenant";
+import { publicInternalErrorMessage } from "@/lib/server/internal-error";
 import {
   deleteRunForTenant,
   loadRunForTenant,
@@ -13,6 +14,7 @@ import {
   serializedToState,
   stateToSerialized,
 } from "@/lib/supabase/runs-store";
+import { isValidRunIdParam } from "@/lib/validation/run-id";
 
 const MAX_BODY_BYTES = 25 * 1024 * 1024; // 25 MB, matching the demo Express server.
 const DESCRIBED_BY = '</api/openapi.json>; rel="describedby"';
@@ -28,11 +30,16 @@ export async function GET(_req: Request, ctx: Ctx): Promise<Response> {
   try {
     const { tenantId } = await requireTenant();
     const { runId } = await ctx.params;
+    if (!isValidRunIdParam(runId)) {
+      return withDescribedBy(
+        NextResponse.json({ error: "Invalid run id" }, { status: 400 }),
+      );
+    }
     const row = await loadRunForTenant(tenantId, runId);
     if (!row) return withDescribedBy(new NextResponse(null, { status: 404 }));
     return withDescribedBy(NextResponse.json(row.state));
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, "GET");
   }
 }
 
@@ -40,6 +47,11 @@ export async function PUT(req: Request, ctx: Ctx): Promise<Response> {
   try {
     const { tenantId } = await requireTenant();
     const { runId } = await ctx.params;
+    if (!isValidRunIdParam(runId)) {
+      return withDescribedBy(
+        NextResponse.json({ error: "Invalid run id" }, { status: 400 }),
+      );
+    }
 
     if (!withinSizeBudget(req)) {
       return withDescribedBy(
@@ -93,7 +105,7 @@ export async function PUT(req: Request, ctx: Ctx): Promise<Response> {
     await saveRunForTenant(tenantId, state);
     return withDescribedBy(new NextResponse(null, { status: 204 }));
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, "PUT");
   }
 }
 
@@ -101,10 +113,15 @@ export async function DELETE(_req: Request, ctx: Ctx): Promise<Response> {
   try {
     const { tenantId } = await requireTenant();
     const { runId } = await ctx.params;
+    if (!isValidRunIdParam(runId)) {
+      return withDescribedBy(
+        NextResponse.json({ error: "Invalid run id" }, { status: 400 }),
+      );
+    }
     await deleteRunForTenant(tenantId, runId);
     return withDescribedBy(new NextResponse(null, { status: 204 }));
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, "DELETE");
   }
 }
 
@@ -120,7 +137,7 @@ function withinSizeBudget(req: Request): boolean {
   return n <= MAX_BODY_BYTES;
 }
 
-function errorResponse(e: unknown): Response {
+function errorResponse(e: unknown, op: "GET" | "PUT" | "DELETE"): Response {
   if (e instanceof TenantAuthError) {
     return withDescribedBy(
       NextResponse.json({ error: e.message }, { status: 401 }),
@@ -131,6 +148,6 @@ function errorResponse(e: unknown): Response {
       NextResponse.json({ error: e.message, code: e.code }, { status: 400 }),
     );
   }
-  const message = e instanceof Error ? e.message : "Internal error";
+  const message = publicInternalErrorMessage(`api/runs/[runId] ${op}`, e);
   return withDescribedBy(NextResponse.json({ error: message }, { status: 500 }));
 }
