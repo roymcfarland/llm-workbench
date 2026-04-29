@@ -67,7 +67,12 @@ The full schema lives at \`/api/openapi.json\` (OpenAPI 3.1).
 
 ## MCP (\`/api/mcp\`)
 
-A Streamable HTTP MCP endpoint exposes six tools — \`list_runs\`, \`get_run\`, \`start_run\`, \`resolve_gate\`, \`write_artifact\`, \`export_bundle\`. Discovery via \`/.well-known/mcp.json\`.
+A Streamable HTTP MCP endpoint registers:
+
+- Core (\`@llm-workbench/mcp\`): \`list_runs\`, \`get_run\`, \`verify_run_integrity\`, \`validate_run_bundle\`.
+- Reference app additions: \`start_run\`, \`resolve_gate\`, \`write_artifact\`, \`export_bundle\` (full-profile tamper-evident bundle).
+
+Discovery via \`/.well-known/mcp.json\`. Resources expose \`runs://{runId}\` bundle URIs — see \`packages/mcp/README.md\`.
 
 ## Error model
 

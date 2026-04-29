@@ -9,12 +9,12 @@ import { siteOrigin } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Protocol",
   description:
-    "LLM Workbench protocol overview — run bundles, integrity hashing, gates, schemas, telemetry, migrations.",
+    "Deep dive: RunBundle vs RunStoreState, canonical SHA-256, trace correlation, gates, forks, MCP tools (export_bundle), REST wire format.",
   alternates: { canonical: "/docs/protocol" },
   openGraph: {
     title: "LLM Workbench protocol",
     description:
-      "Run bundles, integrity hashing, gates, schemas, telemetry, migrations.",
+      "Run bundles, live persistence wire format, integrity hashing, gates, telemetry, OTel bridge, integrations.",
     url: "/docs/protocol",
     type: "article",
   },
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "LLM Workbench protocol",
     description:
-      "Run bundles, integrity hashing, gates, schemas, telemetry, migrations.",
+      "Run bundles, persistence vs export, correlation IDs, gates, MCP + REST surfaces.",
   },
 };
 
@@ -34,7 +34,7 @@ export default async function ProtocolDocsPage() {
     "@type": "TechArticle",
     headline: "LLM Workbench protocol overview",
     description:
-      "Run bundles, integrity hashing, gates, schemas, telemetry, migrations.",
+      "Deep dive: bundles vs wire state, canonical hashing, gates, correlation IDs, MCP export_bundle.",
     url: `${origin}/docs/protocol`,
     proficiencyLevel: "Expert",
     keywords: [

@@ -2,6 +2,7 @@
 title: "What LLM Workbench solves in production LLM stacks"
 description: "From opaque prompts to replayable bundles: gates, traced model I/O, artifacts, integrity—and surfaces both humans and tools can consume."
 date: "2026-04-21"
+updated: "2026-04-28"
 tags:
   - run bundles
   - governance
@@ -38,3 +39,24 @@ This does not automate legal sign-off—it **shrinks ambiguity** enough that aud
 Your team still picks models and providers. LLM Workbench does not replace gateways or secretly call models on your behalf. The payoff is narrower and deeper: **durable cognition receipts** layered where your agent orchestration actually lives—not only where infra emits metrics.
 
 If this matches your scars—gates bolted awkwardly beside tools, spreadsheets for approvals, brittle replays—we built it for operators who refuse to pretend that “lots of dashboards” equals **operational certainty**.
+
+## Anatomy of an incident-ready trace
+
+When something goes wrong after midnight, investigators reach for concrete joins:
+
+| Question | Where it typically lands | Why bundles help |
+| --- | --- | --- |
+| Which workflow revision was running? | `workflowSnapshot` on the run | Frozen DAG — no ambiguity about gate placement vs latest YAML in Git |
+| Did a human authorize propagation? | `human_gate_resolved` events | Decision + timestamp beside step context — not a ticket ID divorced from execution |
+| What did the model return before edits? | `model_io` + artifact versions | Receipts beside steps; patches remain trace-visible |
+| Can we prove this export wasn’t tampered with? | `integrity.sha256` on exported bundles | Canonical JSON hashing — skeptics verify offline |
+
+Telemetry dashboards summarize aggregates; **trace events plus bundles** anchor disputes to rows your runtime already emitted.
+
+## Gates versus prompts alone
+
+Strong prompts reduce accidental toxicity; they don’t substitute for **explicit halt points**
+when regulatory or contractual review applies. Gates encode policy as runtime facts — **who**
+approved **what**, **when**, relative to structured artifacts — rather than buried instructions inside system prompts that drift silently across releases.
+
+Benchmark suites measure average quality; gates operationalize **exceptions**: hold releases until humans bless specific structured outputs tied to trace ids your auditors can replay later.

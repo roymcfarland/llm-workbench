@@ -40,4 +40,25 @@ Nobody flips continents overnight—teams usually:
 - Land **tracing** wrappers on the hottest **generateText-style** surfaces first—prove durable receipts before widening.
 - Decide how **bundles export** upstream (object storage vs tickets vs compliance)—so humans know where canon lives.
 
-Reach for LLM Workbench when you’d rather replay a tape than persuade a room from memory—we built it for that inflection point.
+## Concrete integration checklist
+
+Use this as an acceptance checklist rather than inspiration fodder:
+
+1. **Freeze schemas before UI.** Register JSON Schemas for artifact `typeId`s your workflows emit — validation failures become trace-visible mistakes early.
+2. **Wrap hot AI SDK calls.** Swap `generateText` / streaming helpers for `@llm-workbench/ai-sdk` wrappers tied to an active run session so **`model_io`** events inherit step ids without bespoke logging.
+3. **Pick one risky gate.** Identify the single step whose mistaken automation hurts most — attach `PAUSE_AFTER` or `CHECKPOINT`, wire reviewers to `/runs/[runId]` or MCP `resolve_gate`.
+4. **Define export destiny.** Decide whether bundles land in object storage, ticketing attachments, or SIEM pipelines — **`export_bundle`** (MCP) produces tamper-evident JSON with integrity suitable for auditors.
+5. **Verify programmatically.** Exercise **`verify_run_integrity`** / **`validate_run_bundle`** on exported bundles inside CI before you promise downstream consumers cryptographic assurance.
+
+## REST versus MCP for automation
+
+Both surfaces enforce the same tenancy rules (`/agents.md`); choose by ergonomics:
+
+- **REST (`/api/runs`)** fits cron jobs, backend workers, and anything already issuing cookies or bearer tokens over vanilla HTTP — payloads mirror **`RunStoreState`** for persistence rounds.
+- **MCP (`/api/mcp`)** fits assistants that enumerate tools — combine **`export_bundle`** with **`verify_run_integrity`** when automation must fetch integrity-ready archives without bespoke glue.
+
+Neither replaces your gateway billing APIs — correlate **`model_io`** cost lines against invoices separately — but both preserve **workflow-relative semantics** cheaper than scraping unstructured logs.
+
+## Reading order for engineers
+
+Skim **[`/docs/protocol`](/docs/protocol)** top-down once for vocabulary, then drill **`TraceEvent`** shapes while holding one exported bundle beside **`GET /api/openapi.json`**. When those three agree in your head, the playground stops feeling magical and starts feeling inspectable — **reach for LLM Workbench** when you’d rather replay a tape than persuade a room from memory.
