@@ -56,6 +56,7 @@ These are intentional entry points for crawlers, assistants, and integrations:
 | `/llms-full.txt` | Long-form narrative for model context. |
 | `/agents.md` | Agent-oriented capability summary. |
 | `/robots.txt`, `/sitemap.xml` | Crawling hints + URL list. |
+| `/.well-known/security.txt` | RFC 9116 security contact (GitHub private advisories). |
 | `/.well-known/mcp.json` | MCP server descriptor. |
 | `/feed.xml` | RSS 2.0 for blog posts. |
 
@@ -87,6 +88,16 @@ npm run dev:web
 ```
 
 The app will be available at <http://localhost:3000>.
+
+### Lighthouse (optional)
+
+After `npm install` in the repo root, from `apps/web`:
+
+```bash
+npm run lighthouse:smoke
+```
+
+Builds production, serves `next start` briefly, audits `/`, and writes scores under `reports/` (gitignored). Requires Chromium for headless Chrome.
 
 ## Deploying
 

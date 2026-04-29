@@ -21,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/agents.md", priority: 0.45, changeFrequency: "monthly" },
     { path: "/api/openapi.json", priority: 0.52, changeFrequency: "weekly" },
     { path: "/.well-known/mcp.json", priority: 0.52, changeFrequency: "monthly" },
+    { path: "/.well-known/security.txt", priority: 0.35, changeFrequency: "monthly" },
   ];
 
   const staticEntries = pathConfigs.map((entry): MetadataRoute.Sitemap[0] => ({

@@ -20,6 +20,9 @@ clerk.lock
 *.tsbuildinfo
 .DS_Store
 
+# Lighthouse (local audits)
+/reports/
+
 # Playwright
 /playwright-report/
 /test-results/

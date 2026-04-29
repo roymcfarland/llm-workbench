@@ -13,7 +13,8 @@
     "clean:next": "node ./scripts/clean-next.mjs",
     "test:e2e": "node ./scripts/run-playwright-e2e.mjs",
     "test:e2e:full": "node ./scripts/run-e2e-full.mjs",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lighthouse:smoke": "node ./scripts/run-lighthouse.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.5.1",
@@ -64,6 +65,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.4",
+    "lighthouse": "^12.8.2",
     "postcss": "^8.4.49",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.6.3",

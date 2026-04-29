@@ -137,6 +137,7 @@ In the Vercel dashboard:
    - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/playground`
    - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/playground`
    - `AI_GATEWAY_API_KEY` *(omit if using OIDC)*
+   - **`GOOGLE_SITE_VERIFICATION`** / **`BING_SITE_VERIFICATION`** / **`YANDEX_SITE_VERIFICATION`** *(optional HTML-tag verification via `lib/site-verification.ts` — omit until you paste tokens from Search Console / Bing / Yandex)*
 3. **Domains**: attach a real domain (or use the preview URL) and set
    `NEXT_PUBLIC_SITE_ORIGIN` to it before redeploying — sitemap.xml,
    robots.txt, llms.txt, and the OpenAPI `servers` block all derive
@@ -164,12 +165,23 @@ discoverable without auth:
 | `/agents.md`                                | Machine-readable agent surface          |
 | `/robots.txt`                               | Crawler policy                          |
 | `/sitemap.xml`                              | XML sitemap                             |
+| `/.well-known/security.txt`                 | RFC 9116 security contact               |
 | `/.well-known/mcp.json`                     | MCP server discovery                    |
 | `/api/openapi.json`                         | OpenAPI 3.1 description of the run API  |
 | `/runs/demo`                                | Public read-only demo run               |
 
 Authenticated routes (`/playground`, `/runs`, `/api/runs`, `/api/llm`)
 should redirect unauthenticated visitors to `/sign-in`. Public routes (`/blog`, `/feed.xml`, `/docs/protocol`, discovery URLs above) must stay **200** without auth.
+
+### Local Lighthouse (optional)
+
+From `apps/web` after `npm install`:
+
+```bash
+npm run lighthouse:smoke
+```
+
+This builds production, briefly runs `next start`, audits `/`, and writes `reports/LIGHTHOUSE.md` plus JSON (artifacts are gitignored by default). Requires a Chromium install compatible with Lighthouse.
 
 ---
 

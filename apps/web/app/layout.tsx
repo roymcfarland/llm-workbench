@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/landing/site-footer";
 
 import { ScrollChrome } from "@/components/landing/scroll-chrome";
 import { OG_IMAGE_ALT } from "@/lib/site";
+import { siteVerificationFields } from "@/lib/site-verification";
 
 import "./globals.css";
 
@@ -93,6 +94,7 @@ export const metadata: Metadata = {
       },
     ],
   },
+  ...siteVerificationFields(),
 };
 
 export const viewport: Viewport = {

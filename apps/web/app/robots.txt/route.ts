@@ -4,16 +4,24 @@ export const dynamic = "force-dynamic";
 
 export async function GET(): Promise<Response> {
   const origin = await siteOrigin();
-  // One `User-agent: *` block: per RFC, each named bot group is independent—duplicated
-  // `Allow: /`–only stanzas (GPTBot, etc.) did not inherit these Disallow lines and
-  // could index auth-only routes. Keep marketing + discoverability public; gate /runs
-  // (except /runs/demo), playground, and auth surfaces.
+  // One `User-agent: *` block: each named bot group is independent—keep all rules here.
+  // Allow OpenAPI + `.well-known/*` explicitly so no future broad `/api` rule can
+  // accidentally block discovery URLs.
   const body = `User-agent: *
 Allow: /
 Allow: /runs/demo
+Allow: /api/openapi.json
+Allow: /.well-known/
+
+# JSON / streaming / probes — not HTML documents for search
 Disallow: /api/runs
+Disallow: /api/runs/
 Disallow: /api/llm
 Disallow: /api/mcp
+Disallow: /api/health
+Disallow: /trpc/
+
+# Clerk-gated shells and auth flows
 Disallow: /playground
 Disallow: /runs
 Disallow: /sign-in
