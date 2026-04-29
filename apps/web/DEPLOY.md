@@ -24,7 +24,7 @@ into production on Vercel + Supabase + Clerk + Vercel AI Gateway.
 
 | Tool                 | Why                                                  |
 | -------------------- | ---------------------------------------------------- |
-| Node 18.18+ / 20.x   | Build + runtime                                      |
+| Node **22+** (CI uses 22 & 24) | Build + runtime                               |
 | `npm` 10+            | Workspace install                                    |
 | `gh` CLI (optional)  | Linking the repo to Vercel via CLI                   |
 | `vercel` CLI         | `npm i -g vercel`                                    |
@@ -156,6 +156,9 @@ discoverable without auth:
 | URL                                         | What it is                              |
 | ------------------------------------------- | --------------------------------------- |
 | `/`                                         | Landing page                            |
+| `/blog`                                     | Blog index                              |
+| `/feed.xml`                                 | RSS feed for blog posts                 |
+| `/docs/protocol`                            | Protocol overview                       |
 | `/llms.txt`                                 | LLM-friendly site map                   |
 | `/llms-full.txt`                            | Long-form description                   |
 | `/agents.md`                                | Machine-readable agent surface          |
@@ -166,7 +169,7 @@ discoverable without auth:
 | `/runs/demo`                                | Public read-only demo run               |
 
 Authenticated routes (`/playground`, `/runs`, `/api/runs`, `/api/llm`)
-should redirect unauthenticated visitors to `/sign-in`.
+should redirect unauthenticated visitors to `/sign-in`. Public routes (`/blog`, `/feed.xml`, `/docs/protocol`, discovery URLs above) must stay **200** without auth.
 
 ---
 

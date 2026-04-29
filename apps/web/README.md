@@ -17,24 +17,55 @@ comments in the source.
 - **Clerk** (`@clerk/nextjs`) for authentication and tenancy
 - **Supabase** (`@supabase/supabase-js`) for the `runs` table
 - **AI SDK v5** (`ai`) routed through **Vercel AI Gateway**
-- **`@llm-workbench/runtime` / `@llm-workbench/ui`** consumed as workspace deps
+- **`@llm-workbench/runtime`**, **`@llm-workbench/ui`**, **`@llm-workbench/mcp`** — workspace packages (`mcp` powers `/api/mcp`)
 
 ## Routes
 
-| Path                          | What it is                                                   |
-| ----------------------------- | ------------------------------------------------------------ |
-| `/`                           | Marketing landing page with a "Try the playground" CTA.      |
-| `/sign-in`, `/sign-up`        | Clerk hosted flows.                                          |
-| `/playground`                 | Live job-search workflow demo backed by AI Gateway.          |
-| `/runs`                       | Saved runs for the current Clerk org/user.                   |
-| `/runs/[runId]`               | Run detail: trace timeline, artifact viewer, gate panel.     |
-| `GET /api/runs?limit=N`       | List runs for the caller's tenant (matches `HttpRunRepository.list`). |
-| `GET/PUT/DELETE /api/runs/[runId]` | Single-run CRUD using the workbench wire format.        |
-| `POST /api/llm`               | AI Gateway streaming proxy (demo).                           |
+### Product UI
+
+| Path | What it is |
+| --- | --- |
+| `/` | Marketing landing page with a “Try the playground” CTA. |
+| `/sign-in`, `/sign-up` | Clerk hosted flows. |
+| `/playground` | Live job-search workflow demo backed by AI Gateway (**auth required**). |
+| `/runs` | Saved runs for the current Clerk org/user. |
+| `/runs/[runId]` | Run detail: trace timeline, artifact viewer, gate panel. |
+| `/runs/demo` | **Public** read-only demo run (no sign-in). |
+| `/blog` | Blog index (Markdown sources under `content/blog/`). |
+| `/blog/[slug]` | Individual article (static paths from `.md` front matter). |
+| `/docs/protocol` | Protocol overview (**public**). |
+
+### HTTP APIs
+
+| Path | What it is |
+| --- | --- |
+| `GET /api/health` | Liveness check (**public**). |
+| `GET /api/runs?limit=N` | List runs for the caller’s tenant (`HttpRunRepository.list` shape). |
+| `GET/PUT/DELETE /api/runs/[runId]` | Single-run CRUD using the workbench wire format. |
+| `POST /api/llm` | AI Gateway streaming proxy (demo). |
+| `POST /api/mcp` | MCP JSON-RPC (`tools/list` public; mutating tools require auth — see handler). |
+| `GET /api/openapi.json` | OpenAPI 3.1 for the run REST surface (**public**). |
+
+### Discovery & feeds (machine-readable)
+
+These are intentional entry points for crawlers, assistants, and integrations:
+
+| Path | What it is |
+| --- | --- |
+| `/llms.txt` | Short LLM-oriented site summary + important links. |
+| `/llms-full.txt` | Long-form narrative for model context. |
+| `/agents.md` | Agent-oriented capability summary. |
+| `/robots.txt`, `/sitemap.xml` | Crawling hints + URL list. |
+| `/.well-known/mcp.json` | MCP server descriptor. |
+| `/feed.xml` | RSS 2.0 for blog posts. |
+
+### Routing & security notes
+
+- **Clerk + CSP** live in [`proxy.ts`](proxy.ts) (Next.js middleware convention). Public routes include `/`, `/blog`, `/feed.xml`, `/docs/*`, discovery URLs above, `/runs/demo`, and `/api/openapi.json`; gated surfaces (`/playground`, `/runs`, `/api/runs`, …) require a session. API routes return **401 JSON** when unauthenticated — they never redirect to HTML sign-in.
 
 ## Prerequisites
 
-- Node.js **20+** (matches repo `engines` and CI)
+- Node.js **22+** (matches monorepo `engines` and CI)
 - A Clerk application (publishable + secret key)
 - A Supabase project (URL + service-role key)
 - Vercel AI Gateway access (`AI_GATEWAY_API_KEY`, or OIDC if deployed on Vercel)

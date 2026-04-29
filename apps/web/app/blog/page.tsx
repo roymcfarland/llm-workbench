@@ -3,14 +3,12 @@ import Link from "next/link";
 
 import { getAllPostsForList } from "@/lib/blog";
 import {
-  OG_IMAGE_ALT,
+  BLOG_INDEX_DESCRIPTION,
+  BLOG_INDEX_OG_ALT,
   SITE_NAME,
   siteOriginSync,
   siteOrigin,
 } from "@/lib/site";
-
-const BLOG_INDEX_DESCRIPTION =
-  "Articles on LLM Workbench — audit-ready run bundles, human gates, model-agnostic tracing, and the protocol behind replayable agents.";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -22,14 +20,14 @@ export const metadata: Metadata = {
       "Audit-ready run bundles, human gates, and model-agnostic tracing for deployed agents.",
     url: "/blog",
     type: "website",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: OG_IMAGE_ALT }],
+    images: [{ url: "/blog/opengraph-image", width: 1200, height: 630, alt: BLOG_INDEX_OG_ALT }],
   },
   twitter: {
     card: "summary_large_image",
     title: "LLM Workbench blog",
     description:
       "Audit-ready run bundles, human gates, and model-agnostic tracing for deployed agents.",
-    images: [{ url: "/twitter-image", width: 1200, height: 630, alt: OG_IMAGE_ALT }],
+    images: [{ url: "/blog/twitter-image", width: 1200, height: 630, alt: BLOG_INDEX_OG_ALT }],
   },
 };
 

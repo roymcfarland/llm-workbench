@@ -12,7 +12,7 @@ full breakdown. In short:
 
 | Path | Outbound license | Your inbound terms when you contribute |
 | --- | --- | --- |
-| `packages/runtime`, `packages/adapters-react`, `packages/ai-sdk`, `packages/ui`, `examples/*` | Apache 2.0 | Apache 2.0 (with patent grant) |
+| `packages/runtime`, `packages/adapters-react`, `packages/ai-sdk`, `packages/ui`, `packages/mcp`, `examples/*` | Apache 2.0 | Apache 2.0 (with patent grant) |
 | `apps/web` and any other path under `apps/*` or future PolyForm-NC packages (e.g. `packages/eval`, `packages/marketplace`, `packages/cost-reconciliation`) | PolyForm Noncommercial 1.0.0 | PolyForm-NC, plus a relicense grant to the Maintainer |
 
 By submitting a pull request, issue, patch, or other contribution
@@ -54,8 +54,8 @@ Maintainer can implement it independently.
 
 Prerequisites:
 
-- Node.js >= 18.18 (CI runs on 18 and 20)
-- npm >= 9
+- Node.js **>= 22** (matches root `engines`; CI runs **22** and **24**)
+- npm **>= 9**
 
 ```bash
 npm install
@@ -75,6 +75,9 @@ Each package lives under `packages/`:
   adapters (`useWorkbenchRunRevision` etc.).
 - `@llm-workbench/ai-sdk` (Apache 2.0) — Vercel AI SDK v5 wrappers that
   emit correlated `model_io` and `tool_call` trace events.
+- `@llm-workbench/mcp` (Apache 2.0) — MCP server construction and HTTP
+  adapter for wiring `WorkbenchRuntime` behind Model Context Protocol — see
+  [`packages/mcp/README.md`](packages/mcp/README.md).
 
 Examples live under `examples/` (Apache 2.0):
 

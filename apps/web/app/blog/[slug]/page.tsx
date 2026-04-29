@@ -3,11 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getPostBySlug, getPostSlugs } from "@/lib/blog";
-import {
-  OG_IMAGE_ALT,
-  SITE_NAME,
-  siteOrigin,
-} from "@/lib/site";
+import { blogPostOgImageAlt, SITE_NAME, siteOrigin } from "@/lib/site";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -41,13 +37,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       modifiedTime: post.updated ?? post.date,
       locale: "en_US",
       siteName: "LLM Workbench",
-      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: OG_IMAGE_ALT }],
+      images: [
+        {
+          url: `/blog/${slug}/opengraph-image`,
+          width: 1200,
+          height: 630,
+          alt: blogPostOgImageAlt(post.title),
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.description,
-      images: [{ url: "/twitter-image", width: 1200, height: 630, alt: OG_IMAGE_ALT }],
+      images: [
+        {
+          url: `/blog/${slug}/twitter-image`,
+          width: 1200,
+          height: 630,
+          alt: blogPostOgImageAlt(post.title),
+        },
+      ],
     },
     ...(post.tags?.length ? { keywords: post.tags } : {}),
     authors: [{ name: post.author ?? SITE_NAME }],
@@ -92,7 +102,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     },
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     url,
-    image: `${origin}/opengraph-image`,
+    image: `${origin}/blog/${slug}/opengraph-image`,
     keywords: post.tags?.join(", "),
     articleSection: "Engineering",
   };

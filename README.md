@@ -96,10 +96,11 @@ host app
 
 ```
 packages/
-  runtime/            @llm-workbench/runtime
-  ui/                 @llm-workbench/ui
-  adapters-react/     @llm-workbench/adapters-react
-  ai-sdk/             @llm-workbench/ai-sdk
+  runtime/              @llm-workbench/runtime
+  ui/                   @llm-workbench/ui
+  adapters-react/       @llm-workbench/adapters-react
+  ai-sdk/               @llm-workbench/ai-sdk
+  mcp/                  @llm-workbench/mcp (MCP server + HTTP adapter)
 examples/
   job-search-demo/    Vite demo app exercising the full surface
   run-repo-server/    Reference REST store for HttpRunRepository
@@ -113,6 +114,7 @@ apps/
 | `@llm-workbench/ui` | `WorkbenchShell`, a themeable React interface for artifacts, rules, traces, gates, and bundles. |
 | `@llm-workbench/adapters-react` | `useWorkbenchRunRevision` for subscribing React components to live run state. |
 | `@llm-workbench/ai-sdk` | Vercel AI SDK v5 wrappers (`tracedGenerateText`, `tracedStreamText`, `tracedGenerateObject`, `tracedStreamObject`, `traceTools`) that emit correlated `model_io`, `tool_call`, and gateway-cost trace events automatically. |
+| `@llm-workbench/mcp` | Model Context Protocol server factory plus HTTP handler (`createWorkbenchMcpHttpHandler`) for exposing the runtime over MCP — see [`packages/mcp/README.md`](packages/mcp/README.md). |
 
 ## Quick Start
 
@@ -124,7 +126,7 @@ npm run demo               # Vite demo app at http://localhost:5173
 npm run demo:http-server   # Reference REST store for HttpRunRepository
 ```
 
-Node.js 18.18+ is required. CI runs on Node 18 and 20.
+Node.js **22+** is required (`engines` in root `package.json`). CI runs on **Node 22 and 24** (`.github/workflows/ci.yml`).
 
 ## 60-Second Integration
 

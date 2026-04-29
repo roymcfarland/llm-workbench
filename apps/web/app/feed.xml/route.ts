@@ -45,7 +45,7 @@ export async function GET(): Promise<Response> {
     <lastBuildDate>${rssDate(posts[0]?.date ?? new Date().toISOString())}</lastBuildDate>
     <atom:link href="${xmlEscape(feedUrl)}" rel="self" type="application/rss+xml" />
     <image>
-      <url>${xmlEscape(`${origin}/opengraph-image`)}</url>
+      <url>${xmlEscape(`${origin}/blog/opengraph-image`)}</url>
       <title>${xmlEscape(`${SITE_NAME} blog`)}</title>
       <link>${xmlEscape(blogUrl)}</link>
     </image>

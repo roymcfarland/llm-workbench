@@ -30,7 +30,7 @@ npm run ci
 | `packages/adapters-react`, `packages/ui` | React integration and workbench UI primitives |
 | `packages/ai-sdk` | AI SDK v5 wrappers + trace events |
 | `packages/mcp` | MCP server construction; HTTP handler |
-| `apps/web` | Next app: marketing, playground, runs UI, REST + MCP routes |
+| `apps/web` | Next app: marketing, blog (`content/blog/*.md`), playground, runs UI, REST + MCP routes |
 | `examples/*` | Demos consuming the runtime |
 | `scripts/` | Bootstrap and shared test config |
 
@@ -40,10 +40,7 @@ build required for local dev).
 
 ## 3. `apps/web` — runtime mental model
 
-1. **Auth:** Clerk (`middleware.ts`). Public routes include `/`, docs, discovery
-   (`/llms.txt`, `/api/openapi.json`, `/.well-known/*`, `/api/mcp` for JSON-RPC
-   entry). Everything else is session-gated; **API** routes return JSON `401`,
-   not redirects.
+1. **Auth:** Clerk (`apps/web/proxy.ts` — middleware edge handler). Public routes include `/`, `/blog`, `/feed.xml`, `/docs/*`, `/runs/demo`, discovery (`/llms.txt`, `/llms-full.txt`, `/agents.md`, `/robots.txt`, `/sitemap.xml`, `/api/openapi.json`, `/.well-known/*`, `/api/mcp` for JSON-RPC entry). Everything else is session-gated; **API** routes return JSON `401`, not redirects.
 2. **Tenancy:** `lib/auth/tenant.ts` — `requireTenant()` maps Clerk session to
    `tenantId` (`orgId` or `user:<userId>`). **Every** path that reads/writes
    runs must call this first. Supabase uses the **service role**; RLS is
@@ -131,7 +128,7 @@ Use this as a punch list; reorder based on product bets.
 
 ## 10. Quick reference — important files
 
-- `apps/web/middleware.ts` — Clerk, CSP on responses, rate limit hook
+- `apps/web/proxy.ts` — Clerk, CSP on responses, rate limit hook (middleware)
 - `apps/web/instrumentation.ts` — Sentry registration + `onRequestError`
 - `apps/web/lib/auth/tenant.ts` — tenancy guard
 - `apps/web/lib/supabase/runs-store.ts` — persistence + Resend hooks

@@ -8,6 +8,18 @@ export const SITE_SHARE_HOST = "www.llmworkbench.io" as const;
 /** Alt text for OG / Twitter generated image routes and metadata. */
 export const OG_IMAGE_ALT =
   "LLM Workbench — Ship LLM agents you can debug, fork, and replay. Tamper-evident bundles, MCP & OpenAPI." as const;
+
+/** Blog index meta description (RSS, OG, listings). */
+export const BLOG_INDEX_DESCRIPTION =
+  "Articles on LLM Workbench — audit-ready run bundles, human gates, model-agnostic tracing, and the protocol behind replayable agents." as const;
+
+/** Alt text for the blog index OG/Twitter image routes. */
+export const BLOG_INDEX_OG_ALT =
+  "LLM Workbench blog — audit-ready run bundles, human gates, and model-agnostic tracing." as const;
+
+export function blogPostOgImageAlt(postTitle: string): string {
+  return `${postTitle} — ${SITE_NAME} blog`;
+}
 export const SITE_TAGLINE =
   "Model-agnostic LLM control plane: tamper-evident, human-gated, replayable run bundles." as const;
 // Placeholder GitHub URL — repo is not yet public at this slug. Update when it lands.
