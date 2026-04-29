@@ -15,10 +15,12 @@ import { SectionReveal } from "@/components/landing/section-reveal";
 import { StaticWorkflowSvg } from "@/components/landing/static-workflow-svg";
 import { TelemetryRain } from "@/components/landing/telemetry-rain";
 import { getTotalRunsCount } from "@/lib/landing/runs-count";
+import { PlaygroundMarketingLink } from "@/components/playground-marketing-link";
 import {
   GITHUB_URL,
   LICENSE_NAME,
   LICENSE_URL,
+  OG_IMAGE_ALT,
   SITE_TAGLINE,
   siteOrigin,
 } from "@/lib/site";
@@ -31,9 +33,23 @@ export const metadata: Metadata = {
   openGraph: {
     url: "/",
     type: "website",
+    siteName: "LLM Workbench",
+    locale: "en_US",
     title: "LLM Workbench",
     description:
       "Tamper-evident, human-gated, replayable run bundles for the LLM agents you actually deploy.",
+    images: [
+      { url: "/opengraph-image", width: 1200, height: 630, alt: OG_IMAGE_ALT },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LLM Workbench",
+    description:
+      "Tamper-evident, human-gated, replayable run bundles for the LLM agents you actually deploy.",
+    images: [
+      { url: "/twitter-image", width: 1200, height: 630, alt: OG_IMAGE_ALT },
+    ],
   },
 };
 
@@ -112,10 +128,10 @@ export default async function LandingPage() {
                 style={{ animationDelay: "0.22s" }}
               >
                 <Button asChild size="lg" className="shadow-lg shadow-cyan-500/10">
-                  <Link href="/playground">
+                  <PlaygroundMarketingLink>
                     Open the playground
                     <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
-                  </Link>
+                  </PlaygroundMarketingLink>
                 </Button>
                 <Button asChild size="lg" variant="outline">
                   <Link href="/docs/protocol">
@@ -269,11 +285,6 @@ function buildJsonLd({
       "@type": "WebSite",
       name: "LLM Workbench",
       url,
-      potentialAction: {
-        "@type": "SearchAction",
-        target: `${url}/runs?q={query}`,
-        "query-input": "required name=query",
-      },
     },
     {
       "@context": "https://schema.org",

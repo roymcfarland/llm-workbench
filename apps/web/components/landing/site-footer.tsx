@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PlaygroundMarketingLink } from "@/components/playground-marketing-link";
 import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 
 import {
@@ -114,9 +115,7 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/playground" className="hover:underline">
-                Playground
-              </Link>
+              <PlaygroundMarketingLink className="hover:underline" />
             </li>
             <li>
               <a

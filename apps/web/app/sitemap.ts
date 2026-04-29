@@ -16,7 +16,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/feed.xml", priority: 0.55, changeFrequency: "weekly" },
     { path: "/docs/protocol", priority: 0.78, changeFrequency: "weekly" },
     { path: "/runs/demo", priority: 0.72, changeFrequency: "monthly" },
-    { path: "/playground", priority: 0.74, changeFrequency: "weekly" },
     { path: "/llms.txt", priority: 0.55, changeFrequency: "monthly" },
     { path: "/llms-full.txt", priority: 0.45, changeFrequency: "monthly" },
     { path: "/agents.md", priority: 0.45, changeFrequency: "monthly" },

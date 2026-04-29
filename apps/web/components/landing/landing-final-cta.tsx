@@ -4,6 +4,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 
 import { Button } from "@/components/ui/button";
+import { PlaygroundMarketingLink } from "@/components/playground-marketing-link";
 import { GITHUB_URL } from "@/lib/site";
 
 type LandingFinalCtaProps = {
@@ -43,10 +44,10 @@ export function LandingFinalCta({ runsCount }: LandingFinalCtaProps) {
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="shadow-lg shadow-cyan-500/10">
-              <Link href="/playground">
+              <PlaygroundMarketingLink>
                 Open the playground
                 <ArrowRight className="ml-1 h-4 w-4" aria-hidden />
-              </Link>
+              </PlaygroundMarketingLink>
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link href="/runs/demo">Watch a demo run</Link>

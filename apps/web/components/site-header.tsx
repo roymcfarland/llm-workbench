@@ -39,10 +39,14 @@ export function SiteHeader() {
           </Button>
           <SignedIn>
             <Button asChild variant="ghost" size="sm" className={navBtn}>
-              <Link href="/playground">Playground</Link>
+              <Link href="/playground" prefetch={false}>
+                Playground
+              </Link>
             </Button>
             <Button asChild variant="ghost" size="sm" className={navBtn}>
-              <Link href="/runs">Runs</Link>
+              <Link href="/runs" prefetch={false}>
+                Runs
+              </Link>
             </Button>
           </SignedIn>
           <div className="shrink-0 [&_button]:size-8 [&_button]:sm:size-9">
@@ -61,7 +65,9 @@ export function SiteHeader() {
               <Link href="/runs/demo">Demo</Link>
             </Button>
             <Button asChild size="sm" className={navBtn}>
-              <Link href="/sign-in">Sign in</Link>
+              <Link href="/sign-in" prefetch={false}>
+                Sign in
+              </Link>
             </Button>
           </SignedOut>
         </nav>

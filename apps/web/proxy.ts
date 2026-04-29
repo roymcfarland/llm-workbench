@@ -8,8 +8,15 @@ import { contentSecurityPolicy } from "@/lib/security/csp";
 // discoverability (blog, RSS, robots/sitemap), and the agentic discovery files
 // (llms.txt / llms-full.txt / agents.md / openapi / mcp.json). Everything else
 // (the (app) group, /api/runs, /api/llm) requires an authenticated session.
+//
+// SEO / crawlers: keep `isPublicRoute` aligned with `app/robots.txt`, `app/sitemap.ts`,
+// and playground CTAs (`components/playground-marketing-link.tsx`). Next.js OG routes
+// (`/opengraph-image`, `/twitter-image`) and blog image routes stay public — crawlers do
+// not send cookies.
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/opengraph-image(.*)",
+  "/twitter-image(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/health",

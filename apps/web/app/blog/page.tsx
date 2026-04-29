@@ -20,6 +20,8 @@ export const metadata: Metadata = {
       "Audit-ready run bundles, human gates, and model-agnostic tracing for deployed agents.",
     url: "/blog",
     type: "website",
+    siteName: SITE_NAME,
+    locale: "en_US",
     images: [{ url: "/blog/opengraph-image", width: 1200, height: 630, alt: BLOG_INDEX_OG_ALT }],
   },
   twitter: {

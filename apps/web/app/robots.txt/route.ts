@@ -4,27 +4,18 @@ export const dynamic = "force-dynamic";
 
 export async function GET(): Promise<Response> {
   const origin = await siteOrigin();
-  const body = `User-agent: GPTBot
+  // One `User-agent: *` block: per RFC, each named bot group is independent—duplicated
+  // `Allow: /`–only stanzas (GPTBot, etc.) did not inherit these Disallow lines and
+  // could index auth-only routes. Keep marketing + discoverability public; gate /runs
+  // (except /runs/demo), playground, and auth surfaces.
+  const body = `User-agent: *
 Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-User-agent: CCBot
-Allow: /
-
-User-agent: Applebot-Extended
-Allow: /
-
-User-agent: *
-Allow: /
-Disallow: /api/runs/
+Allow: /runs/demo
+Disallow: /api/runs
+Disallow: /api/llm
+Disallow: /api/mcp
+Disallow: /playground
+Disallow: /runs
 Disallow: /sign-in
 Disallow: /sign-up
 

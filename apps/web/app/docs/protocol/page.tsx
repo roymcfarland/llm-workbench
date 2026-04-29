@@ -4,7 +4,7 @@ import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 
 import { renderMarkdown } from "@/lib/landing/markdown";
 import { PROTOCOL_OVERVIEW } from "@/lib/landing/protocol-prose";
-import { siteOrigin } from "@/lib/site";
+import { OG_IMAGE_ALT, siteOrigin } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Protocol",
@@ -17,12 +17,20 @@ export const metadata: Metadata = {
       "Run bundles, live persistence wire format, integrity hashing, gates, telemetry, OTel bridge, integrations.",
     url: "/docs/protocol",
     type: "article",
+    siteName: "LLM Workbench",
+    locale: "en_US",
+    images: [
+      { url: "/opengraph-image", width: 1200, height: 630, alt: OG_IMAGE_ALT },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "LLM Workbench protocol",
     description:
       "Run bundles, persistence vs export, correlation IDs, gates, MCP + REST surfaces.",
+    images: [
+      { url: "/twitter-image", width: 1200, height: 630, alt: OG_IMAGE_ALT },
+    ],
   },
 };
 

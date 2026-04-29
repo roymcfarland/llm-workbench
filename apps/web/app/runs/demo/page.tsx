@@ -4,12 +4,34 @@ import Link from "next/link";
 import { RunDetailClient } from "@/components/run-detail-client";
 import { Button } from "@/components/ui/button";
 import { buildDemoRunSerialized } from "@/lib/landing/demo-run";
+import { OG_IMAGE_ALT } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Demo run",
+  title: "Demo run · LLM Workbench",
   description:
     "A public, read-only LLM Workbench run rendered the same way auth-gated runs are. No persistence.",
   alternates: { canonical: "/runs/demo" },
+  openGraph: {
+    title: "Public demo run · LLM Workbench",
+    description:
+      "Seeded sample run (jobSearchWorkflow). Read-only preview of the sandbox — no Clerk session required.",
+    url: "/runs/demo",
+    type: "website",
+    siteName: "LLM Workbench",
+    locale: "en_US",
+    images: [
+      { url: "/opengraph-image", width: 1200, height: 630, alt: OG_IMAGE_ALT },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Public demo run · LLM Workbench",
+    description:
+      "Seeded sample run — tamper-evident bundle preview without signing in.",
+    images: [
+      { url: "/twitter-image", width: 1200, height: 630, alt: OG_IMAGE_ALT },
+    ],
+  },
 };
 
 export const dynamic = "force-dynamic";
@@ -26,7 +48,9 @@ export default function DemoRunPage() {
           </span>
         </div>
         <Button asChild size="sm" variant="outline">
-          <Link href="/sign-in?redirect_url=/playground">Sign in to run your own</Link>
+          <Link href="/sign-in?redirect_url=/playground" prefetch={false}>
+            Sign in to run your own
+          </Link>
         </Button>
       </div>
 

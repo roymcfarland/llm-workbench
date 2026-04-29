@@ -12,10 +12,13 @@ const APP_README_FALLBACK = `# @llm-workbench/web
 
 Hosted reference deployment for LLM Workbench. Next.js 16 App Router,
 Tailwind v4, Clerk auth, Supabase persistence, AI SDK v5 routed through
-Vercel AI Gateway. Routes: /, /docs/protocol, /playground, /runs, /runs/demo,
-/api/runs, /api/runs/[runId], /api/llm, /api/mcp, /api/openapi.json,
-/.well-known/mcp.json, /llms.txt, /llms-full.txt, /agents.md, /robots.txt,
-/sitemap.xml.
+Vercel AI Gateway.
+
+Marketing & discoverability (auth optional): \`/\`, \`/blog\`, \`/docs/protocol\`,
+\`/runs/demo\`, \`/feed.xml\`, \`/llms.txt\`, \`/robots.txt\`, \`/sitemap.xml\`, Open Graph
+routes (\`/opengraph-image\`, \`/twitter-image\`). Authenticated shells: \`/playground\`,
+\`/runs\` (middleware + Clerk). APIs: \`/api/openapi.json\`, \`/.well-known/mcp.json\`
+(public discovery); \`/api/runs…\`, \`/api/llm\`, \`/api/mcp\` require credentials.
 `;
 
 const ROOT_README_FALLBACK = `# LLM Workbench
@@ -73,6 +76,8 @@ A Streamable HTTP MCP endpoint registers:
 - Reference app additions: \`start_run\`, \`resolve_gate\`, \`write_artifact\`, \`export_bundle\` (full-profile tamper-evident bundle).
 
 Discovery via \`/.well-known/mcp.json\`. Resources expose \`runs://{runId}\` bundle URIs — see \`packages/mcp/README.md\`.
+
+HTML crawlers and link previews do not carry Clerk sessions. Middleware explicitly allows OG/Twitter metadata image routes (\`/opengraph-image\`, \`/twitter-image\`) and marketing paths; tenant APIs and MCP stay behind auth (\`robots.txt\` \`Disallow\` on private APIs for crawl-budget hygiene).
 
 ## Error model
 

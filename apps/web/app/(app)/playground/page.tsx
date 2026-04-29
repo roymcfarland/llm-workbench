@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
+
 import { PlaygroundClient } from "@/components/playground-client";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Playground · LLM Workbench",
 };
 

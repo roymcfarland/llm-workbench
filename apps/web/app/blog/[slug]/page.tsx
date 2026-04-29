@@ -7,6 +7,9 @@ import { blogPostOgImageAlt, SITE_NAME, siteOrigin } from "@/lib/site";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
+/** Matches `id` from `generateImageMetadata` in `opengraph-image.tsx` / `twitter-image.tsx`. */
+const OG_FILE_ID = "article";
+
 export async function generateStaticParams() {
   return getPostSlugs().map((slug) => ({ slug }));
 }
@@ -39,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       siteName: "LLM Workbench",
       images: [
         {
-          url: `/blog/${slug}/opengraph-image`,
+          url: `/blog/${slug}/opengraph-image/${OG_FILE_ID}`,
           width: 1200,
           height: 630,
           alt: blogPostOgImageAlt(post.title),
@@ -52,7 +55,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: post.description,
       images: [
         {
-          url: `/blog/${slug}/twitter-image`,
+          url: `/blog/${slug}/twitter-image/${OG_FILE_ID}`,
           width: 1200,
           height: 630,
           alt: blogPostOgImageAlt(post.title),
@@ -102,7 +105,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     },
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     url,
-    image: `${origin}/blog/${slug}/opengraph-image`,
+    image: `${origin}/blog/${slug}/opengraph-image/${OG_FILE_ID}`,
     keywords: post.tags?.join(", "),
     articleSection: "Engineering",
   };
