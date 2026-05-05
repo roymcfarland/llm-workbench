@@ -167,45 +167,21 @@ export function SiteFooter() {
         </nav>
       </div>
       <div className="border-t border-[var(--color-border)] px-6 py-5">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-1 text-center text-xs text-[var(--color-muted-foreground)] sm:flex-row sm:justify-between sm:text-left">
-          <p>
-            <span aria-hidden="true">©</span>
-            <span className="sr-only">Copyright</span>{" "}
-            {COPYRIGHT_START_YEAR === new Date().getFullYear()
-              ? COPYRIGHT_START_YEAR
-              : `${COPYRIGHT_START_YEAR}–${new Date().getFullYear()}`}{" "}
-            <span className="font-medium text-[var(--color-foreground)]">
-              Roy McFarland
-            </span>{" "}
-            /{" "}
-            <a
-              href={BRIGHTLINE_LABS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-[var(--color-foreground)] underline-offset-4 hover:underline"
-            >
-              {BRIGHTLINE_LABS_NAME}
-            </a>
-            . All rights reserved.
-          </p>
-          <p>
-            <span className="text-[var(--color-foreground)]">Attribution: </span>
-            <a
-              href={BRIGHTLINE_LABS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-[var(--color-foreground)] underline-offset-4 hover:underline"
-            >
-              {BRIGHTLINE_LABS_NAME}
-            </a>
-            {" "}— product and reference deployment.
-          </p>
-        </div>
+        <p className="text-center text-xs text-[var(--color-muted-foreground)]">
+          <span className="text-[var(--color-foreground)]">Attribution: </span>
+          <a
+            href={BRIGHTLINE_LABS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[var(--color-foreground)] underline-offset-4 hover:underline"
+          >
+            {BRIGHTLINE_LABS_NAME}
+          </a>
+          — product and reference deployment.
+        </p>
       </div>
     </footer>
   );
 }
-
-const COPYRIGHT_START_YEAR = 2026;
 
 export default SiteFooter;
