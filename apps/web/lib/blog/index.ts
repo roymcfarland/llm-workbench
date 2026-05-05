@@ -3,7 +3,10 @@ import path from "node:path";
 
 import matter from "gray-matter";
 
-import { renderMarkdown } from "@/lib/landing/markdown";
+import {
+  renderMarkdownWithHeadings,
+  type RenderedHeading,
+} from "@/lib/landing/markdown";
 
 import { blogFrontMatterSchema, type BlogFrontMatter } from "./schema";
 
@@ -16,6 +19,7 @@ export type BlogPostPreview = BlogFrontMatter & {
 export type BlogPost = BlogPostPreview & {
   html: string;
   rawMarkdown: string;
+  headings: RenderedHeading[];
 };
 
 const BLOG_REL = ["content", "blog"] as const;
@@ -86,13 +90,14 @@ export function getPostBySlug(slug: string): BlogPost | null {
   }
   const data = meta.data;
   if (data.draft && !includeDrafts()) return null;
-  const html = renderMarkdown(parsed.content.trim());
+  const { html, headings } = renderMarkdownWithHeadings(parsed.content.trim());
   return {
     ...data,
     slug,
     basename: file,
     html,
     rawMarkdown: parsed.content,
+    headings,
   };
 }
 
@@ -143,4 +148,61 @@ export function getRelatedPosts(
     return new Date(b.post.date).getTime() - new Date(a.post.date).getTime();
   });
   return scored.slice(0, limit).map((s) => s.post);
+}
+
+/**
+ * URL-safe form of a tag for use in /blog/tags/[tag]. Lowercase, hyphenated,
+ * stable across casing/punctuation drift in front matter.
+ */
+export function tagSlug(tag: string): string {
+  return tag
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+export type TagBucket = {
+  tag: string;
+  slug: string;
+  count: number;
+};
+
+/**
+ * Aggregate all tags across published posts. Display-name (`tag`) is taken
+ * from the first occurrence to preserve casing/punctuation as authored.
+ */
+export function getAllTags(): TagBucket[] {
+  const map = new Map<string, TagBucket>();
+  for (const post of getAllPostsForList()) {
+    for (const t of post.tags ?? []) {
+      const slug = tagSlug(t);
+      if (!slug) continue;
+      const existing = map.get(slug);
+      if (existing) existing.count += 1;
+      else map.set(slug, { tag: t, slug, count: 1 });
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => {
+    if (b.count !== a.count) return b.count - a.count;
+    return a.tag.localeCompare(b.tag);
+  });
+}
+
+/**
+ * Posts whose front-matter tags map to the given slug, sorted newest first.
+ */
+export function getPostsByTag(slug: string): BlogPostPreview[] {
+  return getAllPostsForList().filter((p) =>
+    (p.tags ?? []).some((t) => tagSlug(t) === slug),
+  );
+}
+
+/**
+ * Resolve a tag slug to the canonical display name from front matter.
+ */
+export function resolveTagDisplayName(slug: string): string | null {
+  const tag = getAllTags().find((t) => t.slug === slug);
+  return tag ? tag.tag : null;
 }

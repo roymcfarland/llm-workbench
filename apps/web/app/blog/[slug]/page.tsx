@@ -7,6 +7,7 @@ import {
   getPostSlugs,
   getRelatedPosts,
   readingTimeIso,
+  tagSlug,
   wordCountOf,
 } from "@/lib/blog";
 import { blogPostOgImageAlt, SITE_NAME, siteOrigin } from "@/lib/site";
@@ -166,6 +167,8 @@ export default async function BlogPostPage({ params }: PageProps) {
     ],
   };
 
+  const readingMinutes = Math.max(1, Math.round(wordCount / 220));
+
   return (
     <>
       <script
@@ -176,110 +179,151 @@ export default async function BlogPostPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <article className="mx-auto w-full max-w-3xl px-6 py-14 md:pb-24 md:pt-14">
-        <nav aria-label="Breadcrumb">
-          <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-[var(--color-muted-foreground)]">
-            <li>
-              <Link href="/blog" className="hover:text-cyan-300 hover:underline">
-                Blog
-              </Link>
-            </li>
-            <li aria-hidden className="select-none opacity-60">
-              /
-            </li>
-            <li className="truncate text-[var(--color-foreground)]">{post.slug}</li>
-          </ol>
-        </nav>
-
-        <header className="mt-8 border-b border-[var(--color-border)] pb-10">
-          <p className="font-mono text-xs text-[var(--color-muted-foreground)]">
-            <time dateTime={post.date}>{formatBlogDate(post.date)}</time>
-            {post.updated ? (
-              <>
-                {" "}
-                · updated{" "}
-                <time dateTime={post.updated}>{formatBlogDate(post.updated)}</time>
-              </>
-            ) : null}
-            {post.author ? ` · ${post.author}` : ""}
-          </p>
-          <h1 className="mt-4 font-serif text-balance text-3xl font-semibold tracking-tight md:text-[2.15rem] md:leading-tight">
-            {post.title}
-          </h1>
-          <p className="mt-4 text-lg leading-relaxed text-[var(--color-muted-foreground)]">
-            {post.description}
-          </p>
-          {post.tags?.length ? (
-            <ul className="mt-6 flex flex-wrap gap-2" aria-label="Tags">
-              {post.tags.map((tag) => (
-                <li
-                  key={tag}
-                  className="rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-2.5 py-0.5 font-mono text-[10px] text-[var(--color-muted-foreground)]"
-                >
-                  {tag}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </header>
-
+      <div className="relative isolate">
         <div
-          className="prose prose-invert mt-10 max-w-none"
-          // Server-rendered from repo markdown; front matter validated in lib/blog
-          dangerouslySetInnerHTML={{ __html: post.html }}
+          aria-hidden="true"
+          className="landing-mesh pointer-events-none absolute inset-x-0 top-0 -z-10 h-[24rem] opacity-40 mix-blend-screen"
         />
+        <article className="mx-auto w-full max-w-3xl px-6 py-14 md:pb-24 md:pt-14">
+          <nav aria-label="Breadcrumb">
+            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-[var(--color-muted-foreground)]">
+              <li>
+                <Link href="/blog" className="hover:text-cyan-300 hover:underline">
+                  Blog
+                </Link>
+              </li>
+              <li aria-hidden className="select-none opacity-60">
+                /
+              </li>
+              <li className="truncate text-[var(--color-foreground)]">
+                {post.slug}
+              </li>
+            </ol>
+          </nav>
 
-        {related.length > 0 ? (
-          <aside
-            className="mt-16 border-t border-[var(--color-border)] pt-10"
-            aria-labelledby="read-next-heading"
-          >
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-muted-foreground)]">
-              Read next
+          <header className="mt-8 border-b border-[var(--color-border)] pb-10">
+            <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-[var(--color-muted-foreground)]">
+              <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-cyan-300">
+                {articleSection}
+              </span>
+              <time dateTime={post.date}>{formatBlogDate(post.date)}</time>
+              {post.updated && post.updated !== post.date ? (
+                <>
+                  <span aria-hidden className="opacity-50">
+                    ·
+                  </span>
+                  <span>
+                    updated{" "}
+                    <time dateTime={post.updated}>
+                      {formatBlogDate(post.updated)}
+                    </time>
+                  </span>
+                </>
+              ) : null}
+              {post.author ? (
+                <>
+                  <span aria-hidden className="opacity-50">
+                    ·
+                  </span>
+                  <span>{post.author}</span>
+                </>
+              ) : null}
+              <span aria-hidden className="opacity-50">
+                ·
+              </span>
+              <span>{readingMinutes} min read</span>
+            </div>
+            <h1 className="mt-5 font-serif text-balance text-3xl font-semibold tracking-tight md:text-[2.15rem] md:leading-tight">
+              {post.title}
+            </h1>
+            <span
+              aria-hidden="true"
+              className="mt-5 block h-px w-24 bg-gradient-to-r from-cyan-400/70 via-violet-400/40 to-transparent"
+            />
+            <p className="mt-5 text-lg leading-relaxed text-[var(--color-muted-foreground)]">
+              {post.description}
             </p>
-            <h2
-              id="read-next-heading"
-              className="mt-2 font-serif text-2xl font-semibold tracking-tight"
+            {post.tags?.length ? (
+              <ul className="mt-6 flex flex-wrap gap-2" aria-label="Tags">
+                {post.tags.map((tag) => (
+                  <li key={tag}>
+                    <Link
+                      href={`/blog/tags/${tagSlug(tag)}`}
+                      className="rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-2.5 py-0.5 font-mono text-[10px] text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
+                    >
+                      {tag}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </header>
+
+          <div
+            className="prose prose-invert mt-10 max-w-none"
+            // Server-rendered from repo markdown; front matter validated in lib/blog
+            dangerouslySetInnerHTML={{ __html: post.html }}
+          />
+
+          {related.length > 0 ? (
+            <aside
+              className="mt-16 border-t border-[var(--color-border)] pt-10"
+              aria-labelledby="read-next-heading"
             >
-              More from the blog
-            </h2>
-            <ul className="mt-6 flex flex-col gap-6">
-              {related.map((p) => (
-                <li
-                  key={p.slug}
-                  className="group rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/40 p-5 transition hover:border-cyan-300/50"
-                >
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
-                    <time dateTime={p.date}>{formatBlogDate(p.date)}</time>
-                  </p>
-                  <h3 className="mt-1 font-serif text-lg font-semibold tracking-tight">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-muted-foreground)]">
+                Read next
+              </p>
+              <h2
+                id="read-next-heading"
+                className="mt-2 font-serif text-2xl font-semibold tracking-tight"
+              >
+                More from the blog
+              </h2>
+              <ul className="mt-6 grid grid-cols-1 gap-5">
+                {related.map((p) => (
+                  <li key={p.slug}>
                     <Link
                       href={`/blog/${p.slug}`}
-                      className="underline-offset-4 transition group-hover:text-cyan-300 group-hover:underline"
+                      className="group/related relative block overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-5 transition hover:border-cyan-400/40 hover:bg-[var(--color-card)]/55"
                     >
-                      {p.title}
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-[var(--color-border)] to-transparent transition-opacity group-hover/related:via-cyan-400/40"
+                      />
+                      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
+                        <time dateTime={p.date}>{formatBlogDate(p.date)}</time>
+                      </p>
+                      <h3 className="mt-1 font-serif text-lg font-semibold tracking-tight underline-offset-4 transition group-hover/related:text-cyan-300 group-hover/related:underline">
+                        {p.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
+                        {p.description}
+                      </p>
                     </Link>
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
-                    {p.description}
-                  </p>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-6 font-mono text-xs text-[var(--color-muted-foreground)]">
-              Browse the full{" "}
-              <Link href="/blog" className="underline-offset-4 hover:underline hover:text-cyan-300">
-                blog
-              </Link>{" "}
-              or subscribe to{" "}
-              <a href="/feed.xml" className="underline-offset-4 hover:underline hover:text-cyan-300">
-                /feed.xml
-              </a>
-              .
-            </p>
-          </aside>
-        ) : null}
-      </article>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6 font-mono text-xs text-[var(--color-muted-foreground)]">
+                Browse the full{" "}
+                <Link
+                  href="/blog"
+                  className="underline-offset-4 hover:text-cyan-300 hover:underline"
+                >
+                  blog
+                </Link>{" "}
+                or subscribe to{" "}
+                <a
+                  href="/feed.xml"
+                  className="underline-offset-4 hover:text-cyan-300 hover:underline"
+                >
+                  /feed.xml
+                </a>
+                .
+              </p>
+            </aside>
+          ) : null}
+        </article>
+      </div>
     </>
   );
 }

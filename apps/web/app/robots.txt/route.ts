@@ -9,9 +9,13 @@ export async function GET(): Promise<Response> {
   // accidentally block discovery URLs.
   const body = `User-agent: *
 Allow: /
+Allow: /blog
+Allow: /blog/tags/
+Allow: /docs/
 Allow: /runs/demo
 Allow: /api/openapi.json
 Allow: /.well-known/
+Allow: /humans.txt
 
 # JSON / streaming / probes — not HTML documents for search
 Disallow: /api/runs

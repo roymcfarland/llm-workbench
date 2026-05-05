@@ -27,10 +27,12 @@ calls explicit APIs to record what happened. Protocol v${WORKBENCH_PROTOCOL_VERS
 - robots.txt:        ${origin}/robots.txt
 - Sitemap:           ${origin}/sitemap.xml
 - Blog:              ${origin}/blog (RSS feed: ${origin}/feed.xml)
+- Topic landings:    ${origin}/blog/tags/<slug> (e.g. /blog/tags/run-bundles)
 - Protocol overview: ${origin}/docs/protocol
 - OpenAPI spec:      ${origin}/api/openapi.json
 - MCP descriptor:    ${origin}/.well-known/mcp.json
 - Agent contract:    ${origin}/agents.md
+- Humans behind it:  ${origin}/humans.txt
 - Public demo run:   ${origin}/runs/demo
 - Long-form (full):  ${origin}/llms-full.txt
 - Source repository: ${GITHUB_URL}

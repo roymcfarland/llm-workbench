@@ -1,8 +1,9 @@
 /**
  * Microscopic markdown → HTML renderer for the landing/docs surface. Handles
- * H1-H3 headings, paragraphs, fenced code blocks, unordered lists, GFM-style
- * pipe tables, and inline `code` spans. Anything more exotic should be
- * authored as JSX directly.
+ * H1–H4 headings (with slugified ids and a hover-revealed `#` anchor),
+ * paragraphs, fenced code blocks, unordered lists, GFM-style pipe tables,
+ * blockquotes, inline `code`, **bold**, and *italic*. Anything more exotic
+ * should be authored as JSX directly.
  */
 function escape(s: string): string {
   return s
@@ -21,6 +22,17 @@ function inline(s: string): string {
   withCode = escape(withCode);
   // bold **text**
   withCode = withCode.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  // italic *text* and _text_ — match single markers that don't touch
+  // word characters on the wrong side, so things like `5 * 3` and
+  // `snake_case` stay untouched.
+  withCode = withCode.replace(
+    /(^|[\s(])\*([^*\n]+?)\*(?=$|[\s).,;:!?])/g,
+    "$1<em>$2</em>",
+  );
+  withCode = withCode.replace(
+    /(^|[\s(])_([^_\n]+?)_(?=$|[\s).,;:!?])/g,
+    "$1<em>$2</em>",
+  );
   // links [label](url) — only http(s) and relative
   withCode = withCode.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
@@ -62,9 +74,56 @@ function alignFromSep(sep: string): "left" | "center" | "right" {
   return "left";
 }
 
-export function renderMarkdown(src: string): string {
+/**
+ * Slugify heading text for use as a stable `id`. Mirrors the GitHub-flavored
+ * slug rules closely enough that links posted in chat / docs are predictable.
+ */
+export function slugifyHeading(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/<[^>]+>/g, "")
+    .replace(/[`*_~]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+function uniquifyId(base: string, used: Set<string>): string {
+  if (!used.has(base)) {
+    used.add(base);
+    return base;
+  }
+  let n = 2;
+  while (used.has(`${base}-${n}`)) n += 1;
+  const id = `${base}-${n}`;
+  used.add(id);
+  return id;
+}
+
+/**
+ * One surface heading produced by the renderer. Useful for building tables
+ * of contents from the same source the page renders from.
+ */
+export type RenderedHeading = {
+  level: 1 | 2 | 3 | 4;
+  /** Plain-text label (entities decoded; markup stripped). */
+  text: string;
+  id: string;
+};
+
+/**
+ * Render markdown to HTML and (optionally) collect the headings that were
+ * emitted so callers can build a sidebar TOC without re-parsing.
+ */
+export function renderMarkdownWithHeadings(src: string): {
+  html: string;
+  headings: RenderedHeading[];
+} {
   const lines = src.split("\n");
   const out: string[] = [];
+  const headings: RenderedHeading[] = [];
+  const usedIds = new Set<string>();
   let i = 0;
   while (i < lines.length) {
     const line = lines[i]!;
@@ -78,23 +137,38 @@ export function renderMarkdown(src: string): string {
         i += 1;
       }
       i += 1;
-      const cls = lang
-        ? `language-${escape(lang)}`
-        : "language-plain";
+      const cls = lang ? `language-${escape(lang)}` : "language-plain";
       out.push(
         `<pre class="my-4 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/60 p-4 font-mono text-xs leading-relaxed"><code class="${cls}">${escape(buf.join("\n"))}</code></pre>`,
       );
       continue;
     }
-    // headings
-    const h = /^(#{1,3})\s+(.*)$/.exec(line);
+    // headings (H1-H4 with slug ids and hover anchors)
+    const h = /^(#{1,4})\s+(.*)$/.exec(line);
     if (h) {
-      const level = h[1]!.length;
-      const text = inline(h[2]!);
-      const sizes = ["text-3xl", "text-2xl", "text-lg"][level - 1];
-      const margin = level === 1 ? "mt-0 mb-6" : level === 2 ? "mt-10 mb-4" : "mt-6 mb-2";
+      const level = h[1]!.length as 1 | 2 | 3 | 4;
+      const rawText = h[2]!;
+      const text = inline(rawText);
+      const plain = rawText.replace(/[`*_~]/g, "").trim();
+      const id = uniquifyId(slugifyHeading(plain), usedIds);
+      headings.push({ level, text: plain, id });
+      const sizes = [
+        "text-3xl",
+        "text-2xl",
+        "text-lg",
+        "text-base uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]",
+      ][level - 1];
+      const margin =
+        level === 1
+          ? "mt-0 mb-6"
+          : level === 2
+            ? "mt-10 mb-4"
+            : level === 3
+              ? "mt-6 mb-2"
+              : "mt-5 mb-2 font-mono";
+      const fontFamily = level === 4 ? "" : "font-serif";
       out.push(
-        `<h${level} class="font-serif font-semibold tracking-tight ${sizes} ${margin}">${text}</h${level}>`,
+        `<h${level} id="${id}" class="group/heading scroll-mt-20 ${fontFamily} font-semibold tracking-tight ${sizes} ${margin}"><a href="#${id}" class="no-underline" aria-label="Anchor link to: ${escape(plain)}"><span class="mr-2 select-none text-[var(--color-muted-foreground)] opacity-0 transition-opacity group-hover/heading:opacity-60">#</span>${text}</a></h${level}>`,
       );
       i += 1;
       continue;
@@ -108,6 +182,20 @@ export function renderMarkdown(src: string): string {
       }
       out.push(
         `<ul class="my-4 ml-6 list-disc space-y-1 text-sm leading-relaxed text-zinc-100/90">${buf.join("")}</ul>`,
+      );
+      continue;
+    }
+    // blockquote (consecutive `> ` lines collapse into one paragraph)
+    if (/^> ?/.test(line)) {
+      const buf: string[] = [];
+      while (i < lines.length && /^> ?/.test(lines[i]!)) {
+        buf.push(lines[i]!.replace(/^> ?/, ""));
+        i += 1;
+      }
+      out.push(
+        `<blockquote class="my-5 rounded-r-lg border-l-2 border-cyan-400/50 bg-[var(--color-card)]/40 px-4 py-3 text-sm italic leading-relaxed text-[var(--color-muted-foreground)]">${inline(
+          buf.join(" "),
+        )}</blockquote>`,
       );
       continue;
     }
@@ -144,7 +232,7 @@ export function renderMarkdown(src: string): string {
       const bodyHtml = bodyRows
         .map(
           (row) =>
-            `<tr>${row
+            `<tr class="transition-colors hover:bg-[var(--color-card)]/30">${row
               .map(
                 (c, idx) =>
                   `<td class="border-b border-[var(--color-border)]/60 px-3 py-2 align-top ${alignClass(idx)}">${inline(c)}</td>`,
@@ -153,7 +241,7 @@ export function renderMarkdown(src: string): string {
         )
         .join("");
       out.push(
-        `<div class="my-5 overflow-x-auto"><table class="w-full border-collapse text-sm leading-relaxed text-zinc-100/90"><thead><tr>${headHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`,
+        `<div class="my-5 overflow-x-auto rounded-lg border border-[var(--color-border)]/70"><table class="w-full border-collapse text-sm leading-relaxed text-zinc-100/90"><thead class="bg-[var(--color-card)]/40"><tr>${headHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`,
       );
       continue;
     }
@@ -167,9 +255,10 @@ export function renderMarkdown(src: string): string {
     while (
       i < lines.length &&
       lines[i]!.trim() !== "" &&
-      !/^#{1,3}\s+/.test(lines[i]!) &&
+      !/^#{1,4}\s+/.test(lines[i]!) &&
       !lines[i]!.startsWith("```") &&
       !/^- /.test(lines[i]!) &&
+      !/^> ?/.test(lines[i]!) &&
       !(
         isTableRow(lines[i]!) &&
         i + 1 < lines.length &&
@@ -183,5 +272,12 @@ export function renderMarkdown(src: string): string {
       `<p class="my-3 text-sm leading-relaxed text-zinc-100/90">${inline(buf.join(" "))}</p>`,
     );
   }
-  return out.join("\n");
+  return { html: out.join("\n"), headings };
+}
+
+/**
+ * Convenience wrapper kept for callers that only need the HTML output.
+ */
+export function renderMarkdown(src: string): string {
+  return renderMarkdownWithHeadings(src).html;
 }
