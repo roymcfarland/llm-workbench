@@ -95,3 +95,52 @@ export function getPostBySlug(slug: string): BlogPost | null {
     rawMarkdown: parsed.content,
   };
 }
+
+/**
+ * Approximate word count for a markdown body. Used for `wordCount` and
+ * `timeRequired` in Article JSON-LD; precision is not important — search
+ * engines and assistants only need a credible order-of-magnitude.
+ */
+export function wordCountOf(markdown: string): number {
+  const stripped = markdown
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`[^`]*`/g, " ")
+    .replace(/!?\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/[#>*_~`|\-]+/g, " ");
+  const tokens = stripped.split(/\s+/).filter(Boolean);
+  return tokens.length;
+}
+
+/**
+ * ISO 8601 duration string for an estimated reading time, assuming
+ * ~220 WPM (a common baseline for technical readers).
+ */
+export function readingTimeIso(wordCount: number): string {
+  const minutes = Math.max(1, Math.round(wordCount / 220));
+  return `PT${minutes}M`;
+}
+
+/**
+ * Pick up to `limit` related posts by tag overlap, then recency. Excludes the
+ * current slug. When no overlap exists, falls back to the newest other posts
+ * so the related-posts block always renders.
+ */
+export function getRelatedPosts(
+  current: BlogPostPreview,
+  limit = 3,
+): BlogPostPreview[] {
+  const all = getAllPostsForList().filter((p) => p.slug !== current.slug);
+  const tags = new Set(current.tags ?? []);
+  const scored = all.map((p) => {
+    const overlap = (p.tags ?? []).reduce(
+      (n, t) => n + (tags.has(t) ? 1 : 0),
+      0,
+    );
+    return { post: p, overlap };
+  });
+  scored.sort((a, b) => {
+    if (b.overlap !== a.overlap) return b.overlap - a.overlap;
+    return new Date(b.post.date).getTime() - new Date(a.post.date).getTime();
+  });
+  return scored.slice(0, limit).map((s) => s.post);
+}

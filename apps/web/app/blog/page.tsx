@@ -48,18 +48,20 @@ function formatBlogDate(iso: string): string {
 export default async function BlogIndexPage() {
   const posts = getAllPostsForList();
   const origin = await siteOrigin();
-  const jsonLd = {
+  const blogJsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
     "@id": `${origin}/blog#blog`,
     name: `${SITE_NAME} blog`,
     description: BLOG_INDEX_DESCRIPTION,
     url: `${origin}/blog`,
+    inLanguage: "en-US",
     publisher: {
       "@type": "Organization",
       name: SITE_NAME,
       url: origin,
     },
+    mainEntityOfPage: { "@type": "WebPage", "@id": `${origin}/blog` },
     blogPost: posts.map((p) => ({
       "@type": "BlogPosting",
       headline: p.title,
@@ -67,6 +69,7 @@ export default async function BlogIndexPage() {
       datePublished: p.date,
       dateModified: p.updated ?? p.date,
       url: `${origin}/blog/${p.slug}`,
+      keywords: p.tags?.join(", "),
       author: {
         "@type": "Organization",
         name: p.author ?? SITE_NAME,
@@ -74,13 +77,51 @@ export default async function BlogIndexPage() {
     })),
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${origin}/` },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${origin}/blog` },
+    ],
+  };
+
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${SITE_NAME} blog — articles`,
+    itemListOrder: "https://schema.org/ItemListOrderDescending",
+    numberOfItems: posts.length,
+    itemListElement: posts.map((p, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      url: `${origin}/blog/${p.slug}`,
+      name: p.title,
+    })),
+  };
+
+  const allTags = Array.from(
+    posts.reduce((acc, p) => {
+      for (const t of p.tags ?? []) acc.add(t);
+      return acc;
+    }, new Set<string>()),
+  ).sort();
+
   const feedUrl = `${siteOriginSync()}/feed.xml`;
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
       <div className="mx-auto max-w-3xl px-6 pb-20 pt-12 md:pt-16">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--color-border)] pb-8">
@@ -92,8 +133,9 @@ export default async function BlogIndexPage() {
               Blog
             </h1>
             <p className="mt-3 max-w-xl text-[var(--color-muted-foreground)]">
-              Practical notes on run bundles, human gates, and model-agnostic
-              tracing for agents you operate in production.
+              Practical notes on run bundles, human gates, model-agnostic
+              tracing, token economics, and AI governance for agents you
+              operate in production.
             </p>
           </div>
           <p className="font-mono text-[10px] text-[var(--color-muted-foreground)]">
@@ -103,6 +145,24 @@ export default async function BlogIndexPage() {
             </a>
           </p>
         </div>
+
+        {allTags.length > 0 ? (
+          <nav aria-label="Topics" className="mt-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
+              Topics
+            </p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {allTags.map((tag) => (
+                <li
+                  key={tag}
+                  className="rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-2.5 py-0.5 font-mono text-[10px] text-[var(--color-muted-foreground)]"
+                >
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : null}
 
         <ol className="mt-12 flex list-none flex-col gap-0 divide-y divide-[var(--color-border)] p-0">
           {posts.map((post) => (

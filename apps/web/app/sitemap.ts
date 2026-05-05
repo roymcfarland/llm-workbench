@@ -6,14 +6,21 @@ import { siteOrigin } from "@/lib/site";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = await siteOrigin();
   const now = new Date();
+  const posts = getAllPostsForList();
+  const newestPostDate = posts
+    .map((p) => new Date(p.updated ?? p.date).getTime())
+    .reduce((max, t) => (t > max ? t : max), 0);
+  const blogLastModified = newestPostDate > 0 ? new Date(newestPostDate) : now;
+
   const pathConfigs: {
     path: string;
     priority: number;
     changeFrequency: MetadataRoute.Sitemap[0]["changeFrequency"];
+    lastModified?: Date;
   }[] = [
     { path: "/", priority: 1, changeFrequency: "weekly" },
-    { path: "/blog", priority: 0.88, changeFrequency: "weekly" },
-    { path: "/feed.xml", priority: 0.55, changeFrequency: "weekly" },
+    { path: "/blog", priority: 0.88, changeFrequency: "weekly", lastModified: blogLastModified },
+    { path: "/feed.xml", priority: 0.55, changeFrequency: "weekly", lastModified: blogLastModified },
     { path: "/docs/protocol", priority: 0.78, changeFrequency: "weekly" },
     { path: "/runs/demo", priority: 0.72, changeFrequency: "monthly" },
     { path: "/llms.txt", priority: 0.55, changeFrequency: "monthly" },
@@ -29,12 +36,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entry.path === "/"
         ? `${origin}/`
         : `${origin}${entry.path}`,
-    lastModified: now,
+    lastModified: entry.lastModified ?? now,
     changeFrequency: entry.changeFrequency,
     priority: entry.priority,
   }));
-
-  const posts = getAllPostsForList();
 
   const postEntries = posts.map(
     (p): MetadataRoute.Sitemap[0] => ({

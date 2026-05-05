@@ -8,7 +8,12 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 
 import { ScrollChrome } from "@/components/landing/scroll-chrome";
-import { OG_IMAGE_ALT } from "@/lib/site";
+import {
+  GITHUB_URL,
+  OG_IMAGE_ALT,
+  SITE_NAME,
+  SITE_TAGLINE,
+} from "@/lib/site";
 import { siteVerificationFields } from "@/lib/site-verification";
 
 import "./globals.css";
@@ -109,6 +114,36 @@ export const viewport: Viewport = {
 // clerk.dummy.dev). Real deployments must set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`.
 const BUILD_FALLBACK_CLERK_PK = "pk_test_Y2xlcmsuZHVtbXkuZGV2JA";
 
+const SITE_BASE = (
+  process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://www.llmworkbench.io"
+).replace(/\/$/, "");
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": `${SITE_BASE}#organization`,
+  name: SITE_NAME,
+  url: SITE_BASE,
+  logo: {
+    "@type": "ImageObject",
+    url: `${SITE_BASE}/opengraph-image`,
+    width: 1200,
+    height: 630,
+  },
+  sameAs: [GITHUB_URL],
+  description: SITE_TAGLINE,
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${SITE_BASE}#website`,
+  name: SITE_NAME,
+  url: SITE_BASE,
+  inLanguage: "en-US",
+  publisher: { "@id": `${SITE_BASE}#organization` },
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const publishableKey =
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || BUILD_FALLBACK_CLERK_PK;
@@ -120,6 +155,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className={`${outfit.variable} ${jetbrainsMono.variable} ${newsreader.variable}`}
       >
         <body className="min-h-screen antialiased">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+          />
           <ScrollChrome />
           <a
             href="#main-content"

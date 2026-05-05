@@ -1,7 +1,8 @@
 /**
  * Microscopic markdown → HTML renderer for the landing/docs surface. Handles
- * H1-H3 headings, paragraphs, fenced code blocks, unordered lists, and inline
- * `code` spans. Anything more exotic should be authored as JSX directly.
+ * H1-H3 headings, paragraphs, fenced code blocks, unordered lists, GFM-style
+ * pipe tables, and inline `code` spans. Anything more exotic should be
+ * authored as JSX directly.
  */
 function escape(s: string): string {
   return s
@@ -33,6 +34,32 @@ function inline(s: string): string {
     return `<code class="rounded bg-[var(--color-muted)]/40 px-1 py-0.5 font-mono text-[0.85em]">${codeMarker[Number(idx)]}</code>`;
   });
   return withCode;
+}
+
+function isTableRow(s: string): boolean {
+  return s.trim().startsWith("|") && s.trim().endsWith("|");
+}
+
+function isTableSeparator(s: string): boolean {
+  // Header separator: | --- | :---: | ---: |
+  if (!isTableRow(s)) return false;
+  const cells = splitTableRow(s);
+  if (cells.length === 0) return false;
+  return cells.every((c) => /^:?-{3,}:?$/.test(c.trim()));
+}
+
+function splitTableRow(s: string): string[] {
+  const trimmed = s.trim().replace(/^\|/, "").replace(/\|$/, "");
+  return trimmed.split("|").map((c) => c.trim());
+}
+
+function alignFromSep(sep: string): "left" | "center" | "right" {
+  const t = sep.trim();
+  const left = t.startsWith(":");
+  const right = t.endsWith(":");
+  if (left && right) return "center";
+  if (right) return "right";
+  return "left";
 }
 
 export function renderMarkdown(src: string): string {
@@ -84,6 +111,52 @@ export function renderMarkdown(src: string): string {
       );
       continue;
     }
+    // GFM-style pipe table: header row, separator, then body rows.
+    if (
+      isTableRow(line) &&
+      i + 1 < lines.length &&
+      isTableSeparator(lines[i + 1]!)
+    ) {
+      const headerCells = splitTableRow(line);
+      const aligns = splitTableRow(lines[i + 1]!).map(alignFromSep);
+      i += 2;
+      const bodyRows: string[][] = [];
+      while (
+        i < lines.length &&
+        isTableRow(lines[i]!) &&
+        !isTableSeparator(lines[i]!)
+      ) {
+        bodyRows.push(splitTableRow(lines[i]!));
+        i += 1;
+      }
+      const alignClass = (idx: number): string => {
+        const a = aligns[idx] ?? "left";
+        if (a === "center") return "text-center";
+        if (a === "right") return "text-right";
+        return "text-left";
+      };
+      const headHtml = headerCells
+        .map(
+          (c, idx) =>
+            `<th class="border-b border-[var(--color-border)] px-3 py-2 font-semibold ${alignClass(idx)}">${inline(c)}</th>`,
+        )
+        .join("");
+      const bodyHtml = bodyRows
+        .map(
+          (row) =>
+            `<tr>${row
+              .map(
+                (c, idx) =>
+                  `<td class="border-b border-[var(--color-border)]/60 px-3 py-2 align-top ${alignClass(idx)}">${inline(c)}</td>`,
+              )
+              .join("")}</tr>`,
+        )
+        .join("");
+      out.push(
+        `<div class="my-5 overflow-x-auto"><table class="w-full border-collapse text-sm leading-relaxed text-zinc-100/90"><thead><tr>${headHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`,
+      );
+      continue;
+    }
     // blank line
     if (line.trim() === "") {
       i += 1;
@@ -96,7 +169,12 @@ export function renderMarkdown(src: string): string {
       lines[i]!.trim() !== "" &&
       !/^#{1,3}\s+/.test(lines[i]!) &&
       !lines[i]!.startsWith("```") &&
-      !/^- /.test(lines[i]!)
+      !/^- /.test(lines[i]!) &&
+      !(
+        isTableRow(lines[i]!) &&
+        i + 1 < lines.length &&
+        isTableSeparator(lines[i + 1]!)
+      )
     ) {
       buf.push(lines[i]!);
       i += 1;
