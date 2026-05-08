@@ -6,18 +6,35 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **License — proprietary.** The repository is now governed by a single
+  proprietary license (see `LICENSE` and `PROJECT.md`). The previous
+  dual-licensed (Apache 2.0 / PolyForm Noncommercial 1.0.0) posture has
+  been retired. No packages were published to npm under the prior posture,
+  so the change is forward-looking only. Outside contributions are no
+  longer accepted; see `CONTRIBUTING.md`. Tag-driven release publishing
+  (`.github/workflows/release.yml`) and DCO enforcement
+  (`.github/workflows/dco.yml`) have been removed.
+- **`apps/web/proxy.ts` → `apps/web/middleware.ts`.** Renamed to match
+  Next.js's standard middleware filename convention.
+- **`docs/HANDOFF.md` removed.** Superseded by `PROJECT.md` as the
+  authoritative spec.
+
 ### Added
 
-- **`@llm-workbench/mcp`** — new transport-agnostic Model Context Protocol
+- **`PROJECT.md`** — authoritative source of truth for purpose, scope,
+  non-goals, and the rules that automated reviewers enforce on every PR.
+- **`@llm-workbench/mcp`** — transport-agnostic Model Context Protocol
   package that exposes the LLM Workbench runtime over MCP. Wire any
   `RunRepository` to `createWorkbenchMcpServer({ runRepository, listRunIds?, name?, version? })`
   to get a configured server with tools (`list_runs`, `get_run`,
   `verify_run_integrity`, `validate_run_bundle`) and `runs://{runId}`
   resources. `createWorkbenchMcpHttpHandler({ server })` returns a
   Web-standard `(req: Request) => Promise<Response>` adapter for Next.js
-  Route Handlers, Hono, edge functions, etc. Apache 2.0.
+  Route Handlers, Hono, edge functions, etc.
 
-### Changed
+### Changed (Unreleased, continued)
 
 - **`apps/web` MCP route.** `apps/web/app/api/mcp/route.ts` now imports
   from `@llm-workbench/mcp`. Clerk auth happens at the route boundary
@@ -29,10 +46,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## 0.2.0
 
-The first cut intended for outside consumption. The four core packages
-move to **Apache 2.0** so they can be embedded in commercial products
-without paperwork; the hosted reference plane under `apps/web` stays
-source-available under PolyForm Noncommercial 1.0.0. The runtime adds
+The first internal release containing the runtime, UI, AI SDK adapter,
+and the `apps/web` reference deployment. The runtime adds
 hierarchical tracing, agent-of-agents supervision, externalizable
 artifact payloads, and a Vercel AI SDK v5 adapter; the UI gets a scoped
 CSS rebuild with accessible reordering and a workflow graph; and a real
@@ -44,7 +59,7 @@ hosted reference deployment ships under `apps/web`.
   (`tracedGenerateText`, `tracedStreamText`, `tracedGenerateObject`,
   `tracedStreamObject`, `traceTools`, plus `costFromGatewayMetadata`)
   that automatically emits correlated `model_io` and `tool_call` trace
-  events for every model call and tool invocation. Apache 2.0.
+  events for every model call and tool invocation.
 - **Hierarchical tracing (Trace 2.0).** New `span_started` / `span_ended`
   trace events for nested units of work and a `WorkbenchSession.span()`
   / `beginSpan()` helper that handles duration, status, and error capture
@@ -85,8 +100,7 @@ hosted reference deployment ships under `apps/web`.
   deployment showing how to run the runtime against real infrastructure
   — Supabase Postgres for `RunRepository`, Clerk for auth, Vercel AI
   Gateway for model calls, AI SDK v5 streaming. Includes a server-side
-  `RunRepository` adapter, a job-search workflow, and a saved-runs
-  browser. PolyForm Noncommercial 1.0.0.
+  `RunRepository` adapter, job-search workflow, and a saved-runs browser.
 - **Headless agentic surface (apps/web).** Static
   [`/llms.txt`](https://llmstxt.org/), `/llms-full.txt`, `/agents.md`,
   `/robots.txt`, and `/sitemap.xml`; an OpenAPI 3.1 document at
@@ -101,24 +115,9 @@ hosted reference deployment ships under `apps/web`.
 - **`MonacoArtifactEditor`.** New optional, lazy-loaded component for
   rich JSON artifact viewing/editing, opted in via `WorkbenchShell`'s
   new `useMonacoEditor` prop.
-- **DCO and release CI.** New
-  `.github/workflows/dco.yml` enforcing `Signed-off-by:` on every PR
-  commit, and `.github/workflows/release.yml` (tag-driven, Sigstore
-  provenance, refuses tags not reachable from `main`).
 
 ### Changed
 
-- **License (BREAKING for the four core packages).** Re-licensed
-  `@llm-workbench/runtime`, `@llm-workbench/adapters-react`,
-  `@llm-workbench/ai-sdk`, and `@llm-workbench/ui` to **Apache 2.0**
-  (full LICENSE text in each package, SPDX `Apache-2.0` in
-  `package.json`). Examples follow the same Apache 2.0 license. The
-  hosted reference plane under `apps/web` and the repository root keep
-  PolyForm Noncommercial 1.0.0 for source-available, paid-commercial
-  use. `LICENSES/Apache-2.0.txt` and
-  `LICENSES/PolyForm-Noncommercial-1.0.0.txt` carry reference copies.
-  See `COMMERCIAL.md` and `CONTRIBUTING.md` for the per-path inbound
-  rules.
 - **`WorkbenchShell` — modernized UI.** All CSS classes scoped under a
   `.lwb-root` container with `lwb-` prefixes (was `wb__`), all variables
   under `--lwb-*`. Rule reordering rebuilt on `@dnd-kit/core` +

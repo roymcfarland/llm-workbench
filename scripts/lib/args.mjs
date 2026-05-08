@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Proprietary
 //
 // Tiny dependency-free argv parser tailored for the bootstrap CLI.
 // Supports `--flag`, `--flag=value`, and `--flag value`. Unknown flags

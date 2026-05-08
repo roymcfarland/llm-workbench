@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Proprietary
 //
 // `npm run bootstrap` — one-command provisioner for the LLM Workbench
 // hosted reference plane (apps/web). Replaces the manual checklist in

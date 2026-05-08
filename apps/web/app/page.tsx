@@ -319,7 +319,7 @@ function buildJsonLd({
           name: "What is the license?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "PolyForm Noncommercial 1.0.0. You can read the source, fork it, modify it, redistribute noncommercial forks, and use it for personal projects, research, education, and public-benefit work. Commercial use requires a separate paid license.",
+            text: "Proprietary. All rights reserved. Use, modification, and operation are limited to Authorized Users (Roy McFarland personally and entities controlled by Roy McFarland, including Brightline Ltd) except by separate written agreement.",
           },
         },
       ],

@@ -23,10 +23,10 @@ routes (\`/opengraph-image\`, \`/twitter-image\`). Authenticated shells: \`/play
 
 const ROOT_README_FALLBACK = `# LLM Workbench
 
-A source-available control plane for LLM-powered products. Workflow state,
+A proprietary control plane for LLM-powered products. Workflow state,
 artifacts, rules, human review gates, trace history, model I/O, cost
 telemetry, import/export, and replay. Protocol v${WORKBENCH_PROTOCOL_VERSION}.
-Licensed under PolyForm Noncommercial 1.0.0.
+Proprietary; all rights reserved.
 `;
 
 const TRACE_EVENT_REFERENCE = `# Trace event reference

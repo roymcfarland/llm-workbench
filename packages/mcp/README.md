@@ -1,6 +1,6 @@
 # `@llm-workbench/mcp`
 
-**Apache 2.0** — Transport-agnostic Model Context Protocol (MCP) glue for the LLM Workbench runtime.
+**Proprietary** — Transport-agnostic Model Context Protocol (MCP) glue for the LLM Workbench runtime.
 
 Use this package when you want assistants or tools speaking MCP to start runs, resolve gates, or inspect traces against any [`RunRepository`](https://github.com/llmworkbench/llm-workbench/tree/main/packages/runtime) implementation.
 

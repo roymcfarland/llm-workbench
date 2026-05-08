@@ -62,7 +62,7 @@ These are intentional entry points for crawlers, assistants, and integrations:
 
 ### Routing & security notes
 
-- **Clerk + CSP** live in [`proxy.ts`](proxy.ts) (Next.js middleware convention). Public routes include `/`, `/blog`, `/feed.xml`, `/docs/*`, discovery URLs above, `/runs/demo`, and `/api/openapi.json`; gated surfaces (`/playground`, `/runs`, `/api/runs`, …) require a session. API routes return **401 JSON** when unauthenticated — they never redirect to HTML sign-in.
+- **Clerk + CSP** live in [`middleware.ts`](middleware.ts) (Next.js middleware convention). Public routes include `/`, `/blog`, `/feed.xml`, `/docs/*`, discovery URLs above, `/runs/demo`, and `/api/openapi.json`; gated surfaces (`/playground`, `/runs`, `/api/runs`, …) require a session. API routes return **401 JSON** when unauthenticated — they never redirect to HTML sign-in.
 
 ## Prerequisites
 
@@ -133,8 +133,7 @@ volume on the Supabase / Clerk / Vercel free tiers). End-to-end:
    via `cd ../..`). Paste env vars from [`.env.example`](./.env.example) into
    Project Settings → Environment Variables; set `NEXT_PUBLIC_SITE_ORIGIN` to
    your production URL. Optional: `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`,
-   `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `CSP_EXTRA_CONNECT_SRC`
-   (see root [`docs/HANDOFF.md`](../../docs/HANDOFF.md)).
+  `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `CSP_EXTRA_CONNECT_SRC`.
 6. **Deploy.** Push to `main` (or click Deploy). The first build typically
    takes a few minutes; CI on GitHub runs `build`, `test`, web `typecheck`,
    `lint`, and `build:web` (see `.github/workflows/ci.yml`).

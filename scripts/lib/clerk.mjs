@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Proprietary
 //
 // Clerk token-path provisioner. The Clerk Backend API at
 // https://api.clerk.com is scoped to a single instance, which means

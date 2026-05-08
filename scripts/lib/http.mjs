@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Proprietary
 //
 // Thin fetch wrappers shared by the token-path provisioners. We model
 // HTTP errors as plain objects with `{ status, body, url }` so the

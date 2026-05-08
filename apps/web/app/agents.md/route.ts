@@ -74,7 +74,7 @@ endpoints. The \`/runs/demo\` page and read-only descriptors (\`llms.txt\`,
 
 - \`${origin}/robots.txt\` uses a single \`User-agent: *\` block so every bot inherits the same \`Allow\` / \`Disallow\`: marketing URLs stay reachable; Clerk-gated shells (\`/playground\`, \`/runs…\`), private APIs (\`/api/runs…\`, \`/api/llm\`, \`/api/mcp\`), and sign-in/up flows stay out of the crawl frontier. Public exception: \`/runs/demo\`.
 - \`${origin}/sitemap.xml\` lists indexable URLs only (no authenticated app shells).
-- Open Graph / Twitter preview fetches OG image routes without cookies—the hosted server keeps \`/opengraph-image\`, \`/twitter-image\`, and blog image routes reachable outside the Clerk gate (middleware \`apps/web/proxy.ts\`).
+- Open Graph / Twitter preview fetches OG image routes without cookies—the hosted server keeps \`/opengraph-image\`, \`/twitter-image\`, and blog image routes reachable outside the Clerk gate (middleware \`apps/web/middleware.ts\`).
 
 ## Expected request shape
 

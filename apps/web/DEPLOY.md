@@ -12,11 +12,12 @@ into production on Vercel + Supabase + Clerk + Vercel AI Gateway.
 > checklist below remains authoritative for users without Node access or
 > who want to understand what the script does.
 
-> **License reminder.** `apps/web` is **PolyForm Noncommercial 1.0.0**.
-> You may host it internally and let your team poke at it for free, but
-> a commercial deployment requires a paid license — see
-> [`COMMERCIAL.md`](../../COMMERCIAL.md). The four `@llm-workbench/*`
-> packages it consumes are Apache 2.0 and have no such restriction.
+> **License reminder.** This entire repository is **proprietary** software
+> owned by Roy McFarland and Brightline Ltd. Use, modification, deployment,
+> and operation are limited to Authorized Users (Roy McFarland personally
+> and entities controlled by Roy McFarland) except by separate written
+> agreement. See [`LICENSE`](../../LICENSE) and
+> [`COMMERCIAL.md`](../../COMMERCIAL.md).
 
 ---
 

@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Proprietary
 //
 // ANSI-aware structured logger and `fail()` helper used across the
 // bootstrap script. Color is emitted only when stdout is a TTY so logs
