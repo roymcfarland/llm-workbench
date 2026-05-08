@@ -14,6 +14,17 @@ export class RunLifecycleController {
     return this.ctx.state.run.id;
   }
 
+  /**
+   * Inter-controller contract: this method is intentionally `public` so sibling
+   * controllers (`GateController`, `StepController`, `ArtifactController`,
+   * `TraceController`, `RuleController`) can gate their writes on the run
+   * being active. It is **not** part of the public `WorkbenchSession` surface
+   * — external callers reach the run-active gate transparently through any
+   * facade method (e.g., `requestGate`, `beginStep`, `writeArtifact`). Do not
+   * call this method from outside `packages/runtime/src/runtime/`.
+   *
+   * @internal
+   */
   assertRunActive(action: string): void {
     const status = this.ctx.state.run.status;
     if (status !== "running") {
