@@ -2,9 +2,8 @@ import type { Operation } from "fast-json-patch";
 import type { ArtifactVersion } from "../protocol/artifacts.js";
 import type { RuleSet } from "../protocol/rules.js";
 import type { RunBundle } from "../protocol/run.js";
-import type { ModelCost, ModelUsage, TraceEvent } from "../protocol/trace.js";
+import type { ModelCost, ModelUsage } from "../protocol/trace.js";
 import type { SchemaRegistry } from "../schema/registry.js";
-import type { ArtifactStore } from "../persistence/artifactStore.js";
 import { cloneRunStoreState } from "./state.js";
 import type { RunStoreState } from "./types.js";
 import { ArtifactController } from "./artifactController.js";
@@ -30,8 +29,6 @@ export type ExportRunBundleOptions = {
   includeEngine?: boolean;
 };
 
-type CanStart = ReturnType<typeof import("./readiness.js").canStartStep>;
-
 export type RunTerminalStatus = "completed" | "failed" | "cancelled";
 
 export class WorkbenchSession {
@@ -42,27 +39,19 @@ export class WorkbenchSession {
   private readonly trace: TraceController;
   private readonly rules: RuleController;
 
-  constructor(
-    private readonly ctx: {
-      protocolVersion: string;
-      state: RunStoreState;
-      appendTrace: (e: TraceEvent) => void;
-      newEventId: () => string;
-      nowIso: () => string;
-      canStartStep: (stepId: string) => CanStart;
-      /** Optional external byte store for large artifact payloads. */
-      artifactStore?: ArtifactStore;
-      /** Threshold above which `writeArtifactAsync` externalizes payloads. */
-      artifactExternalizationThresholdBytes?: number;
-    },
-  ) {
-    const sessionContext: SessionContext = ctx;
-    this.lifecycle = new RunLifecycleController(sessionContext);
-    this.gates = new GateController(sessionContext, this.lifecycle);
-    this.steps = new StepController(sessionContext, this.lifecycle, this.gates);
-    this.artifacts = new ArtifactController(sessionContext, this.lifecycle);
-    this.trace = new TraceController(sessionContext, this.lifecycle);
-    this.rules = new RuleController(sessionContext, this.lifecycle);
+  /**
+   * @internal Constructed only by `WorkbenchHost.session()`. The `SessionContext`
+   * parameter type is internal to the runtime package and is not re-exported
+   * from `packages/runtime/src/index.ts`; external callers must reach a
+   * `WorkbenchSession` through `WorkbenchHost`, never via `new WorkbenchSession`.
+   */
+  constructor(private readonly ctx: SessionContext) {
+    this.lifecycle = new RunLifecycleController(ctx);
+    this.gates = new GateController(ctx, this.lifecycle);
+    this.steps = new StepController(ctx, this.lifecycle, this.gates);
+    this.artifacts = new ArtifactController(ctx, this.lifecycle);
+    this.trace = new TraceController(ctx, this.lifecycle);
+    this.rules = new RuleController(ctx, this.lifecycle);
   }
 
   get runId() {
