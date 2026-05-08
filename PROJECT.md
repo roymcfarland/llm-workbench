@@ -42,6 +42,7 @@ Tenancy is enforced at the API layer via `requireTenant()` in `apps/web/lib/auth
 - **Middleware:** Clerk auth, CSP headers, and optional Upstash rate-limiting are enforced via Next.js middleware.
 - **MCP discovery:** Protocol discovery routes (`/api/mcp` GET, `/.well-known/mcp.json`) are public; mutating JSON-RPC tools require an authenticated session.
 - **Errors:** Internal errors are sanitized in production to avoid leaking stack traces; `WorkbenchError` is used for structured, stable error codes across package boundaries.
+- **Cross-controller method elevation:** When a refactor splits a class into multiple controllers and one controller's previously `private` method becomes a cross-controller dependency (i.e., other sibling controllers must call it), the elevated method must (a) carry a JSDoc comment that explicitly enumerates the sibling controllers permitted to call it, (b) state that the method is **not** part of the public surface reachable through any facade, and (c) be tagged `@internal` so it is excluded from generated `.d.ts` documentation. The Verifier should fail any PR that elevates such a method without all three. The first instance of this pattern is `RunLifecycleController.assertRunActive` (see `packages/runtime/src/runtime/runLifecycleController.ts`).
 
 ---
 
