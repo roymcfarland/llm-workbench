@@ -1,6 +1,6 @@
 # LLM Workbench
 
-**A source-available control plane for LLM-powered products.**
+**A proprietary control plane for LLM-powered products.**
 
 LLM Workbench gives AI applications a production-grade human interface for
 the messy parts that matter: workflow state, artifacts, rules, human review
@@ -15,27 +15,24 @@ call OpenAI, Anthropic, local models, or any other provider directly. Your host
 application owns prompts, tools, models, and policy. LLM Workbench records what
 happened and gives humans a clean control surface over it.
 
-> **License in one line:** the four core packages (`@llm-workbench/runtime`,
-> `adapters-react`, `ai-sdk`, `ui`) and the examples ship under Apache 2.0
-> and are free for commercial use. The hosted reference deployment under
-> `apps/web` (and any future `apps/*` product surfaces) is source-available
-> under PolyForm Noncommercial 1.0.0; commercial use of those areas
-> requires a paid license. See [License](#license).
+> **License in one line:** Proprietary. All rights reserved. Use, modification,
+> and operation are limited to Authorized Users (Roy McFarland personally and
+> entities controlled by Roy McFarland, including Brightline Ltd) except by
+> separate written agreement. See [License](#license).
 
 ## Status
 
-`v0.2.0` (2026-04-27): the four OSS packages relicense to **Apache 2.0**;
-the runtime adds Trace 2.0 (hierarchical spans, OTel GenAI mapper),
-hierarchical supervision (`runChildrenOf`, `cancelRunCascade`), and an
-externalizable `ArtifactStore`; a new `@llm-workbench/ai-sdk` wraps Vercel
+`v0.2.0` (2026-04-27): the runtime adds Trace 2.0 (hierarchical spans, OTel
+GenAI mapper), hierarchical supervision (`runChildrenOf`, `cancelRunCascade`),
+and an externalizable `ArtifactStore`; `@llm-workbench/ai-sdk` wraps Vercel
 AI SDK v5 with automatic trace events; the UI ships scoped `lwb-` CSS,
 accessible `@dnd-kit` reorder, virtualized trace, and a `WorkflowGraph`;
 and a hosted reference deployment lands at [`apps/web`](apps/web).
 See [CHANGELOG.md](CHANGELOG.md) for the full list.
 
-**Engineering handoff:** [docs/HANDOFF.md](docs/HANDOFF.md) — how the repo is
-structured, what shipped in `apps/web`, CI, deploy, security posture, and
-suggested work for the next milestone.
+**Project spec:** [PROJECT.md](PROJECT.md) is the authoritative source of
+truth for purpose, scope, non-goals, and the rules that automated reviewers
+enforce on every PR.
 
 ## Why It Exists
 
@@ -214,45 +211,22 @@ Drop the shell anywhere in your app:
 
 ## License
 
-LLM Workbench is **dual-licensed**:
+LLM Workbench is **proprietary**. All rights reserved.
 
-- The four core packages and the examples are **Apache 2.0**, an
-  OSI-approved open-source license with an explicit patent grant. You can
-  use them freely, including in commercial products, with attribution and
-  the standard Apache 2.0 conditions.
-  - `packages/runtime` (`@llm-workbench/runtime`)
-  - `packages/adapters-react` (`@llm-workbench/adapters-react`)
-  - `packages/ai-sdk` (`@llm-workbench/ai-sdk`)
-  - `packages/ui` (`@llm-workbench/ui`)
-  - `examples/*`
-  - Each package contains its own `LICENSE` file with the full Apache 2.0
-    text. A reference copy lives at
-    [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt).
-- The hosted reference deployment under `apps/web` (and any future
-  `apps/*` product surfaces, e.g. `eval`, `marketplace`,
-  `cost-reconciliation`) is source-available under
-  [PolyForm Noncommercial 1.0.0](LICENSE). You can read it, fork it,
-  modify it, and use it for noncommercial / public-benefit purposes.
-  Commercial use of those areas requires a paid license.
+Use, modification, deployment, and operation are limited to Authorized Users
+(Roy McFarland personally and any entity controlled by Roy McFarland,
+including Brightline Ltd) except by separate written agreement. The full
+text of this grant is in [`LICENSE`](LICENSE), and an identical copy lives in
+each `packages/*/LICENSE` directory.
 
-The split is deliberate. The protocol, runtime, and UI primitives that the
-ecosystem depends on are permissively open so they can be adopted, embedded,
-and extended without friction. The hosted product surfaces — the ones that
-look like a sellable SaaS — are reserved so the project can be funded like
-serious infrastructure rather than only existing as a side project.
-
-For commercial terms covering the noncommercial portions, see
-[COMMERCIAL.md](COMMERCIAL.md).
+For licensing inquiries, contact Roy McFarland.
 
 ## Contributing
 
-Contributions are welcome under the inbound terms in
-[CONTRIBUTING.md](CONTRIBUTING.md). Inbound license matches outbound license:
-contributions to the Apache 2.0 packages come in under Apache 2.0 (DCO
-sign-off via `git commit -s` is the only paperwork required); contributions
-to the PolyForm-NC areas under `apps/*` come in under PolyForm-NC plus a
-relicense grant so the maintainer can issue paid commercial licenses for
-those product surfaces.
+Outside contributions are not currently accepted. Issue reports are welcome
+through [GitHub Issues](https://github.com/roymcfarland/llm-workbench/issues),
+but pull requests from third parties will be closed without merge unless a
+separate written agreement is in place.
 
 ## Security
 

@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Proprietary
 //
 // Pure helpers for the token path. `extractTokens` reads the standard
 // env vars; `requiredTokenError` returns a structured `{message,hint}`

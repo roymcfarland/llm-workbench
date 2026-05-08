@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-// The Clerk proxy (see `proxy.ts`) already gates this group, so
+// The Clerk middleware (see `middleware.ts`) already gates this group, so
 // the layout itself stays a static boundary that Cache Components can
 // prerender. Per-route data fetches handle their own auth + Suspense.
 //

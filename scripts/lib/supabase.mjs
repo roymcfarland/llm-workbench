@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Proprietary
 //
 // Supabase token-path provisioner. Hits the Management API at
 // https://api.supabase.com using a personal access token from

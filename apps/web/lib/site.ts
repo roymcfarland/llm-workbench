@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
 export const SITE_NAME = "LLM Workbench" as const;
-export const BRIGHTLINE_LABS_NAME = "Brightline Labs" as const;
+export const BRIGHTLINE_LABS_NAME = "Brightline Ltd" as const;
 export const BRIGHTLINE_LABS_URL = "https://www.brightline.io" as const;
 /** Hostname displayed on share cards and in copy (no scheme). */
 export const SITE_SHARE_HOST = "www.llmworkbench.io" as const;
@@ -24,9 +24,9 @@ export const SITE_TAGLINE =
   "Model-agnostic LLM control plane: tamper-evident, human-gated, replayable run bundles." as const;
 // Placeholder GitHub URL — repo is not yet public at this slug. Update when it lands.
 export const GITHUB_URL = "https://github.com/llmworkbench/llm-workbench" as const;
-export const LICENSE_NAME = "PolyForm Noncommercial 1.0.0" as const;
+export const LICENSE_NAME = "Proprietary" as const;
 export const LICENSE_URL = `${GITHUB_URL}/blob/main/LICENSE` as const;
-/** Plain-language licensing + commercial inquiries (dual OSS / PolyForm terms). */
+/** Plain-language licensing inquiry pointer. */
 export const COMMERCIAL_URL = `${GITHUB_URL}/blob/main/COMMERCIAL.md` as const;
 export const DEFAULT_ORIGIN = "https://workbench.example.com" as const;
 

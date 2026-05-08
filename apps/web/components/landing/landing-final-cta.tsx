@@ -62,7 +62,7 @@ export function LandingFinalCta({ runsCount }: LandingFinalCtaProps) {
             <span className="text-[var(--color-foreground)]">
               {runsCount === null ? "—" : runsCount.toLocaleString()}
             </span>{" "}
-            runs on this plane · PolyForm Noncommercial · Apache-2.0 core
+            runs on this plane
           </p>
         </div>
       </div>

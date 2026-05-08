@@ -21,76 +21,45 @@ export function SiteFooter() {
         <section>
           <h2 className="text-sm font-semibold tracking-tight">{SITE_NAME}</h2>
           <p className="mt-2 text-xs leading-relaxed text-[var(--color-muted-foreground)]">
-            {SITE_TAGLINE} This deployment is an open codebase you can inspect,
-            fork, and run for personal, research, and other noncommercial
-            purposes—as well as charities, schools, and similar uses described in
-            the license.
+            {SITE_TAGLINE}
           </p>
           <p className="mt-4 text-xs leading-relaxed text-[var(--color-muted-foreground)]">
             <strong className="font-medium text-[var(--color-foreground)]">
               Licensing.
             </strong>{" "}
-            The core OSS packages published from this repo (runtime, adapters,
-            AI SDK helpers, UI) are offered under{" "}
+            Proprietary. All rights reserved. Use, modification, and operation
+            are limited to Authorized Users (Roy McFarland personally and
+            entities controlled by Roy McFarland, including{" "}
             <a
-              href={`${GITHUB_URL}/blob/main/packages/runtime/LICENSE`}
+              href={BRIGHTLINE_LABS_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="underline-offset-4 hover:underline"
             >
-              Apache&nbsp;2.0
+              {BRIGHTLINE_LABS_NAME}
             </a>
-            , including commercial redistribution. The hosted reference web app
-            and other PolyForm-licensed surfaces are under{" "}
+            ) except by separate written agreement. See the{" "}
             <a
               href={LICENSE_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="underline-offset-4 hover:underline"
             >
-              {LICENSE_NAME}
+              {LICENSE_NAME} license
             </a>
-            : commercial or proprietary exploitation of those portions requires a{" "}
-            <strong className="font-medium text-[var(--color-foreground)]">
-              separate written license from{" "}
-              <a
-                href={BRIGHTLINE_LABS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline-offset-4 hover:underline"
-              >
-                {BRIGHTLINE_LABS_NAME}
-              </a>
-            </strong>
-            , who may negotiate paid, perpetual, royalty, or other revenue terms.{" "}
+            {" "}or{" "}
             <a
               href={COMMERCIAL_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="underline-offset-4 hover:underline"
             >
-              Read the dual-license summary and inquiry process.
+              contact for licensing inquiries
             </a>
+            .
           </p>
           <p className="mt-4 font-mono text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-            protocol v{WORKBENCH_PROTOCOL_VERSION} ·{" "}
-            <a
-              href={LICENSE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline-offset-4 hover:underline"
-            >
-              PolyForm NC · reference app
-            </a>{" "}
-            ·{" "}
-            <a
-              href={COMMERCIAL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline-offset-4 hover:underline"
-            >
-              COMMERCIAL.md
-            </a>
+            protocol v{WORKBENCH_PROTOCOL_VERSION} · {LICENSE_NAME}
           </p>
         </section>
 

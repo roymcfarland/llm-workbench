@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Proprietary
 //
 // Pure plan-builder for the MCP path. The plan describes the operations
 // a Cursor agent (with the Vercel + Supabase + Clerk MCP plugins

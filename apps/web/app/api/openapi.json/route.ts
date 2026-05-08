@@ -171,8 +171,8 @@ function buildOpenApi(origin: string) {
         url: `${origin}/agents.md`,
       },
       license: {
-        name: "PolyForm Noncommercial 1.0.0",
-        url: "https://polyformproject.org/licenses/noncommercial/1.0.0",
+        name: "Proprietary",
+        url: `${origin}/agents.md`,
       },
     },
     servers: [{ url: origin, description: "Reference deployment" }],

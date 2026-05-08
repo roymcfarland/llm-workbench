@@ -36,7 +36,7 @@ export async function GET(): Promise<Response> {
   Components: Next.js 16 (App Router), React 19, Tailwind v4, Clerk, Supabase
   Software: Built with TypeScript, AI SDK v5, ${BRIGHTLINE_LABS_NAME} stack
   Protocol: v${WORKBENCH_PROTOCOL_VERSION}
-  License: ${LICENSE_NAME} (reference web app); core packages Apache 2.0
+  License: ${LICENSE_NAME} (all rights reserved)
   Source: ${GITHUB_URL}
   Canonical: ${origin}
 
