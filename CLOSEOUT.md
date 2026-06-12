@@ -1,144 +1,120 @@
-# Closeout: Slice 4.5 - CI Playwright install hardening
+# Closeout: Slice 8 - Package lint and audit CI gate
 
-This slice hardens the Node 24 CI path against Playwright install wedges and
-bumps the affected Playwright package to the fixed release without changing the
-job matrix or the existing install/test commands.
+This slice adds package-wide lint coverage and a high/critical dependency
+advisory gate without changing runtime behavior. ESLint now covers
+`packages/*/src/**/*.{ts,tsx}` through a root flat config, the root `ci` script
+runs that package lint step after web lint, and GitHub Actions runs both package
+lint and `npm audit --audit-level=high` on each matrix node.
 
-- `build-test` now has a 20-minute job timeout.
-- The existing Chromium install step now has a 10-minute timeout.
-- The existing Playwright smoke step now has an 8-minute timeout.
-- Node 24 runs cache `~/.cache/ms-playwright` with a key derived from the
-  installed `@playwright/test` package version.
-- `apps/web` now requests `@playwright/test` `^1.60.0`.
+## Architectural Choices
 
-## Root cause
-
-GitHub runners now resolve `node-version: 24` to Node 24.16.0. Playwright
-1.59.1 is affected by a yauzl zip-extraction hang on Node 24.16+; the failed PR
-run reproduced that shape by downloading Chromium to 100% and then timing out in
-`Install Playwright Chromium`. Playwright 1.60.0 contains the upstream fix
-tracked in microsoft/playwright#41000, so this amendment bumps the direct
-`apps/web` dev dependency to `@playwright/test` `^1.60.0`.
-
----
+- Root ESLint uses `typescript-eslint` recommended flat config, enforces
+  `no-console`, and allows `_`-prefixed unused values for intentional drops.
+- The ai-sdk empty interface became a type alias. This changes the package's
+  emitted `.d.ts` shape from an empty extending interface to the equivalent
+  `Pick<WorkbenchSession, ...>` alias; the runtime declaration-emit convention
+  does not cover ai-sdk.
+- Runtime source edits are type-only. The `WorkbenchError` V8
+  `captureStackTrace` casts now use `unknown`, and the dead `RunContextRef`
+  type import is gone. The declaration-emit comparison is scoped to `*.d.ts`
+  files; `workbench.d.ts.map` changes due to source position shift from the
+  clean import removal, which is expected.
 
 ## Evidence
 
-### Playwright bump
+### Resolved dependency versions
 
-`npm ls @playwright/test`
+`npm ls typescript-eslint --depth=0`
 
-```
+```text
 llm-workbench@ /Users/roymcfarland/Projects/llm-workbench
-└─┬ @llm-workbench/web@0.1.0 -> ./apps/web
-  ├── @playwright/test@1.60.0
-  └─┬ next@16.2.9
-    └── @playwright/test@1.59.1
+└── typescript-eslint@8.61.0
 ```
 
-### Changed workflow region
+### Packages lint
 
-```yaml
-jobs:
-  build-test:
-    name: build & test (node ${{ matrix.node }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    # Align NEXT_PUBLIC_* and PLAYWRIGHT_WEB_PORT with apps/web/e2e/env.ts + e2e/listen-port.ts
-    # (default port 3399) so build output matches Playwright smoke `next start` (CI-only placeholders).
-    env:
-      # Run embedded @actions/*.js scripts on Node 24 (GH is deprecating the Node 20 action runtime).
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-      PLAYWRIGHT_WEB_PORT: "3399"
-      NEXT_PUBLIC_SITE_ORIGIN: http://localhost:3399
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk
-      CLERK_SECRET_KEY: sk_test_dGVzdCUyMF9zZWNyZXRfa2V5X2Zvcl9lMmU
-    strategy:
-      fail-fast: false
-      matrix:
-        node: ["22", "24"]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+`npm run lint:packages`
 
-      - name: Setup Node ${{ matrix.node }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-          cache: npm
-
-      - name: Install
-        run: npm ci
-
-      - name: Build all packages
-        run: npm run build
-
-      - name: Test
-        run: npm test
-
-      - name: Web typecheck
-        run: npm run typecheck -w @llm-workbench/web
-
-      - name: Web lint
-        run: npm run lint -w @llm-workbench/web
-
-      - name: Web production build
-        run: npm run build:web
-
-      - name: Get Playwright version
-        if: matrix.node == '24'
-        id: playwright-version
-        working-directory: apps/web
-        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Playwright browsers
-        if: matrix.node == '24'
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright Chromium
-        if: matrix.node == '24'
-        timeout-minutes: 10
-        working-directory: apps/web
-        run: npx playwright install --with-deps chromium
-
-      - name: Playwright smoke
-        if: matrix.node == '24'
-        timeout-minutes: 8
-        working-directory: apps/web
-        env:
-          # Linux runners resolve localhost; the DNS shim can break Next 16's internal proxy.
-          LLM_WB_E2E_DISABLE_DNS_SHIM: "1"
-        run: npm run test:e2e
+```text
+> lint:packages
+> eslint "packages/*/src/**/*.{ts,tsx}"
 ```
 
-### Local verification
+Result: exit 0, zero errors, zero warnings.
 
-- YAML validation passed:
-  `python3 -c "import yaml,sys; yaml.safe_load(open('.github/workflows/ci.yml')); print('YAML OK')"`
-- `npm install` changed only `apps/web/package.json` and `package-lock.json`
-  before ledger updates.
-- `npx playwright install chromium` completed under `apps/web` with Playwright
-  1.60.0.
-- `npm run test:e2e` passed:
+### Audit gate
 
-```
-> @llm-workbench/web@0.1.0 test:e2e
-> node ./scripts/run-playwright-e2e.mjs
+`npm audit --audit-level=high`
 
-Running 2 tests using 1 worker
-
-  ✓  1 [chromium] › e2e/smoke.spec.ts:4:3 › Public smoke (no sign-in) › GET /api/health (345ms)
-  ✓  2 [chromium] › e2e/smoke.spec.ts:11:3 › Public smoke (no sign-in) › GET /llms.txt (route handler, no document handshake) (23ms)
-
-  2 passed (2.3s)
+```text
+11 vulnerabilities (3 low, 8 moderate)
 ```
 
-### PR CI status
+Result: exit 0. No high or critical advisories block the new gate. Advisory
+totals can drift as the registry publishes new moderate/low findings; the gate
+criterion is the command's exit code at `--audit-level=high`.
 
-The first PR run proved the guardrail: Node 24 failed at the 10-minute
-`Install Playwright Chromium` timeout after the browser download reached 100%.
-The amended PR CI status after the Playwright 1.60 bump is recorded in the final
-task report.
+### Runtime .d.ts declaration comparison
+
+```text
+Saved working directory and index state WIP on chore/packages-lint-and-audit-gate: d7b26c3 chore(lint,ci): lint all packages and gate dependency advisories in CI
+Switched to branch 'main'
+Your branch is up to date with 'origin/main'.
+
+> @llm-workbench/runtime@0.2.0 build
+> tsc -p tsconfig.build.json
+
+Switched to branch 'chore/packages-lint-and-audit-gate'
+Your branch is up to date with 'origin/chore/packages-lint-and-audit-gate'.
+On branch chore/packages-lint-and-audit-gate
+Your branch is up to date with 'origin/chore/packages-lint-and-audit-gate'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   packages/runtime/src/runtime/workbench.ts
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (85b0de53cb73923714ebc779ebe2a1de3d7786ba)
+
+> @llm-workbench/runtime@0.2.0 build
+> tsc -p tsconfig.build.json
+
+OK: runtime .d.ts declarations byte-identical
+```
+
+### Full CI
+
+`npm run ci`
+
+Result: exit 0. Workspace test count stayed exactly 245:
+
+```text
+runtime: 105
+adapters-react: 1
+ai-sdk: 27
+ui: 13
+mcp: 14
+scripts: 18
+web: 67
+total: 245
+```
+
+Last CI lines:
+
+```text
+├ ƒ /runs
+├ ƒ /runs/[runId]
+├ ƒ /runs/demo
+├ ƒ /sign-in/[[...sign-in]]
+├ ƒ /sign-up/[[...sign-up]]
+├ ƒ /sitemap.xml
+└ ○ /twitter-image
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+```

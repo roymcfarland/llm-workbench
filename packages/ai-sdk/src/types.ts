@@ -52,5 +52,7 @@ export interface WorkbenchTraceContext {
  *
  * @internal
  */
-export interface WorkbenchSessionLike
-  extends Pick<WorkbenchSession, "logModelIO" | "logToolCall" | "writeArtifact"> {}
+export type WorkbenchSessionLike = Pick<
+  WorkbenchSession,
+  "logModelIO" | "logToolCall" | "writeArtifact"
+>;

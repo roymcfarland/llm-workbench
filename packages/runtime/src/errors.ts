@@ -38,9 +38,9 @@ export class WorkbenchError extends Error {
   constructor(code: WorkbenchErrorCode, message: string, cause?: unknown) {
     super(message, cause !== undefined ? { cause } : undefined);
     this.code = code;
-    if (typeof (Error as unknown as { captureStackTrace?: (target: object, ctor?: Function) => void })
+    if (typeof (Error as unknown as { captureStackTrace?: (target: object, ctor?: unknown ) => void })
       .captureStackTrace === "function") {
-      (Error as unknown as { captureStackTrace: (target: object, ctor?: Function) => void })
+      (Error as unknown as { captureStackTrace: (target: object, ctor?: unknown ) => void })
         .captureStackTrace(this, WorkbenchError);
     }
   }

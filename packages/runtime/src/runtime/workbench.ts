@@ -1,7 +1,7 @@
 import { WorkbenchError, formatZodError } from "../errors.js";
 import type { ArtifactVersion } from "../protocol/artifacts.js";
 import { parseRunBundleJson, verifyRunBundleIntegrity } from "../protocol/bundle.js";
-import type { RunBundle, RunContextRef } from "../protocol/run.js";
+import type { RunBundle } from "../protocol/run.js";
 import { RunBundleSchema, getParentRunIds } from "../protocol/run.js";
 import { parseWorkflowSpec } from "../protocol/workflow.js";
 import { assertWorkflowStructuralInvariants } from "../protocol/workflowValidate.js";

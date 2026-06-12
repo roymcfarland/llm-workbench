@@ -19,10 +19,13 @@
     "demo:http-server": "npm run start -w run-repo-server",
     "dev:web": "npm run dev -w apps/web",
     "build:web": "npm run build -w apps/web",
-    "ci": "npm run build && npm test && npm run typecheck -w @llm-workbench/web && npm run lint -w @llm-workbench/web && npm run build:web"
+    "lint:packages": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
+    "ci": "npm run build && npm test && npm run typecheck -w @llm-workbench/web && npm run lint -w @llm-workbench/web && npm run lint:packages && npm run build:web"
   },
   "devDependencies": {
+    "eslint": "^9.39.4",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.61.0",
     "vitest": "^3.2.4"
   },
   "overrides": {

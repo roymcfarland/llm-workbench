@@ -49,6 +49,12 @@ jobs:
       - name: Web lint
         run: npm run lint -w @llm-workbench/web
 
+      - name: Packages lint
+        run: npm run lint:packages
+
+      - name: Audit gate (high/critical)
+        run: npm audit --audit-level=high
+
       - name: Web production build
         run: npm run build:web
 
