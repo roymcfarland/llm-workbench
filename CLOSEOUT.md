@@ -1,18 +1,40 @@
 # Closeout: Slice 4.5 - CI Playwright install hardening
 
-This slice hardens the Node 24 CI path against Playwright CDN wedges without
-changing package code, package metadata, the job matrix, or the existing
-install/test commands.
+This slice hardens the Node 24 CI path against Playwright install wedges and
+bumps the affected Playwright package to the fixed release without changing the
+job matrix or the existing install/test commands.
 
 - `build-test` now has a 20-minute job timeout.
 - The existing Chromium install step now has a 10-minute timeout.
 - The existing Playwright smoke step now has an 8-minute timeout.
 - Node 24 runs cache `~/.cache/ms-playwright` with a key derived from the
   installed `@playwright/test` package version.
+- `apps/web` now requests `@playwright/test` `^1.60.0`.
+
+## Root cause
+
+GitHub runners now resolve `node-version: 24` to Node 24.16.0. Playwright
+1.59.1 is affected by a yauzl zip-extraction hang on Node 24.16+; the failed PR
+run reproduced that shape by downloading Chromium to 100% and then timing out in
+`Install Playwright Chromium`. Playwright 1.60.0 contains the upstream fix
+tracked in microsoft/playwright#41000, so this amendment bumps the direct
+`apps/web` dev dependency to `@playwright/test` `^1.60.0`.
 
 ---
 
 ## Evidence
+
+### Playwright bump
+
+`npm ls @playwright/test`
+
+```
+llm-workbench@ /Users/roymcfarland/Projects/llm-workbench
+└─┬ @llm-workbench/web@0.1.0 -> ./apps/web
+  ├── @playwright/test@1.60.0
+  └─┬ next@16.2.9
+    └── @playwright/test@1.59.1
+```
 
 ### Changed workflow region
 
@@ -96,9 +118,27 @@ jobs:
 
 - YAML validation passed:
   `python3 -c "import yaml,sys; yaml.safe_load(open('.github/workflows/ci.yml')); print('YAML OK')"`
-- Full `npm run ci`: intentionally not run; this is a workflow-only change.
+- `npm install` changed only `apps/web/package.json` and `package-lock.json`
+  before ledger updates.
+- `npx playwright install chromium` completed under `apps/web` with Playwright
+  1.60.0.
+- `npm run test:e2e` passed:
+
+```
+> @llm-workbench/web@0.1.0 test:e2e
+> node ./scripts/run-playwright-e2e.mjs
+
+Running 2 tests using 1 worker
+
+  ✓  1 [chromium] › e2e/smoke.spec.ts:4:3 › Public smoke (no sign-in) › GET /api/health (345ms)
+  ✓  2 [chromium] › e2e/smoke.spec.ts:11:3 › Public smoke (no sign-in) › GET /llms.txt (route handler, no document handshake) (23ms)
+
+  2 passed (2.3s)
+```
 
 ### PR CI status
 
-The PR CI run does not exist until after this closeout is committed, pushed, and
-opened as a pull request. Live CI status is recorded in the final task report.
+The first PR run proved the guardrail: Node 24 failed at the 10-minute
+`Install Playwright Chromium` timeout after the browser download reached 100%.
+The amended PR CI status after the Playwright 1.60 bump is recorded in the final
+task report.
