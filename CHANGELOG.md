@@ -16,6 +16,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Production-scope dependency audit gate.** CI now runs
+  `npm audit --omit=dev --audit-level=high`, so the gate covers
+  shippable dependency exposure while dev-toolchain-only esbuild/vite/vitest
+  majors remain tracked in a scoped dependency-upgrade slice. A non-force
+  `npm audit fix` updated only `package-lock.json`; current registry metadata
+  still reports non-gating moderate `dompurify` / `uuid` findings through the
+  locked Monaco/Resend transitive paths, so those remain follow-up items.
 - **Dependency advisory remediation (lockfile-only).** `npm audit fix`
   cleared the high/critical audit gate from the 21-vulnerability baseline
   (1 critical, 4 high), including the Next.js middleware/proxy bypass
