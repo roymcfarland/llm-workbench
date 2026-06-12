@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Newsreader, Outfit } from "next/font/google";
+import { headers } from "next/headers";
 import { ClerkProvider } from "@clerk/nextjs";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -152,11 +153,16 @@ const websiteJsonLd = {
   publisher: { "@id": `${SITE_BASE}#organization` },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const publishableKey =
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || BUILD_FALLBACK_CLERK_PK;
   return (
-    <ClerkProvider publishableKey={publishableKey}>
+    <ClerkProvider publishableKey={publishableKey} dynamic>
       <html
         lang="en"
         suppressHydrationWarning
@@ -178,7 +184,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             Skip to content
           </a>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            nonce={nonce}
+          >
             <TooltipProvider delayDuration={150}>
               <SiteHeader />
               <main id="main-content" className="min-h-[calc(100vh-3.5rem)]">

@@ -44,37 +44,50 @@ const isPublicRoute = createRouteMatcher([
 // and the OpenAPI surface) expect a structured error, not an HTML page.
 const isApiRoute = createRouteMatcher(["/api/(.*)", "/trpc/(.*)"]);
 
-const cspHeaders = (): HeadersInit => ({
-  "Content-Security-Policy": contentSecurityPolicy(),
-});
+function createNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes));
+}
+
+function nextWithCsp(csp: string, requestHeaders: Headers): NextResponse {
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
+}
 
 export default clerkMiddleware(async (auth, req) => {
   const rate = await rateLimitApiIfConfigured(req);
   if (rate) return rate;
 
+  const nonce = createNonce();
+  const csp = contentSecurityPolicy(nonce);
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("content-security-policy", csp);
+
   if (isPublicRoute(req)) {
-    return NextResponse.next({ headers: cspHeaders() });
+    return nextWithCsp(csp, requestHeaders);
   }
 
   const { userId, redirectToSignIn } = await auth();
   if (userId) {
-    return NextResponse.next({ headers: cspHeaders() });
+    return nextWithCsp(csp, requestHeaders);
   }
 
   if (isApiRoute(req)) {
     return NextResponse.json(
       { error: "Unauthorized" },
-      { status: 401, headers: cspHeaders() },
+      { status: 401, headers: { "Content-Security-Policy": csp } },
     );
   }
 
   const signInRedirect = (await redirectToSignIn({
     returnBackUrl: req.url,
   })) as NextResponse;
-  signInRedirect.headers.set(
-    "Content-Security-Policy",
-    contentSecurityPolicy(),
-  );
+  signInRedirect.headers.set("Content-Security-Policy", csp);
   return signInRedirect;
 });
 

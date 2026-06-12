@@ -18,4 +18,34 @@ test.describe("Public smoke (no sign-in)", () => {
     expect(text).toMatch(/LLM Workbench/);
     expect(text).toMatch(/Protocol overview/u);
   });
+
+  test("GET / renders under strict CSP without script violations", async ({
+    page,
+  }) => {
+    const cspViolations: string[] = [];
+    await page.context().addCookies([
+      {
+        name: "__clerk_db_jwt",
+        value: "e2e-dev-browser",
+        domain: "localhost",
+        path: "/",
+        sameSite: "Lax",
+      },
+    ]);
+
+    page.on("console", (msg) => {
+      if (/Refused to (execute|load)[^]*script/i.test(msg.text())) {
+        cspViolations.push(msg.text());
+      }
+    });
+
+    const response = await page.goto("/");
+
+    expect(response?.status()).toBe(200);
+    expect(response?.headers()["content-security-policy"]).toContain(
+      "'strict-dynamic'",
+    );
+    await expect(page.locator("body")).toBeVisible();
+    expect(cspViolations).toEqual([]);
+  });
 });

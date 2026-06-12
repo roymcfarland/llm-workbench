@@ -16,6 +16,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Production CSP script hardening.** `script-src` now uses a per-request
+  nonce with `'strict-dynamic'` for production-rendered pages, and
+  `'unsafe-eval'` is removed from the effective production script policy.
+  `'unsafe-inline'` and script host sources remain only as CSP2 fallbacks that
+  nonce-supporting browsers ignore. Development keeps the permissive script
+  policy for Turbopack HMR. `style-src 'unsafe-inline'` is unchanged and
+  accepted for now because Monaco, React Flow, and theme inline styles depend
+  on it.
 - **Production-scope dependency audit gate.** CI now runs
   `npm audit --omit=dev --audit-level=high`, so the gate covers
   shippable dependency exposure while dev-toolchain-only esbuild/vite/vitest

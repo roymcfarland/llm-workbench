@@ -1,107 +1,46 @@
-# Closeout: Slice 8.1 hotfix - production-scope audit gate
+# Closeout: Slice 3 - Nonce-based strict production CSP
 
-This hotfix re-scopes the CI dependency audit gate to production dependencies:
-`npm audit --omit=dev --audit-level=high`. The gate now matches the deployable
-surface while dev-toolchain esbuild/vite/vitest majors remain a tracked
-dependency-upgrade follow-up.
+This slice moves production-rendered pages to a nonce-based `script-src` with
+`'strict-dynamic'`. Development and no-arg callers keep the legacy script policy
+so Turbopack HMR and non-rendering response paths keep working.
 
-## Scope
+## Architectural Choices
 
-- `.github/workflows/ci.yml`: renamed the audit step and added the
-  production-scope audit command.
-- `package-lock.json`: updated only by non-force `npm audit fix` commands.
-- `CHANGELOG.md`: recorded the security ledger entry.
-- `CLOSEOUT.md`: replaced with this verification record.
+- `contentSecurityPolicy(nonce?: string)` is additive. With no nonce, it emits
+  the legacy policy byte-for-byte for callers such as the rate-limit failure
+  response.
+- Middleware generates one nonce per request, forwards both `x-nonce` and the
+  full CSP on request headers, and sets the same CSP on the response.
+- `RootLayout` reads `x-nonce`, passes `dynamic` to `ClerkProvider`, and passes
+  `nonce` to `ThemeProvider`.
+- `style-src 'unsafe-inline'` is unchanged. This is an accepted residual risk
+  because Monaco, React Flow, and theme inline styles still depend on it.
+- The page e2e seeds Clerk's local dev-browser cookie so the dummy CI Clerk key
+  stays signed out instead of redirecting document navigation to the external
+  Clerk handshake endpoint.
 
-No `package.json` files changed.
+## Evidence
 
-## Audit Evidence
+### Focused CSP unit test
 
-Advisory totals are registry-sensitive context; the pass/fail criterion is the
-command exit code.
-
-### Before the hotfix
-
-`npm audit --audit-level=high`
-
-```text
-18 vulnerabilities (3 low, 9 moderate, 6 high)
-exit: 1
-```
-
-The failing high findings are in the dev-toolchain esbuild/vite path whose
-available remediation is a breaking Vite major.
-
-`npm audit --omit=dev --audit-level=high`
+`npm test -w @llm-workbench/web -- lib/security/csp.test.ts`
 
 ```text
-12 vulnerabilities (3 low, 9 moderate)
-exit: 0
+> @llm-workbench/web@0.1.0 test
+> vitest run --passWithNoTests lib/security/csp.test.ts
+
+ RUN  v4.1.5 /Users/roymcfarland/Projects/llm-workbench/apps/web
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Duration  225ms
 ```
 
-Production high/critical exposure was already clean.
-
-### After non-force audit fix and gate re-scope
-
-`npm audit --omit=dev --audit-level=high`
-
-```text
-12 vulnerabilities (3 low, 9 moderate)
-exit: 0
-```
-
-`npm audit --audit-level=high`
-
-```text
-18 vulnerabilities (3 low, 9 moderate, 6 high)
-exit: 1
-```
-
-`npm audit 2>&1 | grep -c dompurify`
-
-```text
-3
-```
-
-The builder prompt expected `0`, but current registry metadata still reports
-the moderate Monaco path. `npm view monaco-editor version dependencies --json`
-shows latest `monaco-editor@0.55.1` depends exactly on `dompurify@3.2.7`, while
-the advisory flags `dompurify <=3.3.3`. Clearing that path would require a
-manifest-level override, prerelease dependency selection, or a force-style
-upgrade, all outside this slice's hard rules.
-
-## Audit Fix Behavior
-
-Commands run without `--force`:
-
-```text
-npm audit fix
-npm audit fix --omit=dev
-npm audit fix --package-lock-only
-npm audit fix --workspaces --include-workspace-root
-npm audit fix --workspace @llm-workbench/web
-```
-
-The initial `npm audit fix` updated only `package-lock.json`; subsequent
-non-force passes made no manifest changes and did not clear the remaining
-moderate `dompurify` / `uuid` registry findings.
-
-## Full CI
-
-`npm ci`
-
-```text
-added 1231 packages, and audited 1240 packages in 22s
-18 vulnerabilities (3 low, 9 moderate, 6 high)
-```
-
-Result: exit 0. Local npm emitted an engine warning because the shell is using
-Node 22.12.0 and `eslint-visitor-keys@5.0.1` declares `^20.19.0 || ^22.13.0 ||
->=24`; this was a warning, not a failure.
+### Full CI
 
 `npm run ci`
 
-Result: exit 0. Workspace test count stayed exactly 245:
+Result: exit 0. Workspace test count is now 250:
 
 ```text
 runtime: 105
@@ -110,13 +49,20 @@ ai-sdk: 27
 ui: 13
 mcp: 14
 scripts: 18
-web: 67
-total: 245
+web: 72
+total: 250
 ```
 
 Last CI lines:
 
 ```text
+├ ƒ /feed.xml
+├ ƒ /humans.txt
+├ ƒ /llms-full.txt
+├ ƒ /llms.txt
+├ ○ /opengraph-image
+├ ƒ /playground
+├ ƒ /robots.txt
 ├ ƒ /runs
 ├ ƒ /runs/[runId]
 ├ ƒ /runs/demo
@@ -131,4 +77,60 @@ Last CI lines:
 ○  (Static)   prerendered as static content
 ●  (SSG)      prerendered as static HTML (uses generateStaticParams)
 ƒ  (Dynamic)  server-rendered on demand
+```
+
+### E2E smoke
+
+`cd apps/web && npx playwright install chromium`
+
+```text
+Removing unused browser at /Users/roymcfarland/Library/Caches/ms-playwright/chromium-1217
+Removing unused browser at /Users/roymcfarland/Library/Caches/ms-playwright/chromium_headless_shell-1217
+```
+
+`cd apps/web && npm run test:e2e`
+
+```text
+Running 3 tests using 1 worker
+
+  ✓  1 [chromium] › e2e/smoke.spec.ts:4:3 › Public smoke (no sign-in) › GET /api/health (346ms)
+  ✓  2 [chromium] › e2e/smoke.spec.ts:11:3 › Public smoke (no sign-in) › GET /llms.txt (route handler, no document handshake) (14ms)
+  ✓  3 [chromium] › e2e/smoke.spec.ts:22:3 › Public smoke (no sign-in) › GET / renders under strict CSP without script violations (909ms)
+
+  3 passed (3.6s)
+```
+
+### Local production CSP transcript
+
+`cd apps/web && npm run build`
+
+```text
+✓ Compiled successfully in 8.2s
+✓ Completed runAfterProductionCompile in 565ms
+✓ Generating static pages using 7 workers (51/51) in 882ms
+```
+
+`cd apps/web && env NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk CLERK_SECRET_KEY=sk_test_dGVzdCUyMF9zZWNyZXRfa2V5X2Zvcl9lMmU NEXT_PUBLIC_SITE_ORIGIN=http://localhost:3399 npm run start -- --hostname 0.0.0.0 --port 3399`
+
+```text
+▲ Next.js 16.2.9
+- Local:         http://localhost:3399
+- Network:       http://0.0.0.0:3399
+✓ Ready in 90ms
+```
+
+`curl -i http://0.0.0.0:3399/`
+
+```text
+HTTP/1.1 200 OK
+content-security-policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'nonce-cz6UMLS/AE0NmOFsdJELoA==' 'strict-dynamic' 'unsafe-inline' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev wss://*.clerk.com https://clerk-telemetry.com https://*.supabase.co wss://*.supabase.co wss://*.supabase.io https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://vercel.live https://*.vercel-insights.com https://vitals.vercel-insights.com https://*.vercel.com https://*.vercel.app https://*.vercel.sh; frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com; worker-src 'self' blob:; media-src 'self' blob:; child-src 'self' blob:; upgrade-insecure-requests
+```
+
+Executable script count from a saved 200 HTML response. The nonce differs on
+each request, as intended.
+
+```text
+executable_scripts=47
+noncified_executable_scripts=47
+unnonced_executable_scripts=0
 ```
