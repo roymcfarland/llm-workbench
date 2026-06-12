@@ -5,6 +5,7 @@ import {
   encodeArtifactPayloadBytes,
   sha256Hex,
 } from "./artifactStore.js";
+import { WorkbenchError } from "../errors.js";
 import { ArtifactPointerSchema, getArtifactPayloadHash } from "../protocol/artifacts.js";
 import { WorkbenchRuntime } from "../runtime/workbench.js";
 
@@ -199,6 +200,48 @@ describe("WorkbenchSession.writeArtifactAsync routing", () => {
     });
     const back = await session.materializeArtifact("k");
     expect(back).toEqual({ large: "this should be externalized because threshold is tiny" });
+  });
+
+  it("materializeArtifact reports artifact key and store ref for invalid external JSON", async () => {
+    const artifactKey = "bad-json";
+    const ref = "ref_bad_json";
+    const payload = new TextEncoder().encode("{not-json");
+    const payloadHash = await sha256Hex(payload);
+    const store = {
+      put: async () => {
+        throw new Error("put should not be called");
+      },
+      get: async () => ({ payload, payloadHash }),
+      delete: async () => {},
+    };
+    const rt = new WorkbenchRuntime({ artifactStore: store });
+    const { runId } = rt.startRun({ workflow: baseWorkflow });
+    const session = rt.session(runId);
+    session.writeArtifact({
+      artifactKey,
+      typeId: "doc",
+      data: null,
+      pointer: {
+        kind: "external",
+        ref,
+        payloadHash,
+        byteLength: payload.byteLength,
+      },
+    });
+
+    await session.materializeArtifact(artifactKey).then(
+      () => {
+        throw new Error("expected materializeArtifact to reject");
+      },
+      (err: unknown) => {
+        expect(WorkbenchError.is(err)).toBe(true);
+        if (!WorkbenchError.is(err)) return;
+        expect(err.code).toBe("INVALID_JSON");
+        expect(err.message).toContain(`External artifact "${artifactKey}"`);
+        expect(err.message).toContain(`ref "${ref}"`);
+        expect(err.message).toContain(`${payload.byteLength} bytes`);
+      },
+    );
   });
 });
 

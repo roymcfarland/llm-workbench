@@ -9,7 +9,10 @@ import {
   type WorkflowSpec,
 } from "@llm-workbench/runtime";
 
-import { createWorkbenchMcpServer } from "./server.js";
+import {
+  MAX_BUNDLE_JSON_CHARS,
+  createWorkbenchMcpServer,
+} from "./server.js";
 
 const wf: WorkflowSpec = {
   id: "wf",
@@ -158,6 +161,62 @@ describe("createWorkbenchMcpServer", () => {
     );
     expect(bad.ok).toBe(false);
     expect(typeof bad.error).toBe("string");
+  });
+
+  it("verify_run_integrity reports circular bundles without leaking raw stringify errors", async () => {
+    const repo = new MemoryRunRepository();
+    const { client } = await connect(repo);
+    const bundle: Record<string, unknown> = {};
+    bundle.self = bundle;
+
+    const result = (await client.callTool({
+      name: "verify_run_integrity",
+      arguments: { bundle },
+    })) as { isError?: boolean; content: Array<{ text?: string }> };
+    const message = result.content[0]?.text ?? "";
+
+    expect(result.isError).toBe(true);
+    expect(message).toContain("JSON-serializable");
+    expect(message).not.toContain("Converting circular structure");
+  });
+
+  it("validate_run_bundle reports circular bundles as invalid data", async () => {
+    const repo = new MemoryRunRepository();
+    const { client } = await connect(repo);
+    const bundle: Record<string, unknown> = {};
+    bundle.self = bundle;
+
+    const result = asJson<{ ok: boolean; error?: string }>(
+      await client.callTool({
+        name: "validate_run_bundle",
+        arguments: { bundle },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("JSON-serializable");
+  });
+
+  it("rejects oversized bundles cleanly in verify and validate tools", async () => {
+    const repo = new MemoryRunRepository();
+    const { client } = await connect(repo);
+    const bundle = { pad: "x".repeat(MAX_BUNDLE_JSON_CHARS + 1) };
+
+    const verify = (await client.callTool({
+      name: "verify_run_integrity",
+      arguments: { bundle },
+    })) as { isError?: boolean; content: Array<{ text?: string }> };
+    expect(verify.isError).toBe(true);
+    expect(verify.content[0]?.text).toContain("maximum size");
+
+    const validate = asJson<{ ok: boolean; error?: string }>(
+      await client.callTool({
+        name: "validate_run_bundle",
+        arguments: { bundle },
+      }),
+    );
+    expect(validate.ok).toBe(false);
+    expect(validate.error).toContain("maximum size");
   });
 
   it("lists runs:// resources and reads back a RunBundle for runId", async () => {

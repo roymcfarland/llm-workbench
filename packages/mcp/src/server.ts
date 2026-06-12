@@ -32,6 +32,33 @@ function errorMessage(e: unknown, fallback: string): string {
   return e instanceof Error ? e.message : fallback;
 }
 
+/** Cap on serialized bundle size accepted by verify/validate tools (chars ≈ bytes for ASCII JSON). */
+export const MAX_BUNDLE_JSON_CHARS = 25 * 1024 * 1024;
+
+function safeBundleJson(bundle: unknown):
+  | { ok: true; json: string }
+  | { ok: false; error: string } {
+  let json: string | undefined;
+  try {
+    json = JSON.stringify(bundle);
+  } catch {
+    return {
+      ok: false,
+      error: "bundle is not JSON-serializable (circular reference or unsupported value)",
+    };
+  }
+  if (json === undefined) {
+    return {
+      ok: false,
+      error: "bundle is not JSON-serializable (circular reference or unsupported value)",
+    };
+  }
+  if (json.length > MAX_BUNDLE_JSON_CHARS) {
+    return { ok: false, error: "bundle exceeds maximum size (25 MiB serialized)" };
+  }
+  return { ok: true, json };
+}
+
 /**
  * Build a transport-agnostic LLM Workbench MCP server.
  *
@@ -117,7 +144,9 @@ export function createWorkbenchMcpServer(
     },
     async ({ bundle }) => {
       try {
-        const parsed = parseRunBundleJson(JSON.stringify(bundle));
+        const serialized = safeBundleJson(bundle);
+        if (!serialized.ok) return asError(serialized.error);
+        const parsed = parseRunBundleJson(serialized.json);
         const ok = await verifyRunBundleIntegrity(parsed);
         return asJsonText({ ok, sha256: parsed.integrity?.sha256 });
       } catch (e) {
@@ -137,7 +166,9 @@ export function createWorkbenchMcpServer(
     },
     async ({ bundle }) => {
       try {
-        parseRunBundleJson(JSON.stringify(bundle));
+        const serialized = safeBundleJson(bundle);
+        if (!serialized.ok) return asJsonText({ ok: false, error: serialized.error });
+        parseRunBundleJson(serialized.json);
         return asJsonText({ ok: true });
       } catch (e) {
         return asJsonText({ ok: false, error: errorMessage(e, "invalid bundle") });
