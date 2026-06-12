@@ -138,6 +138,10 @@ In the Vercel dashboard:
    - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/playground`
    - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/playground`
    - `AI_GATEWAY_API_KEY` *(omit if using OIDC)*
+   - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` *(API rate limiting)*
+   - `RATE_LIMIT_ALLOW_UNCONFIGURED=1` *(only if you deliberately run
+     production without Upstash; otherwise missing Upstash config makes
+     `/api/*` except `/api/health` return `503`)*
    - **`GOOGLE_SITE_VERIFICATION`** / **`BING_SITE_VERIFICATION`** / **`YANDEX_SITE_VERIFICATION`** *(optional HTML-tag verification via `lib/site-verification.ts` — omit until you paste tokens from Search Console / Bing / Yandex)*
 3. **Domains**: attach a real domain (or use the preview URL) and set
    `NEXT_PUBLIC_SITE_ORIGIN` to it before redeploying — sitemap.xml,

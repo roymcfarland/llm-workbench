@@ -15,6 +15,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (GHSA-5xrq-8626-4rwp). No `package.json` ranges changed; no major
   versions changed. `npm audit` now reports 12 residual moderate/low
   findings for follow-up dependency slices.
+- **Rate limiting fails closed in production.** When Upstash Redis is not
+  configured, `/api/*` routes (except `/api/health`) now return `503` in
+  production instead of silently running unlimited. Deliberate opt-out via
+  `RATE_LIMIT_ALLOW_UNCONFIGURED=1`. `X-Frame-Options` tightened
+  `SAMEORIGIN` → `DENY` to match the CSP's `frame-ancestors 'none'`.
 
 ### Changed
 
