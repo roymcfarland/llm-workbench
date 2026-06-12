@@ -16,6 +16,7 @@ function redisFromEnv(): Redis | null {
 }
 
 const redis = redisFromEnv();
+const UNCONFIGURED_RETRY_AFTER_SECONDS = "60";
 
 /** Default JSON/MCP-style API traffic (requests / minute, per client IP). */
 const limiterDefault =
@@ -63,9 +64,34 @@ function skipRateLimit(pathname: string): boolean {
   return false;
 }
 
+function unconfiguredRateLimitFailsClosed(): boolean {
+  return (
+    process.env.NODE_ENV === "production" &&
+    process.env.RATE_LIMIT_ALLOW_UNCONFIGURED !== "1"
+  );
+}
+
+function rateLimitJsonResponse(
+  error: string,
+  status: 429 | 503,
+  retryAfter: string,
+): NextResponse {
+  return NextResponse.json(
+    { error },
+    {
+      status,
+      headers: {
+        "Retry-After": retryAfter,
+        "Content-Security-Policy": contentSecurityPolicy(),
+      },
+    },
+  );
+}
+
 /**
- * Edge-safe API rate limit when Upstash env vars are set. No-op otherwise
- * (configure `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` to enable).
+ * Edge-safe API rate limiting. Configured Upstash env vars enforce limits;
+ * missing config fails closed in production unless `RATE_LIMIT_ALLOW_UNCONFIGURED=1`;
+ * missing config remains a no-op in development and test.
  */
 export async function rateLimitApiIfConfigured(
   req: NextRequest,
@@ -75,20 +101,18 @@ export async function rateLimitApiIfConfigured(
   if (skipRateLimit(pathname)) return null;
 
   const limiter = isHeavyApiPath(pathname) ? limiterHeavy : limiterDefault;
-  if (!limiter) return null;
+  if (!limiter) {
+    if (!unconfiguredRateLimitFailsClosed()) return null;
+    return rateLimitJsonResponse(
+      "Rate limiter not configured",
+      503,
+      UNCONFIGURED_RETRY_AFTER_SECONDS,
+    );
+  }
 
   const { success, reset } = await limiter.limit(clientKey(req));
   if (success) return null;
 
   const retryAfterSec = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
-  return NextResponse.json(
-    { error: "Too many requests" },
-    {
-      status: 429,
-      headers: {
-        "Retry-After": String(retryAfterSec),
-        "Content-Security-Policy": contentSecurityPolicy(),
-      },
-    },
-  );
+  return rateLimitJsonResponse("Too many requests", 429, String(retryAfterSec));
 }
