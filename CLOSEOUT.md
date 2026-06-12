@@ -1,93 +1,46 @@
-# Closeout: Slice 8 - Package lint and audit CI gate
+# Closeout: Slice 3 - Nonce-based strict production CSP
 
-This slice adds package-wide lint coverage and a high/critical dependency
-advisory gate without changing runtime behavior. ESLint now covers
-`packages/*/src/**/*.{ts,tsx}` through a root flat config, the root `ci` script
-runs that package lint step after web lint, and GitHub Actions runs both package
-lint and `npm audit --audit-level=high` on each matrix node.
+This slice moves production-rendered pages to a nonce-based `script-src` with
+`'strict-dynamic'`. Development and no-arg callers keep the legacy script policy
+so Turbopack HMR and non-rendering response paths keep working.
 
 ## Architectural Choices
 
-- Root ESLint uses `typescript-eslint` recommended flat config, enforces
-  `no-console`, and allows `_`-prefixed unused values for intentional drops.
-- The ai-sdk empty interface became a type alias. This changes the package's
-  emitted `.d.ts` shape from an empty extending interface to the equivalent
-  `Pick<WorkbenchSession, ...>` alias; the runtime declaration-emit convention
-  does not cover ai-sdk.
-- Runtime source edits are type-only. The `WorkbenchError` V8
-  `captureStackTrace` casts now use `unknown`, and the dead `RunContextRef`
-  type import is gone. The declaration-emit comparison is scoped to `*.d.ts`
-  files; `workbench.d.ts.map` changes due to source position shift from the
-  clean import removal, which is expected.
+- `contentSecurityPolicy(nonce?: string)` is additive. With no nonce, it emits
+  the legacy policy byte-for-byte for callers such as the rate-limit failure
+  response.
+- Middleware generates one nonce per request, forwards both `x-nonce` and the
+  full CSP on request headers, and sets the same CSP on the response.
+- `RootLayout` reads `x-nonce`, passes `dynamic` to `ClerkProvider`, and passes
+  `nonce` to `ThemeProvider`.
+- `style-src 'unsafe-inline'` is unchanged. This is an accepted residual risk
+  because Monaco, React Flow, and theme inline styles still depend on it.
+- The page e2e seeds Clerk's local dev-browser cookie so the dummy CI Clerk key
+  stays signed out instead of redirecting document navigation to the external
+  Clerk handshake endpoint.
 
 ## Evidence
 
-### Resolved dependency versions
+### Focused CSP unit test
 
-`npm ls typescript-eslint --depth=0`
-
-```text
-llm-workbench@ /Users/roymcfarland/Projects/llm-workbench
-└── typescript-eslint@8.61.0
-```
-
-### Packages lint
-
-`npm run lint:packages`
+`npm test -w @llm-workbench/web -- lib/security/csp.test.ts`
 
 ```text
-> lint:packages
-> eslint "packages/*/src/**/*.{ts,tsx}"
-```
+> @llm-workbench/web@0.1.0 test
+> vitest run --passWithNoTests lib/security/csp.test.ts
 
-Result: exit 0, zero errors, zero warnings.
+ RUN  v4.1.5 /Users/roymcfarland/Projects/llm-workbench/apps/web
 
-### Audit gate
-
-`npm audit --audit-level=high`
-
-```text
-11 vulnerabilities (3 low, 8 moderate)
-```
-
-Result: exit 0. No high or critical advisories block the new gate. Advisory
-totals can drift as the registry publishes new moderate/low findings; the gate
-criterion is the command's exit code at `--audit-level=high`.
-
-### Runtime .d.ts declaration comparison
-
-```text
-Saved working directory and index state WIP on chore/packages-lint-and-audit-gate: d7b26c3 chore(lint,ci): lint all packages and gate dependency advisories in CI
-Switched to branch 'main'
-Your branch is up to date with 'origin/main'.
-
-> @llm-workbench/runtime@0.2.0 build
-> tsc -p tsconfig.build.json
-
-Switched to branch 'chore/packages-lint-and-audit-gate'
-Your branch is up to date with 'origin/chore/packages-lint-and-audit-gate'.
-On branch chore/packages-lint-and-audit-gate
-Your branch is up to date with 'origin/chore/packages-lint-and-audit-gate'.
-
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-	modified:   packages/runtime/src/runtime/workbench.ts
-
-no changes added to commit (use "git add" and/or "git commit -a")
-Dropped refs/stash@{0} (85b0de53cb73923714ebc779ebe2a1de3d7786ba)
-
-> @llm-workbench/runtime@0.2.0 build
-> tsc -p tsconfig.build.json
-
-OK: runtime .d.ts declarations byte-identical
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Duration  225ms
 ```
 
 ### Full CI
 
 `npm run ci`
 
-Result: exit 0. Workspace test count stayed exactly 245:
+Result: exit 0. Workspace test count is now 250:
 
 ```text
 runtime: 105
@@ -96,13 +49,20 @@ ai-sdk: 27
 ui: 13
 mcp: 14
 scripts: 18
-web: 67
-total: 245
+web: 72
+total: 250
 ```
 
 Last CI lines:
 
 ```text
+├ ƒ /feed.xml
+├ ƒ /humans.txt
+├ ƒ /llms-full.txt
+├ ƒ /llms.txt
+├ ○ /opengraph-image
+├ ƒ /playground
+├ ƒ /robots.txt
 ├ ƒ /runs
 ├ ƒ /runs/[runId]
 ├ ƒ /runs/demo
@@ -117,4 +77,60 @@ Last CI lines:
 ○  (Static)   prerendered as static content
 ●  (SSG)      prerendered as static HTML (uses generateStaticParams)
 ƒ  (Dynamic)  server-rendered on demand
+```
+
+### E2E smoke
+
+`cd apps/web && npx playwright install chromium`
+
+```text
+Removing unused browser at /Users/roymcfarland/Library/Caches/ms-playwright/chromium-1217
+Removing unused browser at /Users/roymcfarland/Library/Caches/ms-playwright/chromium_headless_shell-1217
+```
+
+`cd apps/web && npm run test:e2e`
+
+```text
+Running 3 tests using 1 worker
+
+  ✓  1 [chromium] › e2e/smoke.spec.ts:4:3 › Public smoke (no sign-in) › GET /api/health (346ms)
+  ✓  2 [chromium] › e2e/smoke.spec.ts:11:3 › Public smoke (no sign-in) › GET /llms.txt (route handler, no document handshake) (14ms)
+  ✓  3 [chromium] › e2e/smoke.spec.ts:22:3 › Public smoke (no sign-in) › GET / renders under strict CSP without script violations (909ms)
+
+  3 passed (3.6s)
+```
+
+### Local production CSP transcript
+
+`cd apps/web && npm run build`
+
+```text
+✓ Compiled successfully in 8.2s
+✓ Completed runAfterProductionCompile in 565ms
+✓ Generating static pages using 7 workers (51/51) in 882ms
+```
+
+`cd apps/web && env NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk CLERK_SECRET_KEY=sk_test_dGVzdCUyMF9zZWNyZXRfa2V5X2Zvcl9lMmU NEXT_PUBLIC_SITE_ORIGIN=http://localhost:3399 npm run start -- --hostname 0.0.0.0 --port 3399`
+
+```text
+▲ Next.js 16.2.9
+- Local:         http://localhost:3399
+- Network:       http://0.0.0.0:3399
+✓ Ready in 90ms
+```
+
+`curl -i http://0.0.0.0:3399/`
+
+```text
+HTTP/1.1 200 OK
+content-security-policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'nonce-cz6UMLS/AE0NmOFsdJELoA==' 'strict-dynamic' 'unsafe-inline' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev wss://*.clerk.com https://clerk-telemetry.com https://*.supabase.co wss://*.supabase.co wss://*.supabase.io https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://vercel.live https://*.vercel-insights.com https://vitals.vercel-insights.com https://*.vercel.com https://*.vercel.app https://*.vercel.sh; frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com; worker-src 'self' blob:; media-src 'self' blob:; child-src 'self' blob:; upgrade-insecure-requests
+```
+
+Executable script count from a saved 200 HTML response. The nonce differs on
+each request, as intended.
+
+```text
+executable_scripts=47
+noncified_executable_scripts=47
+unnonced_executable_scripts=0
 ```
