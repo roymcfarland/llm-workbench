@@ -31,6 +31,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **CI hardening against Playwright CDN wedges.** The `build & test` job now
+  has a 20-minute job timeout; the Chromium install and smoke steps have
+  step timeouts (10/8 min); Playwright browsers are cached keyed on the
+  installed Playwright version, so warm runs skip the CDN download entirely.
 - **License — proprietary.** The repository is now governed by a single
   proprietary license (see `LICENSE` and `PROJECT.md`). The previous
   dual-licensed (Apache 2.0 / PolyForm Noncommercial 1.0.0) posture has

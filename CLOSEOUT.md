@@ -1,148 +1,104 @@
-# Closeout: Slice 4 - Runtime & MCP error-path hardening
+# Closeout: Slice 4.5 - CI Playwright install hardening
 
-Runtime and MCP error paths now fail loudly and predictably without changing
-public runtime declarations:
+This slice hardens the Node 24 CI path against Playwright CDN wedges without
+changing package code, package metadata, the job matrix, or the existing
+install/test commands.
 
-- `WorkbenchRuntime.cancelRunCascade()` logs refused per-node cancellations with
-  the `[llm-workbench]` prefix while preserving skip-and-continue cascade
-  semantics.
-- `materializeArtifact()` `INVALID_JSON` errors now include the artifact key,
-  external store ref, and payload byte length.
-- MCP `verify_run_integrity` / `validate_run_bundle` serialize bundles through a
-  safe helper that rejects circular/unsupported values with a clean message and
-  caps serialized input at 25 MiB.
+- `build-test` now has a 20-minute job timeout.
+- The existing Chromium install step now has a 10-minute timeout.
+- The existing Playwright smoke step now has an 8-minute timeout.
+- Node 24 runs cache `~/.cache/ms-playwright` with a key derived from the
+  installed `@playwright/test` package version.
 
 ---
 
 ## Evidence
 
-### 1. New regression tests
+### Changed workflow region
 
-- `packages/runtime/src/runtime/supervision.test.ts`
-  - `logs and skips runs that refuse cancellation while continuing the cascade`
-- `packages/runtime/src/persistence/artifactStore.test.ts`
-  - `materializeArtifact reports artifact key and store ref for invalid external JSON`
-- `packages/mcp/src/server.test.ts`
-  - `verify_run_integrity reports circular bundles without leaking raw stringify errors`
-  - `validate_run_bundle reports circular bundles as invalid data`
-  - `rejects oversized bundles cleanly in verify and validate tools`
+```yaml
+jobs:
+  build-test:
+    name: build & test (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Align NEXT_PUBLIC_* and PLAYWRIGHT_WEB_PORT with apps/web/e2e/env.ts + e2e/listen-port.ts
+    # (default port 3399) so build output matches Playwright smoke `next start` (CI-only placeholders).
+    env:
+      # Run embedded @actions/*.js scripts on Node 24 (GH is deprecating the Node 20 action runtime).
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      PLAYWRIGHT_WEB_PORT: "3399"
+      NEXT_PUBLIC_SITE_ORIGIN: http://localhost:3399
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk
+      CLERK_SECRET_KEY: sk_test_dGVzdCUyMF9zZWNyZXRfa2V5X2Zvcl9lMmU
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22", "24"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-### 2. Runtime package test output
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
 
-`npm test -w @llm-workbench/runtime -- --reporter verbose`
+      - name: Install
+        run: npm ci
 
-```
-> @llm-workbench/runtime@0.2.0 test
-> vitest run --reporter verbose
+      - name: Build all packages
+        run: npm run build
 
- RUN  v3.2.6 /Users/roymcfarland/Projects/llm-workbench/packages/runtime
+      - name: Test
+        run: npm test
 
- ✓ src/persistence/artifactStore.test.ts > WorkbenchSession.writeArtifactAsync routing > materializeArtifact reports artifact key and store ref for invalid external JSON 0ms
- ✓ src/runtime/supervision.test.ts > WorkbenchRuntime.runChildrenOf and cancelRunCascade > logs and skips runs that refuse cancellation while continuing the cascade 35ms
+      - name: Web typecheck
+        run: npm run typecheck -w @llm-workbench/web
 
- Test Files  13 passed (13)
-      Tests  105 passed (105)
-```
+      - name: Web lint
+        run: npm run lint -w @llm-workbench/web
 
-### 3. MCP package test output
+      - name: Web production build
+        run: npm run build:web
 
-`npm test -w @llm-workbench/mcp -- --reporter verbose`
+      - name: Get Playwright version
+        if: matrix.node == '24'
+        id: playwright-version
+        working-directory: apps/web
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
 
-```
-> @llm-workbench/mcp@0.2.0 test
-> vitest run --reporter verbose
+      - name: Cache Playwright browsers
+        if: matrix.node == '24'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
 
- RUN  v3.2.6 /Users/roymcfarland/Projects/llm-workbench/packages/mcp
+      - name: Install Playwright Chromium
+        if: matrix.node == '24'
+        timeout-minutes: 10
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
 
- ✓ src/server.test.ts > createWorkbenchMcpServer > verify_run_integrity reports circular bundles without leaking raw stringify errors 2ms
- ✓ src/server.test.ts > createWorkbenchMcpServer > validate_run_bundle reports circular bundles as invalid data 2ms
- ✓ src/server.test.ts > createWorkbenchMcpServer > rejects oversized bundles cleanly in verify and validate tools 235ms
-
- Test Files  2 passed (2)
-      Tests  14 passed (14)
-```
-
-### 4. Full CI
-
-`npm run ci` passed. Test counts are 240 baseline + 5 new tests = 245 total:
-
-```
-@llm-workbench/runtime        105
-@llm-workbench/adapters-react   1
-@llm-workbench/ai-sdk          27
-@llm-workbench/ui              13
-@llm-workbench/mcp             14
-test:scripts                   18
-@llm-workbench/web             67
-```
-
-Last lines from the successful `npm run ci`:
-
-```
-├ ƒ /llms-full.txt
-├ ƒ /llms.txt
-├ ○ /opengraph-image
-├ ƒ /playground
-├ ƒ /robots.txt
-├ ƒ /runs
-├ ƒ /runs/[runId]
-├ ƒ /runs/demo
-├ ƒ /sign-in/[[...sign-in]]
-├ ƒ /sign-up/[[...sign-up]]
-├ ƒ /sitemap.xml
-└ ○ /twitter-image
-
-
-ƒ Proxy (Middleware)
-
-○  (Static)   prerendered as static content
-●  (SSG)      prerendered as static HTML (uses generateStaticParams)
-ƒ  (Dynamic)  server-rendered on demand
+      - name: Playwright smoke
+        if: matrix.node == '24'
+        timeout-minutes: 8
+        working-directory: apps/web
+        env:
+          # Linux runners resolve localhost; the DNS shim can break Next 16's internal proxy.
+          LLM_WB_E2E_DISABLE_DNS_SHIM: "1"
+        run: npm run test:e2e
 ```
 
-### 5. Declaration-emit comparison
+### Local verification
 
-The original GNU-style `diff --include='*.d.ts'` command is not supported by
-the macOS/BSD `diff` in this environment, so the declaration comparison used an
-equivalent `.d.ts` file-list plus per-file byte diff. Runtime public declarations
-are byte-identical.
+- YAML validation passed:
+  `python3 -c "import yaml,sys; yaml.safe_load(open('.github/workflows/ci.yml')); print('YAML OK')"`
+- Full `npm run ci`: intentionally not run; this is a workflow-only change.
 
-```
-git stash push --include-untracked -m dts-comparison-error-path-hardening
-Saved working directory and index state On fix/error-path-hardening: dts-comparison-error-path-hardening
+### PR CI status
 
-git checkout main
-Switched to branch 'main'
-Your branch is up to date with 'origin/main'.
-
-npm run build -w @llm-workbench/runtime
-> @llm-workbench/runtime@0.2.0 build
-> tsc -p tsconfig.build.json
-
-cp -R packages/runtime/dist /tmp/dts-parent-slice4
-
-git checkout fix/error-path-hardening
-Switched to branch 'fix/error-path-hardening'
-
-git stash pop stash@{0}
-On branch fix/error-path-hardening
-Changes not staged for commit:
-  modified:   CHANGELOG.md
-  modified:   packages/mcp/src/server.test.ts
-  modified:   packages/mcp/src/server.ts
-  modified:   packages/runtime/src/persistence/artifactStore.test.ts
-  modified:   packages/runtime/src/runtime/artifactController.ts
-  modified:   packages/runtime/src/runtime/supervision.test.ts
-  modified:   packages/runtime/src/runtime/workbench.ts
-Dropped stash@{0} (a489fb8a5b553826aa53cfd0ecc9781b05c3fd49)
-
-npm run build -w @llm-workbench/runtime
-> @llm-workbench/runtime@0.2.0 build
-> tsc -p tsconfig.build.json
-
-find /tmp/dts-parent-slice4 -name '*.d.ts' -print | sed 's#^/tmp/dts-parent-slice4/##' | sort > /tmp/dts-parent-slice4.files
-find packages/runtime/dist -name '*.d.ts' -print | sed 's#^packages/runtime/dist/##' | sort > /tmp/dts-current-slice4.files
-diff -u /tmp/dts-parent-slice4.files /tmp/dts-current-slice4.files
-while IFS= read -r file; do diff -u "/tmp/dts-parent-slice4/$file" "packages/runtime/dist/$file"; done < /tmp/dts-parent-slice4.files
-OK: d.ts byte-identical
-```
+The PR CI run does not exist until after this closeout is committed, pushed, and
+opened as a pull request. Live CI status is recorded in the final task report.
