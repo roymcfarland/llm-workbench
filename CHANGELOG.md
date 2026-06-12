@@ -31,6 +31,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Package-wide linting and audit gate.** ESLint now covers all
+  `packages/*` sources via a root flat config (`no-console` enforced;
+  `_`-prefixed unused values allowed). CI now runs package linting and
+  `npm audit --audit-level=high`; three package lint findings were fixed
+  (ai-sdk empty interface → type alias, `WorkbenchError` casts
+  `Function` → `unknown`, and a dead runtime type import).
 - **CI hardening against Playwright CDN wedges.** The `build & test` job now
   has a 20-minute job timeout; the Chromium install and smoke steps have
   step timeouts (10/8 min); Playwright browsers are cached keyed on the
