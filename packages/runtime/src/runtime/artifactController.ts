@@ -225,7 +225,7 @@ export class ArtifactController {
     } catch (e) {
       throw new WorkbenchError(
         "INVALID_JSON",
-        `External artifact "${artifactKey}" is not valid JSON`,
+        `External artifact "${artifactKey}" is not valid JSON (ref "${art.pointer.ref}", ${fetched.payload.byteLength} bytes)`,
         e,
       );
     }

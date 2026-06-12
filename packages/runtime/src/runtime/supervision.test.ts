@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { WorkbenchRuntime } from "./workbench.js";
 import { buildAgentChildStartInput, buildForkStartInput } from "../host/fork.js";
 import { RunContextRefSchema, getParentRunIds } from "../protocol/run.js";
@@ -129,5 +129,31 @@ describe("WorkbenchRuntime.runChildrenOf and cancelRunCascade", () => {
     expect(rt.getState(root)?.run.status).toBe("cancelled");
     expect(rt.getState(child)?.run.status).toBe("completed");
     expect(rt.getState(grandchild)?.run.status).toBe("cancelled");
+  });
+
+  it("logs and skips runs that refuse cancellation while continuing the cascade", () => {
+    const rt = new WorkbenchRuntime();
+    const { runId: root } = rt.startRun({ workflow: baseWorkflow });
+    const { runId: child } = rt.startRun(buildForkStartInput(rt.getState(root)!));
+    const { runId: grandchild } = rt.startRun(buildForkStartInput(rt.getState(child)!));
+    rt.session(child).beginStep("only");
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const cancelled = rt.cancelRunCascade(root, { reason: "operator stop" });
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        "[llm-workbench] cancelRunCascade: failed to cancel run",
+        child,
+        expect.anything(),
+      );
+      expect(cancelled).toContain(root);
+      expect(cancelled).not.toContain(child);
+      expect(cancelled).toContain(grandchild);
+      expect(rt.getState(child)?.run.status).toBe("running");
+      expect(rt.getState(grandchild)?.run.status).toBe("cancelled");
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 });

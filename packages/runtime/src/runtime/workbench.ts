@@ -299,10 +299,12 @@ export class WorkbenchRuntime {
         try {
           this.session(id).cancelRun(opts);
           cancelled.push(id);
-        } catch {
+        } catch (err) {
           // If a session refuses to cancel (e.g. a step is still running),
           // we propagate the cascade to the rest of the tree but skip this
           // node. The host can retry per-node cancellation if needed.
+          // eslint-disable-next-line no-console
+          console.error("[llm-workbench] cancelRunCascade: failed to cancel run", id, err);
         }
       }
       for (const childId of this.runChildrenOf(id)) {

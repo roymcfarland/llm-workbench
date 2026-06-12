@@ -6,6 +6,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Error-path hardening (runtime + MCP).** `cancelRunCascade` now logs
+  nodes that refuse cancellation instead of silently skipping them;
+  `materializeArtifact` JSON errors include the store ref and payload size;
+  MCP `verify_run_integrity` / `validate_run_bundle` reject non-serializable
+  bundles with a clean message and cap serialized input at 25 MiB.
+
 ### Security
 
 - **Dependency advisory remediation (lockfile-only).** `npm audit fix`
