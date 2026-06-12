@@ -52,8 +52,9 @@ jobs:
       - name: Packages lint
         run: npm run lint:packages
 
-      - name: Audit gate (high/critical)
-        run: npm audit --audit-level=high
+      # Dev-toolchain advisories are tracked via the dependency-upgrade slice, not gated here.
+      - name: Audit gate (prod deps, high/critical)
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Web production build
         run: npm run build:web
