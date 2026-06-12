@@ -16,8 +16,9 @@ lint and `npm audit --audit-level=high` on each matrix node.
   does not cover ai-sdk.
 - Runtime source edits are type-only. The `WorkbenchError` V8
   `captureStackTrace` casts now use `unknown`, and the dead `RunContextRef`
-  type import is gone. Small source-map padding is kept around those erased
-  type positions so `packages/runtime/dist` stays byte-identical to `main`.
+  type import is gone. The declaration-emit comparison is scoped to `*.d.ts`
+  files; `workbench.d.ts.map` changes due to source position shift from the
+  clean import removal, which is expected.
 
 ## Evidence
 
@@ -49,12 +50,14 @@ Result: exit 0, zero errors, zero warnings.
 11 vulnerabilities (3 low, 8 moderate)
 ```
 
-Result: exit 0. No high or critical advisories block the new gate.
+Result: exit 0. No high or critical advisories block the new gate. Advisory
+totals can drift as the registry publishes new moderate/low findings; the gate
+criterion is the command's exit code at `--audit-level=high`.
 
-### Runtime declaration/dist comparison
+### Runtime .d.ts declaration comparison
 
 ```text
-Saved working directory and index state WIP on chore/packages-lint-and-audit-gate: b3902ce chore(ci): timeout and cache the Playwright browser install (#15)
+Saved working directory and index state WIP on chore/packages-lint-and-audit-gate: d7b26c3 chore(lint,ci): lint all packages and gate dependency advisories in CI
 Switched to branch 'main'
 Your branch is up to date with 'origin/main'.
 
@@ -62,29 +65,22 @@ Your branch is up to date with 'origin/main'.
 > tsc -p tsconfig.build.json
 
 Switched to branch 'chore/packages-lint-and-audit-gate'
+Your branch is up to date with 'origin/chore/packages-lint-and-audit-gate'.
 On branch chore/packages-lint-and-audit-gate
+Your branch is up to date with 'origin/chore/packages-lint-and-audit-gate'.
+
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
-	modified:   .github/workflows/ci.yml
-	modified:   CHANGELOG.md
-	modified:   package-lock.json
-	modified:   package.json
-	modified:   packages/ai-sdk/src/types.ts
-	modified:   packages/runtime/src/errors.ts
 	modified:   packages/runtime/src/runtime/workbench.ts
 
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-	eslint.config.mjs
-
 no changes added to commit (use "git add" and/or "git commit -a")
-Dropped refs/stash@{0} (7ad77b3afe2862ef6eca2d60362c4b0585ec74b6)
+Dropped refs/stash@{0} (85b0de53cb73923714ebc779ebe2a1de3d7786ba)
 
 > @llm-workbench/runtime@0.2.0 build
 > tsc -p tsconfig.build.json
 
-OK: runtime d.ts byte-identical
+OK: runtime .d.ts declarations byte-identical
 ```
 
 ### Full CI
