@@ -6,6 +6,16 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Security
+
+- **Dependency advisory remediation (lockfile-only).** `npm audit fix`
+  cleared the high/critical audit gate from the 21-vulnerability baseline
+  (1 critical, 4 high), including the Next.js middleware/proxy bypass
+  (GHSA-26hh-7cqf-hhc6) and the Vitest UI arbitrary-file-read
+  (GHSA-5xrq-8626-4rwp). No `package.json` ranges changed; no major
+  versions changed. `npm audit` now reports 12 residual moderate/low
+  findings for follow-up dependency slices.
+
 ### Changed
 
 - **License — proprietary.** The repository is now governed by a single
