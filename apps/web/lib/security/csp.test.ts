@@ -32,7 +32,7 @@ describe("contentSecurityPolicy", () => {
     vi.resetModules();
   });
 
-  it("uses nonce plus strict-dynamic without unsafe-eval in production", async () => {
+  it("uses nonce plus strict-dynamic and retains unsafe-eval for Ajv in production", async () => {
     const { contentSecurityPolicy } = await loadCsp({
       NODE_ENV: "production",
     });
@@ -41,7 +41,8 @@ describe("contentSecurityPolicy", () => {
 
     expect(directive).toContain("'nonce-nonce-value'");
     expect(directive).toContain("'strict-dynamic'");
-    expect(directive).not.toContain("'unsafe-eval'");
+    // Ajv runtime compilation still needs eval; removal is tracked separately.
+    expect(directive).toContain("'unsafe-eval'");
   });
 
   it("keeps unsafe-inline as a CSP2 fallback in production nonce mode", async () => {

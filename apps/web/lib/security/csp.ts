@@ -7,6 +7,9 @@
  * HMR and non-rendering response paths continue to work. Production HTML
  * responses pass a per-request nonce, which switches script-src to nonce +
  * strict-dynamic, leaving host sources and unsafe-inline only as CSP2 fallbacks.
+ * Nonce mode retains unsafe-eval because the runtime's Ajv-based SchemaRegistry
+ * compiles browser validators via new Function; removal is tracked behind an
+ * Ajv standalone/precompiled-validator slice.
  */
 export function contentSecurityPolicy(nonce?: string): string {
   const isProd = process.env.NODE_ENV === "production";
@@ -38,7 +41,7 @@ export function contentSecurityPolicy(nonce?: string): string {
 
   const scriptSrc =
     nonce && isProd
-      ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.vercel-scripts.com`
+      ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' 'unsafe-inline' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.vercel-scripts.com`
       : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.vercel-scripts.com";
 
   const pieces = [
