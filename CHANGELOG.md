@@ -16,6 +16,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Esbuild advisory remediation.** A single root Vite child override forces
+  esbuild to 0.28.1, clearing six high advisories
+  (GHSA-gv7w-rqvm-qjhr, GHSA-g7r4-m6w7-qqqr): esbuild plus Vite, Vitest,
+  vite-node, `@vitest/mocker`, and `@vitejs/plugin-react` entries flagged
+  only transitively through esbuild. `job-search-demo` moves to Vite 8 and
+  `@vitejs/plugin-react` 6 so its build supports the fixed esbuild path.
+  Exposure is dev/build-only, production was already clean, and no runtime
+  package majors were upgraded.
 - **Production CSP script hardening.** `script-src` now uses a per-request
   nonce with `'strict-dynamic'` for production-rendered pages, and
   `'unsafe-eval'` is removed from the effective production script policy.

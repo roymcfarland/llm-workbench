@@ -1,50 +1,58 @@
-# Closeout: Reviewer-Facing Docs
+# Closeout: Esbuild High Advisory Remediation
 
-This docs-only slice adds the reviewer layer around the live product, local
-examples, and builder/verifier process artifacts. No source, tests, config,
-package metadata, license, or project-spec files were changed.
+This dependency slice clears the dev-inclusive high audit gate by forcing
+Vite's esbuild child dependency to 0.28.1 and moving `job-search-demo` to
+Vite 8 / `@vitejs/plugin-react` 6 so its build supports that fixed esbuild
+version.
 
 ## Files Changed
 
-- `README.md`
+- `package.json`
+- `examples/job-search-demo/package.json`
+- `package-lock.json`
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
-- `examples/job-search-demo/README.md`
-- `examples/run-repo-server/README.md`
 
 ## Evidence
 
-### Link Check
+### Audit Gates
 
-Internal links referenced by the new and edited docs resolve:
+Before this slice, `npm audit --audit-level=high` exited 1 with 6 high
+advisories rooted in esbuild.
 
-```text
-ok: PROJECT.md
-ok: CHANGELOG.md
-ok: SECURITY.md
-ok: apps/web
-ok: packages/mcp/README.md
-ok: examples/job-search-demo/README.md
-ok: examples/run-repo-server/README.md
-ok: CLOSEOUT.md
-ok: VERIFIER-AUDIT-PR8.md
-ok: VERIFIER-AUDIT-PR10.md
-ok: packages/runtime/src/runtime/session.ts
-ok: packages/runtime/src/runtime/workbench.test.ts
-```
-
-External live URLs were checked. The first sandboxed `curl` run returned
-`000`, so the URLs were rechecked with approved network access:
+After the override and demo Vite 8 bump:
 
 ```text
-HTTP/2 200 https://www.llmworkbench.io
-HTTP/2 200 https://www.llmworkbench.io/runs/demo
-HTTP/2 200 https://www.llmworkbench.io/docs/protocol
+npm audit --audit-level=high
+exit: 0
+
+npm audit --omit=dev --audit-level=high
+prod exit: 0
+
+residual audit findings: 12 vulnerabilities (3 low, 9 moderate)
 ```
+
+### Esbuild Version List
+
+```text
+esbuild@0.28.1
+```
+
+### Job Search Demo Build
+
+`npm run build -w job-search-demo`
+
+```text
+vite v8.0.16 building client environment for production...
+✓ 614 modules transformed.
+✓ built in 182ms
+```
+
+Vite 8 emitted the expected large-chunk / `rolldownOptions` warning.
 
 ### Full CI
 
-`npm run ci`
+`npm ci && npm run ci`
 
 Result: exit 0.
 
