@@ -1,0 +1,28 @@
+{
+  // Fail CI on ANY advisory of low severity or higher that is not explicitly
+  // allowlisted below. Fail-closed: a new advisory at any severity breaks the
+  // build until it is triaged (fixed, or consciously allowlisted with a reason).
+  "low": true,
+  "allowlist": [
+    // @ai-sdk chain — 1 low. GHSA-866g-f22w-33x8: Uncontrolled Resource Consumption
+    // in @ai-sdk/provider-utils (also surfaces on @ai-sdk/gateway, ai). No fix without
+    // the ai@6 major SDK migration. REVISIT when the ai@6 migration slice is scoped.
+    "GHSA-866g-f22w-33x8",
+    // dompurify — 8 moderate, via monaco-editor@0.55.1. Monaco VENDORS its own DOMPurify
+    // (esm/vs/base/browser/dompurify/dompurify.js) and imports that, not the npm package,
+    // so an override is impossible and meaningless; 0.55.1 is the latest release.
+    // REVISIT when monaco-editor publishes a version > 0.55.1 bumping its vendored copy.
+    "GHSA-v2wj-7wpq-c8vv",
+    "GHSA-cjmm-f4jc-qw8r",
+    "GHSA-cj63-jhhr-wcxv",
+    "GHSA-39q2-94rc-95cp",
+    "GHSA-h7mw-gpvr-xq4m",
+    "GHSA-crv5-9vww-q3g8",
+    "GHSA-v9jr-rg53-9pgp",
+    "GHSA-h8r8-wccr-v5f2",
+    // postcss — 1 moderate. GHSA-qx2v-qp2m-jg93: XSS via unescaped </style>, transitive
+    // through Next.js (also surfaces on next, @clerk/nextjs, @sentry/nextjs). No fix
+    // published. REVISIT on the next Next.js upgrade.
+    "GHSA-qx2v-qp2m-jg93"
+  ]
+}
