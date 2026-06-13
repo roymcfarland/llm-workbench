@@ -16,6 +16,20 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Moderate advisory cleanup (uuid via Resend; dompurify investigated & deferred).**
+  Bumping `resend` `^6.12.2`→`^6.12.4` removes the `svix`→`uuid@10.0.0` subtree
+  entirely — Resend replaced Svix with `standardwebhooks` at 6.12.3+ — clearing the
+  uuid buffer-bounds advisory (GHSA-w5hq-g745-h8pq). The eight moderate `dompurify`
+  advisories were investigated and **deferred**: `monaco-editor@0.55.1` (the latest)
+  vendors its own DOMPurify at `esm/vs/base/browser/dompurify/dompurify.js` and imports
+  that, not the `dompurify` npm package — Monaco is the only package that declares
+  `dompurify` and it never imports it, so the npm-level finding is a phantom. A
+  `dompurify` override neither resolves (npm keeps `3.2.7` as `invalid … overridden`)
+  nor would change the code Monaco ships, and `0.55.1` is the latest release, so the
+  finding is tracked for a future Monaco bump rather than papered over. Dev-inclusive
+  and production high audit gates stay at exit 0 (the esbuild 0.28.1 override is
+  untouched); residual `npm audit` drops 12 → 9 (3 low `@ai-sdk`, 6 moderate including
+  the deferred `dompurify` and `postcss` chains). No runtime source changed.
 - **Esbuild advisory remediation.** A single root Vite child override forces
   esbuild to 0.28.1, clearing six high advisories
   (GHSA-gv7w-rqvm-qjhr, GHSA-g7r4-m6w7-qqqr): esbuild plus Vite, Vitest,
