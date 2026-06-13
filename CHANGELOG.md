@@ -24,6 +24,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   policy for Turbopack HMR. `style-src 'unsafe-inline'` is unchanged and
   accepted for now because Monaco, React Flow, and theme inline styles depend
   on it.
+- **Production CSP Ajv eval hotfix.** Corrected the nonce policy to retain
+  `'unsafe-eval'` because Ajv compiles schema validators in the browser via
+  `new Function`. This was discovered as a production EvalError on
+  `/runs/demo` after #17; nonce + `'strict-dynamic'` inline-injection
+  protection is unaffected. Removal is tracked behind an Ajv standalone
+  precompilation slice.
 - **Production-scope dependency audit gate.** CI now runs
   `npm audit --omit=dev --audit-level=high`, so the gate covers
   shippable dependency exposure while dev-toolchain-only esbuild/vite/vitest

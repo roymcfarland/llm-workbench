@@ -48,4 +48,39 @@ test.describe("Public smoke (no sign-in)", () => {
     await expect(page.locator("body")).toBeVisible();
     expect(cspViolations).toEqual([]);
   });
+
+  test("GET /runs/demo renders the workbench under strict CSP without script or eval violations", async ({
+    page,
+  }) => {
+    const cspViolations: string[] = [];
+    await page.context().addCookies([
+      {
+        name: "__clerk_db_jwt",
+        value: "e2e-dev-browser",
+        domain: "localhost",
+        path: "/",
+        sameSite: "Lax",
+      },
+    ]);
+
+    page.on("console", (msg) => {
+      const text = msg.text();
+      if (
+        /violates the following Content Security Policy/i.test(text) &&
+        /script-src/i.test(text)
+      ) {
+        cspViolations.push(text);
+      }
+    });
+
+    const response = await page.goto("/runs/demo");
+
+    expect(response?.status()).toBe(200);
+    expect(response?.headers()["content-security-policy"]).toContain(
+      "'strict-dynamic'",
+    );
+    await expect(page.getByText("Public demo")).toBeVisible();
+    await expect(page.locator("h1").filter({ hasText: /^run_/ })).toBeVisible();
+    expect(cspViolations).toEqual([]);
+  });
 });
