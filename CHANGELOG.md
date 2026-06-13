@@ -79,6 +79,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Runtime controller unit coverage (part 1).** Added dedicated unit suites
+  for `RunLifecycleController`, `GateController`, and `StepController`,
+  pinning controller-local error codes, state mutations, and trace-event
+  shapes so future decomposition refactors are safer.
 - **`PROJECT.md`** — authoritative source of truth for purpose, scope,
   non-goals, and the rules that automated reviewers enforce on every PR.
 - **`@llm-workbench/mcp`** — transport-agnostic Model Context Protocol

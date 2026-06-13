@@ -1,69 +1,108 @@
-# Closeout: Hotfix - Retain unsafe-eval for Ajv CSP compatibility
+# Closeout: Runtime Controller Unit Tests, Part 1
 
-This hotfix restores `'unsafe-eval'` to the production nonce-mode
-`script-src` because `@llm-workbench/runtime`'s Ajv-backed `SchemaRegistry`
-compiles validators in the browser with `new Function`. The nonce +
-`'strict-dynamic'` inline-injection protection remains in place; removing eval
-is re-tracked behind an Ajv standalone/precompiled-validator slice.
+This slice adds dedicated unit coverage for `RunLifecycleController`,
+`GateController`, and `StepController`. The suites pin controller-local error
+codes, state transitions, and trace-event shapes without changing production
+runtime code.
 
-## Motivating Incident
+## Test Inventory
 
-Production `/runs/demo` failed after #17 with the browser reporting:
+New tests added: 20.
 
-```text
-EvalError: Evaluating a string as JavaScript violates the following Content Security
-Policy directive because 'unsafe-eval' is not an allowed source of script: script-src
-'self' 'nonce-...' 'strict-dynamic' 'unsafe-inline' ...
-```
+### runLifecycleController.test.ts
 
-The prior e2e console filter matched only `/Refused to (execute|load)[^]*script/i`,
-which cannot match this EvalError wording. The new `/runs/demo` regression pin
-looks for CSP messages that reference `script-src`, so it catches both classic
-script execution/load failures and eval violations while ignoring unrelated
-dev-key Clerk `connect-src` noise.
+- `assertRunActive rejects terminal statuses with the requested action in the message`
+- `completeRun rejects terminal transition while any step is still running`
+- `completeRun and cancelRun set terminal status, endedAt, and append run_status_changed`
+- `failRun marks the run failed and preserves the error in trace`
+- `exportRunBundle rejects profile "user" without a registry`
+- `completeRun rejects a second terminal transition`
+
+### gateController.test.ts
+
+- `requestGate appends a human_gate_requested event for each gate kind without mutating gate state`
+- `initializes gate slots per policy at run start`
+- `resolveGate records each decision, note, and before-slot transition`
+- `resolveGate updates the after slot for PAUSE_AFTER gates`
+- `resolveCheckpoint mutates only the targeted checkpoint slot`
+- `resolveGate and resolveCheckpoint reject unknown step ids`
+- `rejects every gate operation once the run is no longer running`
+
+### stepController.test.ts
+
+- `beginStep starts a ready AUTO step and appends step_started`
+- `beginStep returns a BlockReason for an unresolved PAUSE_BEFORE gate without mutating status or trace`
+- `assertCanStartStep rejects a non-pending step`
+- `completeStep rejects unknown and non-running steps with controller-specific codes`
+- `completeStep on PAUSE_AFTER completes the step and requests the after gate`
+- `failStep without failFast fails the step, leaves the run running, and appends a non-fatal error`
+- `failStep with failFast also transitions the run to failed`
 
 ## Evidence
 
-### Focused CSP unit test
+### Runtime suite
 
-`npm test -w @llm-workbench/web -- lib/security/csp.test.ts --reporter verbose`
+`npm test -w @llm-workbench/runtime`
+
+Result: exit 0. Runtime test count is now 125 (105 baseline + 20 new).
 
 ```text
-> @llm-workbench/web@0.1.0 test
-> vitest run --passWithNoTests lib/security/csp.test.ts --reporter verbose
+✓ src/runtime/gateController.test.ts (7 tests) 15ms
+✓ src/runtime/stepController.test.ts (7 tests) 17ms
+✓ src/runtime/runLifecycleController.test.ts (6 tests) 79ms
 
- RUN  v4.1.5 /Users/roymcfarland/Projects/llm-workbench/apps/web
-
- ✓ lib/security/csp.test.ts > contentSecurityPolicy > uses nonce plus strict-dynamic and retains unsafe-eval for Ajv in production 5ms
- ✓ lib/security/csp.test.ts > contentSecurityPolicy > keeps unsafe-inline as a CSP2 fallback in production nonce mode 0ms
- ✓ lib/security/csp.test.ts > contentSecurityPolicy > keeps the permissive development script policy 0ms
- ✓ lib/security/csp.test.ts > contentSecurityPolicy > preserves the legacy production script policy without a nonce 0ms
- ✓ lib/security/csp.test.ts > contentSecurityPolicy > keeps non-script hardening directives unchanged in both modes 1ms
-
- Test Files  1 passed (1)
-      Tests  5 passed (5)
+Test Files  16 passed (16)
+     Tests  125 passed (125)
 ```
 
 ### Full CI
 
 `npm run ci`
 
-Result: exit 0. Workspace Vitest count remains 250:
+Result: exit 0. Workspace Vitest count is now 270:
 
 ```text
-runtime: 105
+runtime: 125
 adapters-react: 1
 ai-sdk: 27
 ui: 13
 mcp: 14
 scripts: 18
 web: 72
-total: 250
+total: 270
 ```
 
-Last CI lines:
+CI tail:
 
 ```text
+✓ Compiled successfully in 10.5s
+✓ Completed runAfterProductionCompile in 629ms
+Finished TypeScript in 5.1s ...
+✓ Generating static pages using 7 workers (51/51) in 943ms
+Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /.well-known/mcp.json
+├ ƒ /.well-known/security.txt
+├ ƒ /agents.md
+├ ƒ /api/health
+├ ƒ /api/llm
+├ ƒ /api/mcp
+├ ƒ /api/openapi.json
+├ ƒ /api/runs
+├ ƒ /api/runs/[runId]
+├ ƒ /blog
+├ ƒ /blog/[slug]
+├ ● /blog/[slug]/opengraph-image/[__metadata_id__]
+├ ● /blog/[slug]/twitter-image/[__metadata_id__]
+├ ○ /blog/opengraph-image
+├ ƒ /blog/tags/[tag]
+├ ● /blog/tags/[tag]/opengraph-image/[__metadata_id__]
+├ ● /blog/tags/[tag]/twitter-image/[__metadata_id__]
+├ ○ /blog/twitter-image
+├ ƒ /docs/protocol
 ├ ƒ /feed.xml
 ├ ƒ /humans.txt
 ├ ƒ /llms-full.txt
@@ -84,23 +123,4 @@ Last CI lines:
 ○  (Static)   prerendered as static content
 ●  (SSG)      prerendered as static HTML (uses generateStaticParams)
 ƒ  (Dynamic)  server-rendered on demand
-```
-
-### E2E smoke
-
-`cd apps/web && npx playwright install chromium`
-
-Result: exit 0, no output; Chromium cache was already warm.
-
-`cd apps/web && npm run test:e2e`
-
-```text
-Running 4 tests using 1 worker
-
-  ✓  1 [chromium] › e2e/smoke.spec.ts:4:3 › Public smoke (no sign-in) › GET /api/health (334ms)
-  ✓  2 [chromium] › e2e/smoke.spec.ts:11:3 › Public smoke (no sign-in) › GET /llms.txt (route handler, no document handshake) (11ms)
-  ✓  3 [chromium] › e2e/smoke.spec.ts:22:3 › Public smoke (no sign-in) › GET / renders under strict CSP without script violations (1.2s)
-  ✓  4 [chromium] › e2e/smoke.spec.ts:52:3 › Public smoke (no sign-in) › GET /runs/demo renders the workbench under strict CSP without script or eval violations (302ms)
-
-  4 passed (4.8s)
 ```
