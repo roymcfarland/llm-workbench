@@ -5,6 +5,20 @@ This slice adds dedicated unit coverage for `RunLifecycleController`,
 codes, state transitions, and trace-event shapes without changing production
 runtime code.
 
+## Mid-build Stop and Spec Amendment
+
+During the build, the original GateController checklist item 1 asserted that
+`requestGate` sets the targeted gate slot to `pending`. The builder hard-stopped
+instead of writing that test because the current code does not do this. Advisor
+review confirmed the code is correct by design: `requestGate` is a trace-only
+announcer for `human_gate_requested`, while gate-slot mutations are owned by
+`initialGateState()` at run start (`gates.ts:15-28`) and by `completeStep` for
+after-gate engagement (`stepController.ts:58-65`). The checklist was amended to
+pin item 1a, the announcer non-mutation contract using a `structuredClone`
+before/after assertion, and item 1b, initial slot state per policy. Those
+amended expectations are implemented in `gateController.test.ts`, with no
+production-code changes.
+
 ## Test Inventory
 
 New tests added: 20.
