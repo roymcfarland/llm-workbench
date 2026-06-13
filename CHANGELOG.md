@@ -16,6 +16,17 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **CI audit gate now reads clean via an allowlisted `audit-ci` gate.** Added the
+  `audit-ci` dev dependency + `audit-ci.jsonc`, an `npm run audit:check` script, and
+  replaced the prod-high `npm audit` CI step with `npm run audit:check`. The gate fails
+  on ANY advisory of low severity or higher that is not explicitly allowlisted **by GHSA
+  id**; the 10 current no-fix advisories are allowlisted with documented revisit triggers
+  — `@ai-sdk/provider-utils` (1 low, GHSA-866g-f22w-33x8; needs ai@6), `dompurify`
+  (8 moderate; Monaco vendors its own copy, needs monaco > 0.55.1), and `postcss`
+  (1 moderate, GHSA-qx2v-qp2m-jg93; via Next.js). A new, non-allowlisted advisory at any
+  severity now breaks CI. Note: bare `npm audit` still lists these 9 packages (npm has no
+  native suppression) — only the project gate (`npm run audit:check`) reads clean. No
+  runtime source changed.
 - **Moderate advisory cleanup (uuid via Resend; dompurify investigated & deferred).**
   Bumping `resend` `^6.12.2`→`^6.12.4` removes the `svix`→`uuid@10.0.0` subtree
   entirely — Resend replaced Svix with `standardwebhooks` at 6.12.3+ — clearing the
