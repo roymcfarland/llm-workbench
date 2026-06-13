@@ -79,6 +79,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Runtime controller unit coverage (part 2).** Added dedicated unit suites
+  for `ArtifactController`, `RuleController`, and `TraceController`,
+  completing controller-decomposition coverage with per-method mutation,
+  error-code, idempotency, routing, and trace-event assertions.
 - **Runtime controller unit coverage (part 1).** Added dedicated unit suites
   for `RunLifecycleController`, `GateController`, and `StepController`,
   pinning controller-local error codes, state mutations, and trace-event

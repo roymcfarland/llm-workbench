@@ -1,56 +1,44 @@
-# Closeout: Runtime Controller Unit Tests, Part 1
+# Closeout: Runtime Controller Unit Tests, Part 2
 
-This slice adds dedicated unit coverage for `RunLifecycleController`,
-`GateController`, and `StepController`. The suites pin controller-local error
-codes, state transitions, and trace-event shapes without changing production
-runtime code.
-
-## Mid-build Stop and Spec Amendment
-
-During the build, the original GateController checklist item 1 asserted that
-`requestGate` sets the targeted gate slot to `pending`. The builder hard-stopped
-instead of writing that test because the current code does not do this. Advisor
-review confirmed the code is correct by design: `requestGate` is a trace-only
-announcer for `human_gate_requested`, while gate-slot mutations are owned by
-`initialGateState()` at run start (`gates.ts:15-28`) and by `completeStep` for
-after-gate engagement (`stepController.ts:58-65`). The checklist was amended to
-pin item 1a, the announcer non-mutation contract using a `structuredClone`
-before/after assertion, and item 1b, initial slot state per policy. Those
-amended expectations are implemented in `gateController.test.ts`, with no
-production-code changes.
+This slice adds dedicated unit coverage for `ArtifactController`,
+`RuleController`, and `TraceController`. It completes controller-decomposition
+coverage for the six controllers with test-only changes and no production-code
+edits.
 
 ## Test Inventory
 
-New tests added: 20.
+New tests added: 22.
 
-### runLifecycleController.test.ts
+### artifactController.test.ts
 
-- `assertRunActive rejects terminal statuses with the requested action in the message`
-- `completeRun rejects terminal transition while any step is still running`
-- `completeRun and cancelRun set terminal status, endedAt, and append run_status_changed`
-- `failRun marks the run failed and preserves the error in trace`
-- `exportRunBundle rejects profile "user" without a registry`
-- `completeRun rejects a second terminal transition`
+- Checklist 1: `writeArtifact stores versions and appends artifact_written events`
+- Checklist 2: `writeArtifact rejects empty artifactKey and typeId`
+- Checklist 3: `writeArtifact returns the cached version for unchanged idempotency replay`
+- Checklist 4: `writeArtifact rejects stale and cross-artifact idempotency key reuse`
+- Checklist 5: `writeArtifactAsync auto-routes large payloads externally and small payloads inline`
+- Checklist 6: `writeArtifactAsync rejects routing "external" without a store`
+- Checklist 7: `materializeArtifact rejects unknown keys and returns inline data directly`
+- Extra controller edge: `materializeArtifact rejects external artifacts when no store is configured`
+- Checklist 8: `patchArtifact applies JSON Patch, versions the artifact, and rejects unknown keys`
 
-### gateController.test.ts
+### ruleController.test.ts
 
-- `requestGate appends a human_gate_requested event for each gate kind without mutating gate state`
-- `initializes gate slots per policy at run start`
-- `resolveGate records each decision, note, and before-slot transition`
-- `resolveGate updates the after slot for PAUSE_AFTER gates`
-- `resolveCheckpoint mutates only the targeted checkpoint slot`
-- `resolveGate and resolveCheckpoint reject unknown step ids`
-- `rejects every gate operation once the run is no longer running`
+- Checklist 1: `replaceRuleSet stores and overwrites rule sets while appending rule_changed`
+- Checklist 2: `reorderRules applies a valid permutation, renumbers priorities, and appends rule_changed`
+- Checklist 3: `reorderRules rejects unknown rule sets and unknown rule ids`
+- Checklist 4: `annotate appends annotation without mutating run state`
+- Checklist 5: `forkNotice appends run_forked without mutating run state`
 
-### stepController.test.ts
+### traceController.test.ts
 
-- `beginStep starts a ready AUTO step and appends step_started`
-- `beginStep returns a BlockReason for an unresolved PAUSE_BEFORE gate without mutating status or trace`
-- `assertCanStartStep rejects a non-pending step`
-- `completeStep rejects unknown and non-running steps with controller-specific codes`
-- `completeStep on PAUSE_AFTER completes the step and requests the after gate`
-- `failStep without failFast fails the step, leaves the run running, and appends a non-fatal error`
-- `failStep with failFast also transitions the run to failed`
+- Checklist 1: `logModelIO preserves full payloads, strips summary payloads, and mutates no state`
+- Checklist 1: `logModelIO defaults to summary detail and strips payload without mutating state`
+- Checklist 2: `beginSpan emits span_started and end appends span_ended only once`
+- Checklist 3: `end records error status and payload on span_ended`
+- Checklist 4: `span resolves the callback value and emits a single ok span`
+- Checklist 4: `span records WorkbenchError details and rethrows the original error`
+- Checklist 5: `logToolCall rejects empty names and appends valid tool_call events without state mutation`
+- Checklist 6: `rejects TraceController writes once the run is terminal`
 
 ## Evidence
 
@@ -58,41 +46,41 @@ New tests added: 20.
 
 `npm test -w @llm-workbench/runtime`
 
-Result: exit 0. Runtime test count is now 125 (105 baseline + 20 new).
+Result: exit 0. Runtime test count is now 147 (125 baseline + 22 new).
 
 ```text
-✓ src/runtime/gateController.test.ts (7 tests) 15ms
-✓ src/runtime/stepController.test.ts (7 tests) 17ms
-✓ src/runtime/runLifecycleController.test.ts (6 tests) 79ms
+✓ src/runtime/artifactController.test.ts (9 tests) 18ms
+✓ src/runtime/traceController.test.ts (8 tests) 14ms
+✓ src/runtime/ruleController.test.ts (5 tests) 13ms
 
-Test Files  16 passed (16)
-     Tests  125 passed (125)
+Test Files  19 passed (19)
+     Tests  147 passed (147)
 ```
 
 ### Full CI
 
 `npm run ci`
 
-Result: exit 0. Workspace Vitest count is now 270:
+Result: exit 0. Workspace Vitest count is now 292:
 
 ```text
-runtime: 125
+runtime: 147
 adapters-react: 1
 ai-sdk: 27
 ui: 13
 mcp: 14
 scripts: 18
 web: 72
-total: 270
+total: 292
 ```
 
 CI tail:
 
 ```text
-✓ Compiled successfully in 10.5s
-✓ Completed runAfterProductionCompile in 629ms
-Finished TypeScript in 5.1s ...
-✓ Generating static pages using 7 workers (51/51) in 943ms
+✓ Compiled successfully in 9.1s
+✓ Completed runAfterProductionCompile in 485ms
+Finished TypeScript in 4.8s ...
+✓ Generating static pages using 7 workers (51/51) in 891ms
 Finalizing page optimization ...
 
 Route (app)
