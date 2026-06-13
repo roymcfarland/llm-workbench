@@ -34,6 +34,39 @@ See [CHANGELOG.md](CHANGELOG.md) for the full list.
 truth for purpose, scope, non-goals, and the rules that automated reviewers
 enforce on every PR.
 
+## See It Live
+
+- **Interactive demo (no signup):** https://www.llmworkbench.io/runs/demo — a
+  read-only LLM Workbench run rendered exactly as an authenticated run is.
+- **Overview & docs:** https://www.llmworkbench.io · https://www.llmworkbench.io/docs/protocol
+
+## For Reviewers
+
+If you're reviewing this repo, a useful 15-minute path is:
+
+1. Open the live demo first: https://www.llmworkbench.io/runs/demo.
+2. Skim [PROJECT.md](PROJECT.md), then the [Architecture](#architecture)
+   section below.
+3. Read one representative source file:
+   [`packages/runtime/src/runtime/session.ts`](packages/runtime/src/runtime/session.ts).
+4. Read one representative test suite:
+   [`packages/runtime/src/runtime/workbench.test.ts`](packages/runtime/src/runtime/workbench.test.ts).
+
+## How This Repo Is Built
+
+Most changes are shipped as deliberately small slices. The maintainer
+acts as architect/advisor: designing scope, grounding the prompt in repository
+recon, catching spec errors, reviewing the implementation, and deciding whether
+to merge. A coding agent then implements the scoped PR, and a separate verifier
+agent independently checks it against [PROJECT.md](PROJECT.md) with a
+structured APPROVE/REJECT verdict.
+
+The process artifacts at repo root are there on purpose. [PROJECT.md](PROJECT.md)
+is the contract both agents are held to. [CLOSEOUT.md](CLOSEOUT.md) is the
+latest slice's build record. [VERIFIER-AUDIT-PR8.md](VERIFIER-AUDIT-PR8.md)
+and [VERIFIER-AUDIT-PR10.md](VERIFIER-AUDIT-PR10.md) are independent
+verification transcripts from specific PRs.
+
 ## Why It Exists
 
 LLM apps fail in boring, expensive ways:

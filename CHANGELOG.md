@@ -79,6 +79,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Reviewer-facing docs.** Added example READMEs for `job-search-demo` and
+  `run-repo-server`, plus a live-demo callout, reviewer start-here path, and
+  builder/verifier process explainer in the root README.
 - **Runtime controller unit coverage (part 2).** Added dedicated unit suites
   for `ArtifactController`, `RuleController`, and `TraceController`,
   completing controller-decomposition coverage with per-method mutation,
