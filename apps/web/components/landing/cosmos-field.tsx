@@ -36,7 +36,6 @@ export function CosmosField({ className }: { className?: string }) {
     let t = 0;
     let reduced = prefersReducedMotion();
     let dark = isDarkTheme();
-    const mouse = { x: 0.5, y: 0.5, active: false };
 
     const mqReduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     const onReduce = () => {
@@ -77,19 +76,6 @@ export function CosmosField({ className }: { className?: string }) {
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
     resize();
-
-    const onMove = (e: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = ((e.clientX - rect.left) / Math.max(rect.width, 1)) * w;
-      mouse.y = ((e.clientY - rect.top) / Math.max(rect.height, 1)) * h;
-      mouse.active = true;
-    };
-    const onLeave = () => {
-      mouse.active = false;
-    };
-
-    window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerleave", onLeave, { passive: true });
 
     const trailClear = () => {
       dark = isDarkTheme();
@@ -137,20 +123,11 @@ export function CosmosField({ className }: { className?: string }) {
       const lineBase = dark ? "148, 163, 184" : "100, 116, 139";
       const dotFill = dark ? "rgba(226, 232, 240, 0.5)" : "rgba(51, 65, 85, 0.65)";
 
-      const mx = mouse.active ? mouse.x : w * 0.5;
-      const my = mouse.active ? mouse.y : h * 0.45;
-
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
         if (p.x < 0 || p.x > w) p.vx *= -1;
         if (p.y < 0 || p.y > h) p.vy *= -1;
-        const ax = (mx - p.x) * 0.000085;
-        const ay = (my - p.y) * 0.000085;
-        p.vx += ax;
-        p.vy += ay;
-        p.vx *= 0.993;
-        p.vy *= 0.993;
       }
 
       for (let i = 0; i < particles.length; i++) {
@@ -191,8 +168,6 @@ export function CosmosField({ className }: { className?: string }) {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerleave", onLeave);
       mqReduce.removeEventListener("change", onReduce);
       moTheme.disconnect();
     };

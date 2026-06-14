@@ -1,64 +1,31 @@
-# Closeout: Beloved-story `/runs/demo` scenario rotation
+# Closeout: Landing hero starfield ignores cursor input
 
-This slice replaces the single public job-search demo with five seeded,
-read-only agent traces from beloved books and movies. The route remains
-`force-dynamic`, picks a random scenario by default, and supports
-`/runs/demo?s=<id>` for pinned verification/share links.
+This slice removes cursor-driven motion from the landing-page hero atmosphere while
+preserving the existing autonomous animation in both render paths.
 
 ## Outcome
 
-- Added the five scenarios under `apps/web/lib/landing/scenarios/`:
-  `ring`, `hogwarts`, `delorean`, `deepThought`, and `wonka`.
-- Added client-safe scenario artifact/rule schemas and registered them in
-  `RunDetailClient` alongside the existing demo schemas.
-- Changed `buildDemoRunSerialized(scenarioId?)` to select a pinned scenario
-  or a random one, then return `title` and `blurb` for the demo page subtitle.
-- Exposed in-character human approval notes in trace rows so the approval gate
-  is visible in the read-only demo.
-- No `packages/runtime` changes, no `apps/web/lib/workflow/job-search.ts`
-  changes, and no dependency/package-lock changes.
+- The Three.js hero no longer installs a pointer listener or lerps the camera toward pointer
+  coordinates; the existing Canvas camera position stays fixed at `[0, 0, 4.55]`.
+- The canvas fallback no longer tracks pointer position or applies mouse-attraction forces.
+- Ambient motion is preserved: galaxy particles continue drifting/rotating, wire rings rotate,
+  sparkles twinkle, and the canvas nebula blobs and particles keep animating on their own.
+- No tests were added or changed; this is a visual/UI-only behavior change in two components.
 
-## Files changed
+## Files Changed
 
-- `apps/web/lib/landing/scenarios/*`
-- `apps/web/lib/landing/demo-run.ts`
-- `apps/web/app/runs/demo/page.tsx`
-- `apps/web/components/run-detail-client.tsx`
+- `apps/web/components/landing/hero-atmosphere.tsx`
+- `apps/web/components/landing/cosmos-field.tsx`
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
 ## Verification
 
-```text
-npm run build                                      pass
-npm run typecheck -w @llm-workbench/web           pass
-npm run lint -w @llm-workbench/web                pass
-npm test -w @llm-workbench/web                    pass, 79 tests
-npm run build:web                                 pass
-LLM_WB_E2E_DISABLE_DNS_SHIM=1 npm run test:e2e -w apps/web
-                                                    pass, 4 tests
-npm run ci                                        pass
-npm run audit:check                               pass
-```
-
-## Manual render check
-
-`npm run dev:web` served the app at `http://localhost:3000`. The pinned routes
-below each rendered the scenario title/blurb, completed workflow stats,
-model/tool/gate trace events, visible in-character gate notes, clean artifact
-tabs, and approved gate state:
-
-```text
-/runs/demo?s=ring
-/runs/demo?s=hogwarts
-/runs/demo?s=delorean
-/runs/demo?s=deepThought
-/runs/demo?s=wonka
-```
-
-Refreshing `/runs/demo` 15 times returned all five scenarios at least once:
-`ring`, `hogwarts`, `delorean`, `deepThought`, and `wonka`.
-
-The only dev-browser console noise observed during the manual pass was the
-existing dummy Clerk script timeout; there were no hydration, schema, CSP, or
-eval failures from this slice. The e2e CSP smoke remained green.
+- `npm run build`
+- `npm run typecheck -w @llm-workbench/web`
+- `npm run lint -w @llm-workbench/web`
+- `npm test -w @llm-workbench/web`
+- `npm run build:web`
+- `npm run ci`
+- Manual dev check: moving the cursor over the landing hero no longer moves the stars, while
+  ambient drift, sparkles, ring rotation, and nebula glow continue animating.
