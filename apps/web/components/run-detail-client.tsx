@@ -4,9 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   HttpRunRepository,
-  SchemaRegistry,
   WorkbenchRuntime,
-  registerDemoSchemas,
   summarizeModelTelemetry,
   type RunStoreState,
   type TraceEvent,
@@ -27,7 +25,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { registerScenarioSchemas } from "@/lib/landing/scenarios/schemas";
+import { buildPrecompiledRegistry } from "@/lib/security/precompiled-registry";
 
 type Props = {
   runId: string;
@@ -83,12 +81,7 @@ function summarizeEvent(e: TraceEvent): string {
 }
 
 export function RunDetailClient({ runId, serialized, readOnly }: Props) {
-  const registry = useMemo(() => {
-    const r = new SchemaRegistry();
-    registerDemoSchemas(r);
-    registerScenarioSchemas(r);
-    return r;
-  }, []);
+  const registry = useMemo(() => buildPrecompiledRegistry(), []);
   const runtime = useMemo(() => new WorkbenchRuntime(), []);
   const repo = useMemo(
     () =>

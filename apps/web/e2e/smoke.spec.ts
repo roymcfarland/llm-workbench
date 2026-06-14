@@ -52,7 +52,7 @@ test.describe("Public smoke (no sign-in)", () => {
   test("GET /runs/demo renders the workbench under strict CSP without script or eval violations", async ({
     page,
   }) => {
-    const cspViolations: string[] = [];
+    const scriptOrEvalViolations: string[] = [];
     await page.context().addCookies([
       {
         name: "__clerk_db_jwt",
@@ -66,22 +66,29 @@ test.describe("Public smoke (no sign-in)", () => {
     page.on("console", (msg) => {
       const text = msg.text();
       if (
-        /violates the following Content Security Policy/i.test(text) &&
-        /script-src/i.test(text)
+        (/violates the following Content Security Policy/i.test(text) &&
+          /script-src/i.test(text)) ||
+        /Refused to evaluate|unsafe-eval|EvalError/i.test(text)
       ) {
-        cspViolations.push(text);
+        scriptOrEvalViolations.push(text);
+      }
+    });
+
+    page.on("pageerror", (error) => {
+      if (/Refused to evaluate|unsafe-eval|EvalError/i.test(error.message)) {
+        scriptOrEvalViolations.push(error.message);
       }
     });
 
     const response = await page.goto("/runs/demo");
+    const csp = response?.headers()["content-security-policy"];
 
     expect(response?.status()).toBe(200);
-    expect(response?.headers()["content-security-policy"]).toContain(
-      "'strict-dynamic'",
-    );
+    expect(csp).toContain("'strict-dynamic'");
+    expect(csp).not.toContain("'unsafe-eval'");
     await expect(page.getByText("Public demo")).toBeVisible();
     await expect(page.locator("h1").filter({ hasText: /^run_/ })).toBeVisible();
-    expect(cspViolations).toEqual([]);
+    expect(scriptOrEvalViolations).toEqual([]);
   });
 
   test("navigating to a new demo run via the header does not hang on hydration", async ({
