@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Public demo run · LLM Workbench",
     description:
-      "Seeded sample run (jobSearchWorkflow). Read-only preview of the sandbox — no Clerk session required.",
+      "A seeded sample agent run — read-only preview of the sandbox with no Clerk session required.",
     url: "/runs/demo",
     type: "website",
     siteName: "LLM Workbench",
@@ -36,8 +36,15 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function DemoRunPage() {
-  const { runId, serialized } = buildDemoRunSerialized();
+type DemoRunPageProps = {
+  searchParams: Promise<{ s?: string | string[] }>;
+};
+
+export default async function DemoRunPage({ searchParams }: DemoRunPageProps) {
+  const params = await searchParams;
+  const scenarioId = Array.isArray(params.s) ? params.s[0] : params.s;
+  const { runId, serialized, title, blurb } = buildDemoRunSerialized(scenarioId);
+
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
@@ -59,11 +66,11 @@ export default function DemoRunPage() {
           {runId}
         </h1>
         <span className="text-sm text-[var(--color-muted-foreground)]">
-          jobSearchWorkflow · seeded sample
+          {title} · {blurb}
         </span>
       </div>
 
-      <RunDetailClient runId={runId} serialized={serialized} readOnly />
+      <RunDetailClient key={runId} runId={runId} serialized={serialized} readOnly />
     </div>
   );
 }
