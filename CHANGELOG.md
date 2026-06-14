@@ -6,6 +6,15 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **Beloved-story public demo runs.** `/runs/demo` now rotates through five
+  seeded agent traces — Fellowship Logistics Agent, Owl Post Admissions Agent,
+  DeLorean Flight Computer, Ultimate Question Solver, and Golden Ticket
+  Auditor — with `?s=<id>` pinning for shareable verification links. Scenario
+  content and permissive artifact schemas live under `apps/web`; the runtime
+  package and job-search reference workflow are unchanged.
+
 ### Fixed
 
 - **Error-path hardening (runtime + MCP).** `cancelRunCascade` now logs
@@ -110,7 +119,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`docs/HANDOFF.md` removed.** Superseded by `PROJECT.md` as the
   authoritative spec.
 
-### Added
+### Added (Unreleased, continued)
 
 - **Reviewer-facing docs.** Added example READMEs for `job-search-demo` and
   `run-repo-server`, plus a live-demo callout, reviewer start-here path, and
