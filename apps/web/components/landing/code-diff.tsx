@@ -9,8 +9,8 @@ import { openai } from '@ai-sdk/openai';
 
 const result = await generateText({
   model: openai('gpt-4o-mini'),
-  system: 'You score job listings.',
-  prompt: 'Rate this listing 1-10: ' + listing,
+  system: 'You are the DeLorean flight computer.',
+  prompt: 'Power needed to hit 88 mph: ' + plan,
 });
 
 console.log(result.text);
@@ -23,10 +23,10 @@ import { openai } from '@ai-sdk/openai';
 
 const result = await tracedGenerateText({
   session,                       // workbench run handle
-  stepId: 'scoreListing',
+  stepId: 'computePower',
   model: openai('gpt-4o-mini'),
-  system: 'You score job listings.',
-  prompt: 'Rate this listing 1-10: ' + listing,
+  system: 'You are the DeLorean flight computer.',
+  prompt: 'Power needed to hit 88 mph: ' + plan,
 });
 
 // emits model_io + spans, persists artifact, all gated by policy
@@ -47,21 +47,21 @@ const TRACED_HINTS: TraceHint[] = [
   {
     line: 4,
     events: [
-      "span_started · scoreListing.generateText",
+      "span_started · computePower.generateText",
       "model_io · request",
     ],
   },
   {
     line: 5,
     events: [
-      "session.beginStep('scoreListing')  // recorded automatically",
+      "session.beginStep('computePower')  // recorded automatically",
     ],
   },
   {
     line: 6,
     events: [
-      "model_io · response · gpt-4o-mini · 220ms · 150 tok · $0.003",
-      "span_ended · scoreListing.generateText",
+      "model_io · response · gpt-4o-mini · 300ms · 270 tok · $0.0072",
+      "span_ended · computePower.generateText",
     ],
   },
   {
@@ -74,7 +74,7 @@ const TRACED_HINTS: TraceHint[] = [
     line: 12,
     events: [
       "policy · PAUSE_AFTER pauses run for human review",
-      "artifact_written · scoredListing v1",
+      "artifact_written · powerPlan v1",
     ],
   },
 ];

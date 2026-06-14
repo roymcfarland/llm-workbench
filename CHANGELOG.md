@@ -99,6 +99,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Landing one-import demo now matches the DeLorean theme.** The code-diff
+  sample now uses the DeLorean flight computer, `computePower`, and `88 mph`
+  power-planning copy, while the telemetry rain swaps the remaining
+  job-search sample keys for `setCircuits`, `flightCard`, and `launch`.
 - **Landing hero now previews a DeLorean time-jump trace.** The live workflow
   console and static fallback now show `setCircuits → power → launch` with the
   `claude-sonnet-4-5` power-planning event, and the Three.js wire rings are
