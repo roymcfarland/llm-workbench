@@ -22,6 +22,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/health",
   "/docs/(.*)",
   "/runs/demo",
+  "/faq",
   "/blog",
   "/blog/(.*)",
   "/feed.xml",
