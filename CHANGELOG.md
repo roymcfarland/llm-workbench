@@ -42,6 +42,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Production CSP no longer needs `'unsafe-eval'`.** The run-detail client now
+  registers demo and scenario schemas with build-time Ajv standalone validators
+  and a coverage guard that fails loudly if any client schema is missing its
+  precompiled validator. Production nonce CSP removes `'unsafe-eval'`,
+  superseding the earlier Ajv eval hotfix; development and no-nonce response
+  paths keep it for Turbopack HMR / legacy compatibility.
 - **CI audit gate now reads clean via an allowlisted `audit-ci` gate.** Added the
   `audit-ci` dev dependency + `audit-ci.jsonc`, an `npm run audit:check` script, and
   replaced the prod-high `npm audit` CI step with `npm run audit:check`. The gate fails

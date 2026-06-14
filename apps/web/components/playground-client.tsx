@@ -5,9 +5,7 @@ import { Loader2, RefreshCw, Save, Sparkles } from "lucide-react";
 
 import {
   HttpRunRepository,
-  SchemaRegistry,
   WorkbenchRuntime,
-  registerDemoSchemas,
 } from "@llm-workbench/runtime";
 import { WorkbenchShell } from "@llm-workbench/ui";
 
@@ -24,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { userFacingWorkbenchMessage } from "@/lib/http/workbench-user-message";
 import { compileProfileAction } from "@/lib/runtime/server-actions";
+import { buildPrecompiledRegistry } from "@/lib/security/precompiled-registry";
 import {
   SAMPLE_RESUME,
   initialRuleSet,
@@ -33,11 +32,7 @@ import {
 type Status = "idle" | "running" | "saving" | "error";
 
 export function PlaygroundClient() {
-  const registry = useMemo(() => {
-    const r = new SchemaRegistry();
-    registerDemoSchemas(r);
-    return r;
-  }, []);
+  const registry = useMemo(() => buildPrecompiledRegistry(), []);
 
   const runtime = useMemo(() => new WorkbenchRuntime(), []);
   // HttpRunRepository talks to *this app's* /api/runs. Cookies are forwarded
