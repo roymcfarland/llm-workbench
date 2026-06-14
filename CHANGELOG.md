@@ -8,6 +8,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Four new blog posts.** Added `Anatomy of a run bundle`, `Why our demo runs
+  the One Ring and a DeLorean`, `Hunting unsafe-eval`, and a `Shipping log`
+  recap under `apps/web/content/blog`, dated across the prior cadence
+  (2026-05-12 → 2026-06-13). Markdown-only; content is validated by the existing
+  blog front-matter schema and index tests, and the recap links internally to
+  `/blog/hunting-unsafe-eval`.
 - **Mobile navigation and FAQ page.** Added a keyboard-accessible mobile
   hamburger menu that exposes Blog, Demo, Protocol, FAQ, and signed-in app
   links on phones, plus a `/faq` page with visible Q&A and FAQPage JSON-LD

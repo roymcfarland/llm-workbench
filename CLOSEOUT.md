@@ -1,53 +1,47 @@
-# Closeout: mobile nav and FAQ page
+# Closeout: four blog posts
 
 ## Summary
 
-Added a small client-side mobile hamburger menu while keeping `SiteHeader` as a
-server component. Added a public `/faq` route whose visible Q&A list and
-`FAQPage` JSON-LD are generated from one shared FAQ array, then linked it from
-the desktop nav and footer.
+Added four Markdown blog posts under `apps/web/content/blog`, dated across the
+gap since the previous post (2026-05-12 → 2026-06-13) for a steady publishing
+cadence:
+
+- `anatomy-of-a-run-bundle.md` (2026-05-12) — protocol / run-bundle deep dive.
+- `why-our-demo-runs-a-delorean.md` (2026-05-21) — why the public demo runs
+  beloved-story scenarios on the real engine.
+- `hunting-unsafe-eval.md` (2026-06-02) — removing `'unsafe-eval'` from the
+  production CSP via precompiled Ajv validators.
+- `shipping-log-june-2026.md` (2026-06-13) — a what's-new recap; links
+  internally to `/blog/hunting-unsafe-eval`.
+
+No application code changed. Slugs derive from filenames, so the recap's
+internal `/blog/hunting-unsafe-eval` link resolves to the unsafe-eval post.
 
 ## Files Changed
 
-- `apps/web/components/site-header.tsx`
-- `apps/web/components/site-nav-mobile.tsx`
-- `apps/web/app/faq/page.tsx`
-- `apps/web/components/landing/site-footer.tsx`
+- `apps/web/content/blog/anatomy-of-a-run-bundle.md` (new)
+- `apps/web/content/blog/why-our-demo-runs-a-delorean.md` (new)
+- `apps/web/content/blog/hunting-unsafe-eval.md` (new)
+- `apps/web/content/blog/shipping-log-june-2026.md` (new)
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
 ## Verification
 
-- `git checkout main`, `git fetch --prune`, and `git pull --ff-only origin main`
-  completed with `main` already up to date; branch created:
-  `feat/mobile-nav-and-faq`.
-- `npm run build` exits 0.
-- `npm run typecheck -w @llm-workbench/web` exits 0.
-- `npm run lint -w @llm-workbench/web` exits 0.
-- `npm test -w @llm-workbench/web` exits 0: 12 files, 81 tests.
-- `npm run ci` exits 0. The Next build route table includes `/faq`.
-- `LLM_WB_E2E_DISABLE_DNS_SHIM=1 npm run test:e2e -w apps/web` first hit a
-  sandbox-only `listen EPERM 0.0.0.0:3399`; rerunning the same command with
-  escalation exits 0: 5 Chromium e2e tests passed.
-- `npm run dev:web` starts on `http://localhost:3000`.
-- Live dev-server `/faq` fetch validates:
-  - H1 present.
-  - 10 visible Q&A items.
-  - Parsed `FAQPage` JSON-LD with 10 `mainEntity` questions.
-  - First question: `What is LLM Workbench?`
-  - Last question: `How do I try it?`
-  - Final answer contains real `/runs/demo` and `/playground` links.
-- Live dev-server home/header fetch validates:
-  - mobile menu button is rendered with `aria-label="Open menu"`.
-  - `aria-expanded="false"` on initial render.
-  - Blog, Demo, Protocol, and FAQ links are present in the rendered chrome.
+- `npm test -w @llm-workbench/web` exits 0: 12 files, 81 tests. The blog index
+  tests validate every post's front matter (zod), headings (h2–h4), and
+  rendered HTML across all 13 posts.
+- `npm run build:web` compiles successfully; static generation runs 64/64
+  (includes each new post's OG/Twitter image routes via `generateStaticParams`,
+  so the build exercises every new post's front matter).
+- `npm run ci` exits 0 (root build, all workspace tests, typecheck, lint,
+  build:web).
+- `apps/web/content/blog` now holds 13 `.md` files (9 prior + 4 new). `/blog`
+  is server-rendered and lists posts newest-first, so the four interleave by
+  date; `/blog/[slug]` resolves each, including `hunting-unsafe-eval`.
 
-## Manual Browser Note
+## Notes
 
-The Codex in-app Browser refused to open `http://localhost:3000` under its URL
-policy, so a visual click-through at mobile width was not possible in this
-session. I did not attempt to work around that browser policy with another
-browser surface. The mobile menu implementation is still covered by typecheck,
-lint, production build, static rendered-header checks, and code inspection for
-the required handlers: link click, `Escape`, outside pointer, and
-`aria-expanded`.
+Markdown-only content slice. No middleware/allowlist change needed — `/blog`
+and `/blog/(.*)` are already public routes. Publication dates are intentionally
+spread across the May–June window rather than all stamped "today".
