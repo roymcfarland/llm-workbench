@@ -1,48 +1,34 @@
-# Closeout: Landing drifting craft
+# Closeout: CosmosField reduced-motion ReferenceError fix
 
-This slice adds a subtle, self-contained drifting craft overlay to the landing
-hero background without changing the existing atmosphere, starfield, hero copy,
-or content layers.
+Fixes a temporal-dead-zone crash in the landing's canvas atmosphere fallback
+(`CosmosField`) that only triggered under `prefers-reduced-motion: reduce`.
 
-## Outcome
+## Problem
 
-- Added a `"use client"` `DriftingCraft` overlay that schedules one distant
-  craft at a time, with a small chance of a second overlapping pass.
-- The six inline SVG silhouettes are primitive-only: satellite, ringed orbital
-  station, flying saucer, winged star-fighter, Death-Star-ish sphere, and
-  X-wing-ish fighter.
-- Drift paths randomize craft type, top-biased vertical placement, direction,
-  scale, vertical drift, duration, opacity, and tiny rotation.
-- The overlay is `aria-hidden`, `pointer-events: none`, and renders nothing
-  when `prefers-reduced-motion: reduce` is active.
-- Existing atmosphere, mesh, gradient, noise, and hero content layers are
-  unchanged apart from inserting the new background sibling.
+Inside the main `useEffect`, the initial `resize()` was invoked before the
+`paintStatic` `const` arrow function was defined. Under reduced motion, `resize()`
+runs `if (reduced) paintStatic();`, so it hit `paintStatic` while it was still in
+the temporal dead zone → `ReferenceError: Cannot access 'paintStatic' before
+initialization`. Result: users with reduced motion got a console error and a blank
+atmosphere (the static fallback never painted). Pre-existing; surfaced during QA of
+the drifting-craft PR (#30), not introduced by #30 or #27.
+
+## Fix
+
+- Moved the `const ro = new ResizeObserver(resize); ro.observe(canvas); resize();`
+  block to **after** the `trailClear`/`paintStatic` definitions, so the initial
+  `resize()` no longer runs in their TDZ. Behavior is otherwise identical — no change
+  to the animation loop or the #27 cursor-removal.
 
 ## Files Changed
 
-- `apps/web/components/landing/drifting-craft.tsx`
-- `apps/web/app/page.tsx`
+- `apps/web/components/landing/cosmos-field.tsx`
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
-## Verification
+## Evidence
 
-- `npm run build`
-- `npm run typecheck -w @llm-workbench/web`
-- `npm run lint -w @llm-workbench/web`
-- `npm test -w @llm-workbench/web`
-  - First cold run timed out in four existing `lib/rate-limit/edge.test.ts`
-    cases after slow transform/import; an immediate rerun passed 11 files /
-    79 tests.
-- `npm run ci`
-- Manual browser check of `/` after `npm run dev:web`:
-  - Normal motion: after ~14s, one craft was active at opacity `0.194`,
-    `pointer-events: none`, `aria-hidden="true"`, and `z-index: -20`.
-  - Reduced motion: with `reducedMotion: "reduce"`, the drifting-craft styles
-    and items did not mount.
-  - The craft appeared as a subtle upper-right background silhouette behind the
-    hero content.
-  - Existing local-dev noise remains from Clerk's test/dummy script host. A
-    separate existing reduced-motion error also surfaced in `CosmosField`
-    (`Cannot access 'paintStatic' before initialization`); this slice leaves the
-    atmosphere untouched per scope.
+- `npm run ci` exits 0 (build, 299 vitest, typecheck, lint, web build).
+- `paintStatic` defined before the immediate `resize()` call (verified by line order).
+- Manual: with DevTools "Emulate prefers-reduced-motion: reduce", `/` loads with a
+  clean console (no `ReferenceError`) and the static atmosphere paints.

@@ -73,10 +73,6 @@ export function CosmosField({ className }: { className?: string }) {
       if (reduced) paintStatic();
     };
 
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-    resize();
-
     const trailClear = () => {
       dark = isDarkTheme();
       ctx.fillStyle = dark ? "rgba(12, 12, 15, 0.22)" : "rgba(250, 250, 252, 0.35)";
@@ -100,6 +96,12 @@ export function CosmosField({ className }: { className?: string }) {
         ctx.fillRect(0, 0, w, h);
       }
     };
+
+    // Observe + paint AFTER trailClear/paintStatic are defined: resize() calls
+    // paintStatic() under reduced motion, so it must not run in their TDZ.
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+    resize();
 
     const draw = () => {
       dark = isDarkTheme();
