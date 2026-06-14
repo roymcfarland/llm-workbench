@@ -8,6 +8,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Landing hero drifting craft.** The hero background now occasionally launches
+  a tiny, low-opacity sci-fi silhouette across the starfield as a separate
+  pointer-ignored, reduced-motion-safe overlay behind the content.
 - **Beloved-story public demo runs.** `/runs/demo` now rotates through five
   seeded agent traces — Fellowship Logistics Agent, Owl Post Admissions Agent,
   DeLorean Flight Computer, Ultimate Question Solver, and Golden Ticket
