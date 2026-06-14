@@ -167,7 +167,12 @@ function UniverseScene({
         size={isMobile ? 0.015 : 0.01}
         speed={-0.016}
       />
-      <Float speed={1.85} rotationIntensity={0.45} floatIntensity={0.62}>
+      <Float
+        speed={1.85}
+        rotationIntensity={0.45}
+        floatIntensity={0.62}
+        position={[1.7, -0.15, 0]}
+      >
         <WireHaloRings />
       </Float>
       <Sparkles

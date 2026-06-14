@@ -99,6 +99,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Landing hero now previews a DeLorean time-jump trace.** The live workflow
+  console and static fallback now show `setCircuits → power → launch` with the
+  `claude-sonnet-4-5` power-planning event, and the Three.js wire rings are
+  offset around the console so the hero subheading stays unobstructed.
 - **Landing hero starfield no longer reacts to the cursor.** Removed the pointer-parallax
   camera follow (Three.js hero) and the mouse-attraction force (canvas fallback). Stars keep
   their ambient drift, nebula glow, sparkles, and ring rotation, but no longer move in response

@@ -4,12 +4,63 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   WorkbenchRuntime,
+  type RuleSet,
   type RunStoreState,
   type TraceEvent,
+  type WorkflowSpec,
 } from "@llm-workbench/runtime";
 import { WorkflowGraph } from "@llm-workbench/ui";
 
-import { initialRuleSet, jobSearchWorkflow } from "@/lib/workflow/job-search";
+const timeJumpWorkflow = {
+  id: "timeJump",
+  version: 1,
+  title: "DeLorean Flight Computer",
+  steps: [
+    {
+      id: "setCircuits",
+      gatePolicy: "AUTO",
+      inputs: [],
+      outputs: ["timeCircuits"],
+    },
+    {
+      id: "power",
+      gatePolicy: "PAUSE_BEFORE",
+      inputs: ["timeCircuits"],
+      outputs: ["powerPlan"],
+    },
+    {
+      id: "launch",
+      gatePolicy: "PAUSE_AFTER",
+      inputs: ["powerPlan"],
+      outputs: ["flightCard"],
+    },
+  ],
+  edges: [
+    { id: "e1", from: "setCircuits", to: "power" },
+    { id: "e2", from: "power", to: "launch" },
+  ],
+} satisfies WorkflowSpec;
+
+const temporalSafetyRuleSet = {
+  id: "temporal-safety",
+  ruleSchemaId: "demoRule",
+  rules: [
+    {
+      id: "r1",
+      priority: 0,
+      enabled: true,
+      label: "Avoid your past self",
+      payload: { kind: "forbid", value: "self-encounter" },
+    },
+    {
+      id: "r2",
+      priority: 1,
+      enabled: true,
+      label: "Preserve the continuum",
+      payload: { kind: "policy", value: "no-paradox" },
+    },
+  ],
+} satisfies RuleSet;
 
 function useReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
@@ -130,8 +181,8 @@ export function HeroLiveRun() {
     if (runId) runtime.deleteRun(runId);
 
     const { runId: newId } = runtime.startRun({
-      workflow: jobSearchWorkflow,
-      ruleSets: [initialRuleSet],
+      workflow: timeJumpWorkflow,
+      ruleSets: [temporalSafetyRuleSet],
     });
     setRunId(newId);
     setTrace([]);
@@ -145,7 +196,7 @@ export function HeroLiveRun() {
       });
     });
 
-    const stepIds = ["parser1", "jobSearcher", "output"] as const;
+    const stepIds = ["setCircuits", "power", "launch"] as const;
     const stepDelay = reducedMotion ? 0 : 600;
 
     const schedule = (fn: () => void, ms: number) => {
@@ -157,21 +208,22 @@ export function HeroLiveRun() {
     };
 
     let t = 0;
-    // Resolve PAUSE_BEFORE on parser1, then begin/complete each step.
-    schedule(() => {
-      try {
-        session.resolveGate({
-          stepId: "parser1",
-          gate: "PAUSE_BEFORE",
-          decision: "approved",
-        });
-      } catch {
-        /* gate already resolved */
+    stepIds.forEach((stepId) => {
+      if (stepId === "power") {
+        schedule(() => {
+          try {
+            session.resolveGate({
+              stepId,
+              gate: "PAUSE_BEFORE",
+              decision: "approved",
+            });
+          } catch {
+            /* gate already resolved */
+          }
+        }, t);
+        t += stepDelay;
       }
-    }, t);
-    t += stepDelay;
 
-    stepIds.forEach((stepId, idx) => {
       schedule(() => {
         try {
           session.beginStep(stepId);
@@ -181,18 +233,17 @@ export function HeroLiveRun() {
       }, t);
       t += stepDelay;
 
-      // Middle step gets a fake model_io trace.
-      if (idx === 1) {
+      if (stepId === "power") {
         schedule(() => {
           try {
             session.logModelIO({
               stepId,
               direction: "response",
               provider: "anthropic",
-              model: "claude-haiku-4-5",
-              usage: { inputTokens: 110, outputTokens: 40, totalTokens: 150 },
-              cost: { amount: 0.003, currency: "USD" },
-              durationMs: 220,
+              model: "claude-sonnet-4-5",
+              usage: { inputTokens: 180, outputTokens: 90, totalTokens: 270 },
+              cost: { amount: 0.0072, currency: "USD" },
+              durationMs: 300,
             });
           } catch {
             /* ignore */
@@ -203,6 +254,36 @@ export function HeroLiveRun() {
 
       schedule(() => {
         try {
+          if (stepId === "setCircuits") {
+            session.writeArtifact({
+              artifactKey: "timeCircuits",
+              typeId: "dlrn.circuits",
+              data: {
+                destinationTime: "1955-11-05 06:00",
+                presentTime: "1985-10-26 01:35",
+              },
+            });
+          } else if (stepId === "power") {
+            session.writeArtifact({
+              artifactKey: "powerPlan",
+              typeId: "dlrn.power",
+              data: { gigawatts: 1.21, source: "lightning strike" },
+            });
+          } else {
+            session.writeArtifact({
+              artifactKey: "flightCard",
+              typeId: "dlrn.flight",
+              data: { approachSpeed: "88 mph", route: "Courthouse Square" },
+            });
+          }
+        } catch {
+          /* ignore */
+        }
+      }, t);
+      t += stepDelay;
+
+      schedule(() => {
+        try {
           session.completeStep(stepId);
         } catch {
           /* ignore */
@@ -210,8 +291,7 @@ export function HeroLiveRun() {
       }, t);
       t += stepDelay;
 
-      // PAUSE_AFTER on jobSearcher.
-      if (stepId === "jobSearcher") {
+      if (stepId === "launch") {
         schedule(() => {
           try {
             session.resolveGate({
@@ -257,6 +337,7 @@ export function HeroLiveRun() {
   const state: RunStoreState | undefined = runId
     ? runtime.getState(runId)
     : undefined;
+  const graphKey = state ? `${runId}-${state.revision}` : runId;
 
   const traceSlots = useMemo(() => buildTraceAsideSlots(trace), [trace]);
 
@@ -267,6 +348,7 @@ export function HeroLiveRun() {
       <div className="relative isolate aspect-[4/3] min-h-[220px] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/40">
         {runId && state ? (
           <WorkflowGraph
+            key={graphKey}
             runtime={runtime}
             runId={runId}
             embed
