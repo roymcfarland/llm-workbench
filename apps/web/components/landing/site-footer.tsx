@@ -79,6 +79,11 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/faq" className="hover:underline">
+                FAQ
+              </Link>
+            </li>
+            <li>
               <Link href="/docs/protocol" className="hover:underline">
                 Docs · protocol
               </Link>

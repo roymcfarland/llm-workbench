@@ -4,15 +4,14 @@ import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SiteNavMobile } from "@/components/site-nav-mobile";
 
-/** Shared nav chip styles: compact on phones so SignedIn chrome fits without crushing. */
-const navBtn =
-  "h-8 shrink-0 whitespace-nowrap px-2 text-[11px] leading-none sm:h-9 sm:px-3 sm:text-xs";
+const navBtn = "h-9 shrink-0 whitespace-nowrap px-2 text-xs md:px-3";
 
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-background)]/75 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--color-background)]/65">
-      <div className="mx-auto grid h-14 w-full max-w-6xl grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-3 sm:gap-4 sm:px-6">
+      <div className="mx-auto grid h-14 w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 sm:gap-4 sm:px-6">
         <Link
           href="/"
           className="group flex min-w-0 max-w-[12rem] items-center gap-1.5 overflow-hidden font-semibold tracking-tight sm:max-w-none sm:gap-2"
@@ -29,10 +28,33 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        {/* Scroll on narrow widths so Playground · Runs · theme · avatar never overlap the brand */}
+        <div className="flex min-w-0 items-center justify-end gap-1 sm:hidden">
+          <div className="shrink-0 [&_button]:size-8">
+            <ThemeToggle />
+          </div>
+          <SignedIn>
+            <div className="flex shrink-0">
+              <UserButton afterSignOutUrl="/" />
+            </div>
+          </SignedIn>
+          <SignedOut>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-[11px]"
+            >
+              <Link href="/sign-in" prefetch={false}>
+                Sign in
+              </Link>
+            </Button>
+          </SignedOut>
+          <SiteNavMobile />
+        </div>
+
         <nav
           aria-label="Primary"
-          className="scrollbar-none flex min-w-0 flex-nowrap items-center justify-end gap-0.5 overflow-x-auto overflow-y-visible py-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:justify-end sm:gap-2 sm:overflow-visible sm:py-0 [&::-webkit-scrollbar]:hidden [&_svg]:shrink-0"
+          className="hidden min-w-0 flex-nowrap items-center justify-end gap-1 [&_svg]:shrink-0 md:gap-2 sm:flex"
         >
           <Button asChild variant="ghost" size="sm" className={navBtn}>
             <Link href="/blog">Blog</Link>
@@ -49,6 +71,9 @@ export function SiteHeader() {
               </Link>
             </Button>
           </SignedIn>
+          <Button asChild variant="ghost" size="sm" className={navBtn}>
+            <Link href="/faq">FAQ</Link>
+          </Button>
           <div className="shrink-0 [&_button]:size-8 [&_button]:sm:size-9">
             <ThemeToggle />
           </div>
@@ -58,10 +83,10 @@ export function SiteHeader() {
             </div>
           </SignedIn>
           <SignedOut>
-            <Button asChild variant="ghost" size="sm" className={`${navBtn} hidden sm:inline-flex`}>
+            <Button asChild variant="ghost" size="sm" className={navBtn}>
               <Link href="/docs/protocol">Protocol</Link>
             </Button>
-            <Button asChild variant="ghost" size="sm" className={`${navBtn} hidden sm:inline-flex`}>
+            <Button asChild variant="ghost" size="sm" className={navBtn}>
               <Link href="/runs/demo">Demo</Link>
             </Button>
             <Button asChild size="sm" className={navBtn}>
