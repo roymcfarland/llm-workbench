@@ -50,7 +50,7 @@ async function RunDetailLoader({
           {row.workflow_id ?? "unknown workflow"}
         </span>
       </div>
-      <RunDetailClient runId={runId} serialized={row.state} />
+      <RunDetailClient key={runId} runId={runId} serialized={row.state} />
     </div>
   );
 }

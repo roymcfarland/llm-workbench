@@ -70,7 +70,7 @@ export default async function DemoRunPage({ searchParams }: DemoRunPageProps) {
         </span>
       </div>
 
-      <RunDetailClient runId={runId} serialized={serialized} readOnly />
+      <RunDetailClient key={runId} runId={runId} serialized={serialized} readOnly />
     </div>
   );
 }

@@ -83,4 +83,28 @@ test.describe("Public smoke (no sign-in)", () => {
     await expect(page.locator("h1").filter({ hasText: /^run_/ })).toBeVisible();
     expect(cspViolations).toEqual([]);
   });
+
+  test("navigating to a new demo run via the header does not hang on hydration", async ({
+    page,
+  }) => {
+    await page.context().addCookies([
+      {
+        name: "__clerk_db_jwt",
+        value: "e2e-dev-browser",
+        domain: "localhost",
+        path: "/",
+        sameSite: "Lax",
+      },
+    ]);
+
+    await page.goto("/runs/demo?s=ring");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByText("Hydrating run…")).toHaveCount(0);
+
+    await page.getByRole("link", { name: "Demo", exact: true }).first().click();
+    await page.waitForURL("**/runs/demo");
+
+    await expect(page.getByText("Hydrating run…")).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
 });
