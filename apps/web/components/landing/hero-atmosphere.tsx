@@ -1,7 +1,7 @@
 "use client";
 
 import { Float, Sparkles } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -35,30 +35,6 @@ function useIsMobile(): boolean {
     return () => mq.removeEventListener("change", h);
   }, []);
   return mobile;
-}
-
-/** Window-based pointer so we can keep `pointer-events: none` on the canvas (clicks pass through). */
-function PointerParallax() {
-  const { camera } = useThree();
-  const target = useRef({ x: 0, y: 0 });
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      target.current.x = (e.clientX / Math.max(window.innerWidth, 1)) * 2 - 1;
-      target.current.y = -(e.clientY / Math.max(window.innerHeight, 1)) * 2 + 1;
-    };
-    window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
-  }, []);
-  useFrame(() => {
-    if (document.visibilityState === "hidden") return;
-    const tx = target.current.x * 0.38;
-    const ty = target.current.y * 0.24;
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, tx, 0.045);
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, ty, 0.045);
-    camera.position.z = THREE.MathUtils.lerp(camera.position.z, 4.55, 0.06);
-    camera.lookAt(0, 0, 0);
-  });
-  return null;
 }
 
 /** Deterministic pseudo-random in [0,1) for stable particle placement (pure render). */
@@ -177,7 +153,6 @@ function UniverseScene({
 
   return (
     <>
-      <PointerParallax />
       <GalaxyPoints
         count={n}
         spread={isMobile ? 5.2 : 6.8}

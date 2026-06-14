@@ -1,71 +1,31 @@
-# Closeout: Clean audit gate via audit-ci (allowlisted, fail-closed)
+# Closeout: Landing hero starfield ignores cursor input
 
-`npm audit` reports 9 packages (3 low, 6 moderate) flagged by 10 source advisories, none
-with an available fix. This slice makes the project's audit gate read clean by allowlisting
-exactly those 10 advisories by GHSA id through `audit-ci`, while keeping the gate fail-closed
-for anything new. No application source changes.
+This slice removes cursor-driven motion from the landing-page hero atmosphere while
+preserving the existing autonomous animation in both render paths.
 
 ## Outcome
 
-- `npm run audit:check` (and the CI audit step, now `npm run audit:check`) exits 0:
-  "Passed npm security audit."
-- The 10 no-fix advisories are allowlisted by GHSA id in `audit-ci.jsonc`, each with a
-  written revisit trigger (ai@6 / monaco > 0.55.1 / next upgrade).
-- The gate stays fail-closed: removing any one allowlisted id makes the gate exit non-zero,
-  and a new advisory at any severity (low+) fails CI.
-- Honest scope: bare `npm audit` is UNCHANGED (still 9 — npm has no native ignore). Only the
-  project gate reads clean.
+- The Three.js hero no longer installs a pointer listener or lerps the camera toward pointer
+  coordinates; the existing Canvas camera position stays fixed at `[0, 0, 4.55]`.
+- The canvas fallback no longer tracks pointer position or applies mouse-attraction forces.
+- Ambient motion is preserved: galaxy particles continue drifting/rotating, wire rings rotate,
+  sparkles twinkle, and the canvas nebula blobs and particles keep animating on their own.
+- No tests were added or changed; this is a visual/UI-only behavior change in two components.
 
 ## Files Changed
 
-- `package.json` (audit-ci dev dep + `audit:check` script)
-- `package-lock.json` (audit-ci added; incremental install — cross-platform optionals intact)
-- `audit-ci.jsonc` (new — the allowlist)
-- `.github/workflows/ci.yml` (audit step → `npm run audit:check`)
+- `apps/web/components/landing/hero-atmosphere.tsx`
+- `apps/web/components/landing/cosmos-field.tsx`
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
-## Architectural choices
+## Verification
 
-- **Allowlist by GHSA id, never by severity or package.** `"low": true` makes the gate fail
-  on everything low+; only the 10 named GHSA ids pass. A blanket severity-skip or
-  package/path allowlist would hide future advisories — rejected.
-- **Replaced, not supplemented, the old `npm audit --omit=dev --audit-level=high` step.** The
-  audit-ci gate is strictly broader (dev-inclusive, all severities), so it subsumes the old
-  prod-high check while adding low/moderate coverage.
-- **No native `npm audit` suppression attempted** — npm has none; faking it was not the goal.
-
-## Evidence
-
-### Clean gate
-
-```text
-npm run audit:check
-<… "Passed npm security audit." …>   exit 0
-```
-
-### Fail-closed proof (remove one id → gate fails)
-
-```text
-<temp config with GHSA-qx2v-qp2m-jg93 removed>
-npx audit-ci --config <temp>   ->   exit 1 (non-zero)
-```
-
-### Lockfile clean-install valid + platform-complete
-
-```text
-npm ci                                  exit 0
-grep -c '@rollup/rollup-linux\|@esbuild/linux' package-lock.json   -> <non-zero>
-```
-
-### Bare audit unchanged (honest)
-
-```text
-npm audit   ->   9 vulnerabilities (3 low, 6 moderate)
-```
-
-### Build/test
-
-```text
-npm run ci   ->   <292 tests passed; web build ok>
-```
+- `npm run build`
+- `npm run typecheck -w @llm-workbench/web`
+- `npm run lint -w @llm-workbench/web`
+- `npm test -w @llm-workbench/web`
+- `npm run build:web`
+- `npm run ci`
+- Manual dev check: moving the cursor over the landing hero no longer moves the stars, while
+  ambient drift, sparkles, ring rotation, and nebula glow continue animating.

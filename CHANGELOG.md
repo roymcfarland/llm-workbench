@@ -85,6 +85,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Landing hero starfield no longer reacts to the cursor.** Removed the pointer-parallax
+  camera follow (Three.js hero) and the mouse-attraction force (canvas fallback). Stars keep
+  their ambient drift, nebula glow, sparkles, and ring rotation, but no longer move in response
+  to pointer input.
 - **Package-wide linting and audit gate.** ESLint now covers all
   `packages/*` sources via a root flat config (`no-console` enforced;
   `_`-prefixed unused values allowed). CI now runs package linting and
