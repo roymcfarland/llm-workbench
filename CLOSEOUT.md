@@ -1,39 +1,47 @@
-# Closeout: rate limiter reads Vercel KV_* env names
+# Closeout: four blog posts
 
 ## Summary
 
-Vercel's "Upstash for Redis" Marketplace integration (provisioned as
-`upstash-kv-carmine-drawer`, connected to Production/Preview/Development)
-injects `KV_REST_API_URL` / `KV_REST_API_TOKEN`, not the native
-`UPSTASH_REDIS_REST_*` names the edge rate limiter previously read. Updated
-`redisFromEnv()` to accept either scheme (native `UPSTASH_REDIS_REST_*` first,
-then the `KV_*` vars, using `||` so an empty string falls through), so the
-limiter engages when Redis is provisioned through the integration instead of
-silently treating it as unconfigured. No behavior change when neither is set.
+Added four Markdown blog posts under `apps/web/content/blog`, dated across the
+gap since the previous post (2026-05-12 → 2026-06-13) for a steady publishing
+cadence:
+
+- `anatomy-of-a-run-bundle.md` (2026-05-12) — protocol / run-bundle deep dive.
+- `why-our-demo-runs-a-delorean.md` (2026-05-21) — why the public demo runs
+  beloved-story scenarios on the real engine.
+- `hunting-unsafe-eval.md` (2026-06-02) — removing `'unsafe-eval'` from the
+  production CSP via precompiled Ajv validators.
+- `shipping-log-june-2026.md` (2026-06-13) — a what's-new recap; links
+  internally to `/blog/hunting-unsafe-eval`.
+
+No application code changed. Slugs derive from filenames, so the recap's
+internal `/blog/hunting-unsafe-eval` link resolves to the unsafe-eval post.
 
 ## Files Changed
 
-- `apps/web/lib/rate-limit/edge.ts`
-- `apps/web/lib/rate-limit/edge.test.ts`
+- `apps/web/content/blog/anatomy-of-a-run-bundle.md` (new)
+- `apps/web/content/blog/why-our-demo-runs-a-delorean.md` (new)
+- `apps/web/content/blog/hunting-unsafe-eval.md` (new)
+- `apps/web/content/blog/shipping-log-june-2026.md` (new)
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
 ## Verification
 
-- `npm test -w @llm-workbench/web` exits 0: 12 files, 82 tests (was 81; +1 new
-  test asserting `KV_*` names configure the limiter, so a production `/api`
-  request passes through the limiter rather than failing closed with 503). The
-  Upstash SDKs are mocked so the configured path is exercisable without a real
-  Redis.
-- `npm run typecheck -w @llm-workbench/web` exits 0.
-- `npm run lint -w @llm-workbench/web` exits 0.
-- The unconfigured tests now zero out BOTH naming schemes (`UPSTASH_*` and
-  `KV_*`) so they stay deterministic regardless of the host/CI environment.
+- `npm test -w @llm-workbench/web` exits 0: 12 files, 81 tests. The blog index
+  tests validate every post's front matter (zod), headings (h2–h4), and
+  rendered HTML across all 13 posts.
+- `npm run build:web` compiles successfully; static generation runs 64/64
+  (includes each new post's OG/Twitter image routes via `generateStaticParams`,
+  so the build exercises every new post's front matter).
+- `npm run ci` exits 0 (root build, all workspace tests, typecheck, lint,
+  build:web).
+- `apps/web/content/blog` now holds 13 `.md` files (9 prior + 4 new). `/blog`
+  is server-rendered and lists posts newest-first, so the four interleave by
+  date; `/blog/[slug]` resolves each, including `hunting-unsafe-eval`.
 
-## Follow-up (Vercel env, not code)
+## Notes
 
-- This branch's preview deploy already has `KV_*` (Preview env), so the preview
-  is the verification surface: `/api/*` should respond (not 503) and rate-limit.
-- After merge to production: remove the `RATE_LIMIT_ALLOW_UNCONFIGURED`
-  Production env var (currently set, 3d old) so prod fails closed if Redis ever
-  disappears, then redeploy for the change to take effect.
+Markdown-only content slice. No middleware/allowlist change needed — `/blog`
+and `/blog/(.*)` are already public routes. Publication dates are intentionally
+spread across the May–June window rather than all stamped "today".
