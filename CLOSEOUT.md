@@ -1,27 +1,25 @@
-# Closeout: Landing DeLorean trace and console rings
+# Closeout: Landing code diff DeLorean theme
 
-This slice updates the landing hero's live demo story and moves the floating
-wire rings away from the text column.
+This slice re-themes the landing "one import" code-diff and telemetry rain
+examples so they match the DeLorean landing story.
 
 ## Outcome
 
-- The hero console now loops a DeLorean time-jump workflow:
-  `setCircuits → power → launch`.
-- The trace choreography writes `timeCircuits`, logs the
-  `claude-sonnet-4-5` power-planning model call, writes the `1.21` gigawatt
-  power plan and `88 mph` launch card, then resolves the launch `PAUSE_AFTER`
-  gate.
-- The static fallback rows and SVG now mirror the DeLorean workflow labels.
-- The Three.js wire rings keep their existing look and animation, but are
-  positioned around the console side so the hero subheading remains readable.
-- No tests were added or changed; this is a visual/UI-only landing update.
+- The raw and traced code samples now read as the DeLorean flight computer
+  computing the power needed to hit `88 mph`.
+- The traced sample keeps the same `@llm-workbench/ai-sdk` and
+  `@ai-sdk/openai` imports, but uses `computePower` for the step id and trace
+  events.
+- The line-click hints keep their existing line numbers and now emit
+  `powerPlan v1`.
+- The telemetry rain swaps the remaining job-search sample values for
+  `setCircuits`, `flightCard`, and `launch`.
+- No tests were added or changed; this is a content/theme-only landing update.
 
 ## Files Changed
 
-- `apps/web/components/landing/hero-live-run.tsx`
-- `apps/web/components/landing/hero-atmosphere.tsx`
-- `apps/web/components/landing/static-workflow-svg.tsx`
-- `apps/web/app/page.tsx`
+- `apps/web/components/landing/code-diff.tsx`
+- `apps/web/components/landing/telemetry-rain.tsx`
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
@@ -31,8 +29,11 @@ wire rings away from the text column.
 - `npm run typecheck -w @llm-workbench/web`
 - `npm run lint -w @llm-workbench/web`
 - `npm test -w @llm-workbench/web`
-- `npm run build:web`
 - `npm run ci`
-- Manual dev check: the landing hero console loops the DeLorean run, the trace
-  includes the model/artifact/gate events, the rings sit by the console, and
-  cursor movement still does not affect the starfield.
+- Static landing scan: no `scoreListing`, `scoredListing`,
+  `You score job listings`, `Rate this listing`, `parser1`, `resume.md`, or
+  `"output"` remnants remain in the landing components/page.
+- Manual browser check: attempted against the already-running local web server
+  at `http://localhost:3000`, but the in-app Browser blocked the local URL under
+  its URL policy, so rendered click verification could not be completed in this
+  environment.

@@ -5,15 +5,15 @@ import { useEffect, useRef, useState } from "react";
 type TelemetryLine = { id: number; text: string };
 
 const SAMPLES = [
-  '{"type":"step_started","stepId":"parser1","t":"…"}',
+  '{"type":"step_started","stepId":"setCircuits","t":"…"}',
   '{"type":"model_io","model":"claude-haiku-4-5","durationMs":220}',
-  '{"type":"artifact_written","key":"resume.md","version":3}',
+  '{"type":"artifact_written","key":"flightCard","version":3}',
   '{"type":"human_gate_resolved","decision":"approved"}',
   '{"type":"rule_changed","ruleSetId":"prod-v2"}',
   '{"type":"run_status_changed","status":"completed"}',
   '{"integrity":"sha256:7f83b1657…","bundleId":"run_01J…"}',
   '{"type":"model_io","provider":"anthropic","usage":{"totalTokens":412}}',
-  '{"type":"step_completed","stepId":"output","ok":true}',
+  '{"type":"step_completed","stepId":"launch","ok":true}',
 ] as const;
 
 export function TelemetryRain() {
