@@ -1,6 +1,23 @@
 import { NextRequest, type NextResponse } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+// Mock the Upstash SDKs so the "configured" path is exercisable without a real
+// Redis: any constructed limiter allows the request.
+vi.mock("@upstash/redis", () => ({
+  Redis: class FakeRedis {},
+}));
+vi.mock("@upstash/ratelimit", () => {
+  class FakeRatelimit {
+    static slidingWindow() {
+      return {};
+    }
+    limit() {
+      return Promise.resolve({ success: true, reset: Date.now() + 60_000 });
+    }
+  }
+  return { Ratelimit: FakeRatelimit };
+});
+
 function request(pathname: string): NextRequest {
   return new NextRequest(`http://localhost:3000${pathname}`);
 }
@@ -9,8 +26,12 @@ async function loadRateLimiter(
   env: Record<string, string> = {},
 ): Promise<typeof import("./edge")> {
   vi.resetModules();
+  // Zero out BOTH naming schemes so "unconfigured" cases are deterministic
+  // regardless of what the host/CI environment exports.
   vi.stubEnv("UPSTASH_REDIS_REST_URL", "");
   vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "");
+  vi.stubEnv("KV_REST_API_URL", "");
+  vi.stubEnv("KV_REST_API_TOKEN", "");
   vi.stubEnv("RATE_LIMIT_ALLOW_UNCONFIGURED", "");
   for (const [key, value] of Object.entries(env)) {
     vi.stubEnv(key, value);
@@ -45,6 +66,20 @@ describe("rateLimitApiIfConfigured", () => {
     expect(response.headers.get("Retry-After")).toBe("60");
     expect(response.headers.get("Content-Security-Policy")).toContain(
       "frame-ancestors 'none'",
+    );
+  });
+
+  it("enforces via the limiter (no 503) when configured through KV_* names", async () => {
+    const { rateLimitApiIfConfigured } = await loadRateLimiter({
+      NODE_ENV: "production",
+      KV_REST_API_URL: "https://example.upstash.io",
+      KV_REST_API_TOKEN: "fake-token",
+    });
+
+    // Limiter is configured from the Vercel-injected KV_* vars, so the request
+    // passes through it (mocked to allow) instead of failing closed with 503.
+    await expect(rateLimitApiIfConfigured(request("/api/runs"))).resolves.toBe(
+      null,
     );
   });
 

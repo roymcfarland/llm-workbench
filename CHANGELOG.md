@@ -28,6 +28,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Rate limiter recognizes Vercel's Upstash (`KV_*`) env names.** Vercel's
+  "Upstash for Redis" Marketplace integration injects `KV_REST_API_URL` /
+  `KV_REST_API_TOKEN`, not `UPSTASH_REDIS_REST_*`. The edge rate limiter now
+  reads either scheme (native `UPSTASH_REDIS_REST_*` first, then the `KV_*`
+  vars), so the limiter actually engages when Redis is provisioned through the
+  integration instead of silently treating it as unconfigured.
 - **Landing atmosphere no longer throws under `prefers-reduced-motion`.** `CosmosField`
   called `paintStatic()` from its initial `resize()` before that `const` arrow function was
   initialized (temporal dead zone), throwing a `ReferenceError` and leaving the
