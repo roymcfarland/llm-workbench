@@ -1,4 +1,34 @@
-import { jobSearchWorkflow } from "@/lib/workflow/job-search";
+import type { WorkflowSpec } from "@llm-workbench/runtime";
+
+const timeJumpWorkflow = {
+  id: "timeJump",
+  version: 1,
+  title: "DeLorean Flight Computer",
+  steps: [
+    {
+      id: "setCircuits",
+      gatePolicy: "AUTO",
+      inputs: [],
+      outputs: ["timeCircuits"],
+    },
+    {
+      id: "power",
+      gatePolicy: "PAUSE_BEFORE",
+      inputs: ["timeCircuits"],
+      outputs: ["powerPlan"],
+    },
+    {
+      id: "launch",
+      gatePolicy: "PAUSE_AFTER",
+      inputs: ["powerPlan"],
+      outputs: ["flightCard"],
+    },
+  ],
+  edges: [
+    { id: "e1", from: "setCircuits", to: "power" },
+    { id: "e2", from: "power", to: "launch" },
+  ],
+} satisfies WorkflowSpec;
 
 /**
  * Server-rendered SVG mirror of the live `<WorkflowGraph>`. Kept identical in
@@ -12,7 +42,7 @@ export function StaticWorkflowSvg({
   status?: "pending" | "running" | "completed";
   className?: string;
 }) {
-  const steps = jobSearchWorkflow.steps;
+  const steps = timeJumpWorkflow.steps;
   const nodeWidth = 168;
   const nodeHeight = 64;
   const gapX = 56;
@@ -22,14 +52,14 @@ export function StaticWorkflowSvg({
   return (
     <svg
       role="img"
-      aria-label={`${jobSearchWorkflow.title} workflow with ${steps.length} steps`}
+      aria-label={`${timeJumpWorkflow.title} workflow with ${steps.length} steps`}
       viewBox={`0 0 ${totalWidth} ${totalHeight}`}
       className={className}
       width="100%"
       height="100%"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <title>{jobSearchWorkflow.title}</title>
+      <title>{timeJumpWorkflow.title}</title>
       <defs>
         <linearGradient id="lwb-edge" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="oklch(0.7 0.12 220)" stopOpacity="0.4" />

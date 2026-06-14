@@ -181,9 +181,9 @@ export default async function LandingPage() {
                   <StaticWorkflowSvg />
                 </div>
                 <div className="mt-2 grid grid-cols-3 gap-1 font-mono text-[10px] text-[var(--color-muted-foreground)]">
-                  <span>step_started · parser1</span>
-                  <span>model_io · 220ms</span>
-                  <span>step_completed · output</span>
+                  <span>step_started · setCircuits</span>
+                  <span>model_io · 300ms</span>
+                  <span>step_completed · launch</span>
                 </div>
               </div>
               <noscript>
