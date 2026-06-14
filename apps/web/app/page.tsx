@@ -6,6 +6,7 @@ import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 
 import { Button } from "@/components/ui/button";
 import { CodeDiff } from "@/components/landing/code-diff";
+import { DriftingCraft } from "@/components/landing/drifting-craft";
 import { HeroAtmosphereSlot } from "@/components/landing/hero-atmosphere-slot";
 import { HeroLiveRun } from "@/components/landing/hero-live-run";
 import { LandingFinalCta } from "@/components/landing/landing-final-cta";
@@ -78,6 +79,7 @@ export default async function LandingPage() {
             aria-hidden="true"
             className="landing-mesh pointer-events-none absolute inset-0 -z-20 opacity-[0.55] mix-blend-screen dark:opacity-40 dark:mix-blend-normal"
           />
+          <DriftingCraft />
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[var(--color-background)]/45 via-[var(--color-background)]/10 to-[var(--color-background)]"
