@@ -17,6 +17,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Landing atmosphere no longer throws under `prefers-reduced-motion`.** `CosmosField`
+  called `paintStatic()` from its initial `resize()` before that `const` arrow function was
+  initialized (temporal dead zone), throwing a `ReferenceError` and leaving the
+  reduced-motion fallback blank. The `ResizeObserver`/`resize()` setup now runs after the
+  paint helpers are defined; behavior is otherwise unchanged.
 - **Demo/run viewer no longer hangs on "Hydrating run…" when navigating between runs.**
   `RunDetailClient` is now keyed by `runId` at both call sites (`/runs/demo` and the
   authenticated `/runs/[runId]` viewer), so a client-side navigation to a new run

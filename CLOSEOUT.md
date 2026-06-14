@@ -1,39 +1,34 @@
-# Closeout: Landing code diff DeLorean theme
+# Closeout: CosmosField reduced-motion ReferenceError fix
 
-This slice re-themes the landing "one import" code-diff and telemetry rain
-examples so they match the DeLorean landing story.
+Fixes a temporal-dead-zone crash in the landing's canvas atmosphere fallback
+(`CosmosField`) that only triggered under `prefers-reduced-motion: reduce`.
 
-## Outcome
+## Problem
 
-- The raw and traced code samples now read as the DeLorean flight computer
-  computing the power needed to hit `88 mph`.
-- The traced sample keeps the same `@llm-workbench/ai-sdk` and
-  `@ai-sdk/openai` imports, but uses `computePower` for the step id and trace
-  events.
-- The line-click hints keep their existing line numbers and now emit
-  `powerPlan v1`.
-- The telemetry rain swaps the remaining job-search sample values for
-  `setCircuits`, `flightCard`, and `launch`.
-- No tests were added or changed; this is a content/theme-only landing update.
+Inside the main `useEffect`, the initial `resize()` was invoked before the
+`paintStatic` `const` arrow function was defined. Under reduced motion, `resize()`
+runs `if (reduced) paintStatic();`, so it hit `paintStatic` while it was still in
+the temporal dead zone → `ReferenceError: Cannot access 'paintStatic' before
+initialization`. Result: users with reduced motion got a console error and a blank
+atmosphere (the static fallback never painted). Pre-existing; surfaced during QA of
+the drifting-craft PR (#30), not introduced by #30 or #27.
+
+## Fix
+
+- Moved the `const ro = new ResizeObserver(resize); ro.observe(canvas); resize();`
+  block to **after** the `trailClear`/`paintStatic` definitions, so the initial
+  `resize()` no longer runs in their TDZ. Behavior is otherwise identical — no change
+  to the animation loop or the #27 cursor-removal.
 
 ## Files Changed
 
-- `apps/web/components/landing/code-diff.tsx`
-- `apps/web/components/landing/telemetry-rain.tsx`
+- `apps/web/components/landing/cosmos-field.tsx`
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
-## Verification
+## Evidence
 
-- `npm run build`
-- `npm run typecheck -w @llm-workbench/web`
-- `npm run lint -w @llm-workbench/web`
-- `npm test -w @llm-workbench/web`
-- `npm run ci`
-- Static landing scan: no `scoreListing`, `scoredListing`,
-  `You score job listings`, `Rate this listing`, `parser1`, `resume.md`, or
-  `"output"` remnants remain in the landing components/page.
-- Manual browser check: attempted against the already-running local web server
-  at `http://localhost:3000`, but the in-app Browser blocked the local URL under
-  its URL policy, so rendered click verification could not be completed in this
-  environment.
+- `npm run ci` exits 0 (build, 299 vitest, typecheck, lint, web build).
+- `paintStatic` defined before the immediate `resize()` call (verified by line order).
+- Manual: with DevTools "Emulate prefers-reduced-motion: reduce", `/` loads with a
+  clean console (no `ReferenceError`) and the static atmosphere paints.
