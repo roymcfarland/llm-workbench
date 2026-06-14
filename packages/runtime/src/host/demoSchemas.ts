@@ -1,10 +1,10 @@
-import type { SchemaRegistry } from "../schema/registry.js";
+import type { JsonSchema, SchemaRegistry } from "../schema/registry.js";
 
 /**
  * Reference JSON Schemas for the job-search style demo. Real apps should register their own.
  */
-export function registerDemoSchemas(registry: SchemaRegistry) {
-  registry.registerArtifactType({
+export const demoArtifactTypes: Array<{ id: string; schema: JsonSchema; exportRedactPaths?: string[] }> = [
+  {
     id: "parserInputs",
     exportRedactPaths: ["/resumeText", "/profiles/0/url"],
     schema: {
@@ -28,9 +28,9 @@ export function registerDemoSchemas(registry: SchemaRegistry) {
       },
       required: ["resumeText"],
     },
-  });
+  },
 
-  registry.registerArtifactType({
+  {
     id: "compiledProfile",
     exportRedactPaths: ["/summary"],
     schema: {
@@ -43,9 +43,9 @@ export function registerDemoSchemas(registry: SchemaRegistry) {
       },
       required: ["headline", "skills", "summary"],
     },
-  });
+  },
 
-  registry.registerArtifactType({
+  {
     id: "potentialJobs",
     exportRedactPaths: ["/0/url", "/1/url"],
     schema: {
@@ -62,9 +62,9 @@ export function registerDemoSchemas(registry: SchemaRegistry) {
         required: ["id", "title", "company", "url"],
       },
     },
-  });
+  },
 
-  registry.registerArtifactType({
+  {
     id: "scoredResults",
     schema: {
       type: "array",
@@ -79,9 +79,11 @@ export function registerDemoSchemas(registry: SchemaRegistry) {
         required: ["jobId", "score", "reasons"],
       },
     },
-  });
+  },
+];
 
-  registry.registerRulePayloadSchema({
+export const demoRuleSchemas: Array<{ id: string; schema: JsonSchema }> = [
+  {
     id: "demoJobRule",
     schema: {
       type: "object",
@@ -92,5 +94,14 @@ export function registerDemoSchemas(registry: SchemaRegistry) {
       },
       required: ["kind", "value"],
     },
-  });
+  },
+];
+
+export function registerDemoSchemas(registry: SchemaRegistry) {
+  for (const artifactType of demoArtifactTypes) {
+    registry.registerArtifactType(artifactType);
+  }
+  for (const ruleSchema of demoRuleSchemas) {
+    registry.registerRulePayloadSchema(ruleSchema);
+  }
 }

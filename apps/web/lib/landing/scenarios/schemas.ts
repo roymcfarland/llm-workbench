@@ -283,9 +283,15 @@ export const demoRuleSchema: JsonSchema = {
   required: ["kind", "value"],
 };
 
+export const scenarioRuleSchemas: Array<{ id: string; schema: JsonSchema }> = [
+  { id: "demoRule", schema: demoRuleSchema },
+];
+
 export function registerScenarioSchemas(registry: SchemaRegistry): void {
   for (const artifactType of scenarioArtifactTypes) {
     registry.registerArtifactType(artifactType);
   }
-  registry.registerRulePayloadSchema({ id: "demoRule", schema: demoRuleSchema });
+  for (const ruleSchema of scenarioRuleSchemas) {
+    registry.registerRulePayloadSchema(ruleSchema);
+  }
 }
