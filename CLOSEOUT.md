@@ -1,53 +1,39 @@
-# Closeout: mobile nav and FAQ page
+# Closeout: rate limiter reads Vercel KV_* env names
 
 ## Summary
 
-Added a small client-side mobile hamburger menu while keeping `SiteHeader` as a
-server component. Added a public `/faq` route whose visible Q&A list and
-`FAQPage` JSON-LD are generated from one shared FAQ array, then linked it from
-the desktop nav and footer.
+Vercel's "Upstash for Redis" Marketplace integration (provisioned as
+`upstash-kv-carmine-drawer`, connected to Production/Preview/Development)
+injects `KV_REST_API_URL` / `KV_REST_API_TOKEN`, not the native
+`UPSTASH_REDIS_REST_*` names the edge rate limiter previously read. Updated
+`redisFromEnv()` to accept either scheme (native `UPSTASH_REDIS_REST_*` first,
+then the `KV_*` vars, using `||` so an empty string falls through), so the
+limiter engages when Redis is provisioned through the integration instead of
+silently treating it as unconfigured. No behavior change when neither is set.
 
 ## Files Changed
 
-- `apps/web/components/site-header.tsx`
-- `apps/web/components/site-nav-mobile.tsx`
-- `apps/web/app/faq/page.tsx`
-- `apps/web/components/landing/site-footer.tsx`
+- `apps/web/lib/rate-limit/edge.ts`
+- `apps/web/lib/rate-limit/edge.test.ts`
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
 ## Verification
 
-- `git checkout main`, `git fetch --prune`, and `git pull --ff-only origin main`
-  completed with `main` already up to date; branch created:
-  `feat/mobile-nav-and-faq`.
-- `npm run build` exits 0.
+- `npm test -w @llm-workbench/web` exits 0: 12 files, 82 tests (was 81; +1 new
+  test asserting `KV_*` names configure the limiter, so a production `/api`
+  request passes through the limiter rather than failing closed with 503). The
+  Upstash SDKs are mocked so the configured path is exercisable without a real
+  Redis.
 - `npm run typecheck -w @llm-workbench/web` exits 0.
 - `npm run lint -w @llm-workbench/web` exits 0.
-- `npm test -w @llm-workbench/web` exits 0: 12 files, 81 tests.
-- `npm run ci` exits 0. The Next build route table includes `/faq`.
-- `LLM_WB_E2E_DISABLE_DNS_SHIM=1 npm run test:e2e -w apps/web` first hit a
-  sandbox-only `listen EPERM 0.0.0.0:3399`; rerunning the same command with
-  escalation exits 0: 5 Chromium e2e tests passed.
-- `npm run dev:web` starts on `http://localhost:3000`.
-- Live dev-server `/faq` fetch validates:
-  - H1 present.
-  - 10 visible Q&A items.
-  - Parsed `FAQPage` JSON-LD with 10 `mainEntity` questions.
-  - First question: `What is LLM Workbench?`
-  - Last question: `How do I try it?`
-  - Final answer contains real `/runs/demo` and `/playground` links.
-- Live dev-server home/header fetch validates:
-  - mobile menu button is rendered with `aria-label="Open menu"`.
-  - `aria-expanded="false"` on initial render.
-  - Blog, Demo, Protocol, and FAQ links are present in the rendered chrome.
+- The unconfigured tests now zero out BOTH naming schemes (`UPSTASH_*` and
+  `KV_*`) so they stay deterministic regardless of the host/CI environment.
 
-## Manual Browser Note
+## Follow-up (Vercel env, not code)
 
-The Codex in-app Browser refused to open `http://localhost:3000` under its URL
-policy, so a visual click-through at mobile width was not possible in this
-session. I did not attempt to work around that browser policy with another
-browser surface. The mobile menu implementation is still covered by typecheck,
-lint, production build, static rendered-header checks, and code inspection for
-the required handlers: link click, `Escape`, outside pointer, and
-`aria-expanded`.
+- This branch's preview deploy already has `KV_*` (Preview env), so the preview
+  is the verification surface: `/api/*` should respond (not 503) and rate-limit.
+- After merge to production: remove the `RATE_LIMIT_ALLOW_UNCONFIGURED`
+  Production env var (currently set, 3d old) so prod fails closed if Redis ever
+  disappears, then redeploy for the change to take effect.

@@ -5,8 +5,16 @@ import { type NextRequest, NextResponse } from "next/server";
 import { contentSecurityPolicy } from "@/lib/security/csp";
 
 function redisFromEnv(): Redis | null {
-  const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+  // Accept either naming scheme: the native Upstash vars
+  // (`UPSTASH_REDIS_REST_*`) or the `KV_REST_API_*` vars that Vercel's
+  // "Upstash for Redis" Marketplace integration injects. `||` (not `??`) so an
+  // empty string falls through to the next candidate.
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL?.trim() ||
+    process.env.KV_REST_API_URL?.trim();
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ||
+    process.env.KV_REST_API_TOKEN?.trim();
   if (!url || !token) return null;
   try {
     return new Redis({ url, token });
