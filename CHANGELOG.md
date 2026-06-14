@@ -8,6 +8,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Mobile navigation and FAQ page.** Added a keyboard-accessible mobile
+  hamburger menu that exposes Blog, Demo, Protocol, FAQ, and signed-in app
+  links on phones, plus a `/faq` page with visible Q&A and FAQPage JSON-LD
+  generated from one shared FAQ array.
 - **Ajv precompiled validator machinery.** Added build-time standalone Ajv
   validator generation for runtime and landing-demo schemas, plus freshness
   tests and typed generated output for future client wiring. CSP and runtime

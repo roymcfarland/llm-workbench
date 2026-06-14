@@ -13,6 +13,7 @@ Allow: /blog
 Allow: /blog/tags/
 Allow: /docs/
 Allow: /runs/demo
+Allow: /faq
 Allow: /api/openapi.json
 Allow: /.well-known/
 Allow: /humans.txt
