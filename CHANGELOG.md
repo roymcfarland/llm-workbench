@@ -8,6 +8,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Ajv precompiled validator machinery.** Added build-time standalone Ajv
+  validator generation for runtime and landing-demo schemas, plus freshness
+  tests and typed generated output for future client wiring. CSP and runtime
+  client behavior are unchanged in this slice.
 - **Landing hero drifting craft.** The hero background now occasionally launches
   a tiny, low-opacity sci-fi silhouette across the starfield as a separate
   pointer-ignored, reduced-motion-safe overlay behind the content.

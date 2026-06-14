@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { ValidateFunction } from "ajv";
 import { redactJson } from "./redact.js";
 import { SchemaRegistry } from "./registry.js";
 
@@ -29,5 +30,25 @@ describe("SchemaRegistry", () => {
   it("redactJson skips invalid pointers without throwing", () => {
     const out = redactJson({ value: { a: 1 }, paths: ["/missing/deep", "/a"] });
     expect(out).toEqual({ a: "[REDACTED]" });
+  });
+
+  it("stores supplied validators without compiling schemas", () => {
+    const r = new SchemaRegistry();
+    const validate = (() => true) as ValidateFunction<unknown>;
+    validate.errors = null;
+
+    r.registerArtifactType({
+      id: "precompiled",
+      schema: { type: "object", unknownStrictKeyword: true },
+      validate,
+    });
+    r.registerRulePayloadSchema({
+      id: "precompiledRule",
+      schema: { type: "object", unknownStrictKeyword: true },
+      validate,
+    });
+
+    expect(r.validateArtifact("precompiled", { ok: true }).ok).toBe(true);
+    expect(r.validateRulePayload("precompiledRule", { ok: true }).ok).toBe(true);
   });
 });

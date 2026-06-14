@@ -18,13 +18,31 @@ export type RegisteredRuleSchema = {
   validate: ValidateFunction<unknown>;
 };
 
+export type RegisterArtifactTypeInput = {
+  id: string;
+  schema: JsonSchema;
+  validate?: ValidateFunction<unknown>;
+  exportRedactPaths?: string[];
+};
+
+export type RegisterRulePayloadSchemaInput = {
+  id: string;
+  schema: JsonSchema;
+  validate?: ValidateFunction<unknown>;
+};
+
 export class SchemaRegistry {
-  private ajv = new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
+  private ajv?: Ajv;
   private artifacts = new Map<string, RegisteredArtifactType>();
   private rules = new Map<string, RegisteredRuleSchema>();
 
-  registerArtifactType(input: { id: string; schema: JsonSchema; exportRedactPaths?: string[] }): void {
-    const validate = this.ajv.compile(input.schema);
+  private get compiler(): Ajv {
+    this.ajv ??= new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
+    return this.ajv;
+  }
+
+  registerArtifactType(input: RegisterArtifactTypeInput): void {
+    const validate = input.validate ?? this.compiler.compile(input.schema);
     this.artifacts.set(input.id, {
       id: input.id,
       schema: input.schema,
@@ -37,8 +55,8 @@ export class SchemaRegistry {
     return this.artifacts.get(typeId)?.exportRedactPaths ?? [];
   }
 
-  registerRulePayloadSchema(input: { id: string; schema: JsonSchema }): void {
-    const validate = this.ajv.compile(input.schema);
+  registerRulePayloadSchema(input: RegisterRulePayloadSchemaInput): void {
+    const validate = input.validate ?? this.compiler.compile(input.schema);
     this.rules.set(input.id, { id: input.id, schema: input.schema, validate });
   }
 
