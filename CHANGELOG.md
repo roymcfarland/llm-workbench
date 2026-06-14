@@ -6,8 +6,22 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **Beloved-story public demo runs.** `/runs/demo` now rotates through five
+  seeded agent traces — Fellowship Logistics Agent, Owl Post Admissions Agent,
+  DeLorean Flight Computer, Ultimate Question Solver, and Golden Ticket
+  Auditor — with `?s=<id>` pinning for shareable verification links. Scenario
+  content and permissive artifact schemas live under `apps/web`; the runtime
+  package and job-search reference workflow are unchanged.
+
 ### Fixed
 
+- **Demo/run viewer no longer hangs on "Hydrating run…" when navigating between runs.**
+  `RunDetailClient` is now keyed by `runId` at both call sites (`/runs/demo` and the
+  authenticated `/runs/[runId]` viewer), so a client-side navigation to a new run
+  remounts the component and re-hydrates cleanly instead of reusing stale state. Pinned
+  by an e2e that navigates demo→demo via the header link.
 - **Error-path hardening (runtime + MCP).** `cancelRunCascade` now logs
   nodes that refuse cancellation instead of silently skipping them;
   `materializeArtifact` JSON errors include the store ref and payload size;
@@ -114,7 +128,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`docs/HANDOFF.md` removed.** Superseded by `PROJECT.md` as the
   authoritative spec.
 
-### Added
+### Added (Unreleased, continued)
 
 - **Reviewer-facing docs.** Added example READMEs for `job-search-demo` and
   `run-repo-server`, plus a live-demo callout, reviewer start-here path, and

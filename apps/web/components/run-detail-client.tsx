@@ -27,6 +27,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { registerScenarioSchemas } from "@/lib/landing/scenarios/schemas";
 
 type Props = {
   runId: string;
@@ -55,7 +56,9 @@ function summarizeEvent(e: TraceEvent): string {
     case "human_gate_requested":
       return `gate_requested · ${e.stepId} ${e.gate}`;
     case "human_gate_resolved":
-      return `gate_resolved · ${e.stepId} ${e.decision}`;
+      return `gate_resolved · ${e.stepId} ${e.decision}${
+        e.note ? ` · ${e.note}` : ""
+      }`;
     case "rule_changed":
       return `rule_changed · ${e.ruleSetId}`;
     case "policy_changed":
@@ -83,6 +86,7 @@ export function RunDetailClient({ runId, serialized, readOnly }: Props) {
   const registry = useMemo(() => {
     const r = new SchemaRegistry();
     registerDemoSchemas(r);
+    registerScenarioSchemas(r);
     return r;
   }, []);
   const runtime = useMemo(() => new WorkbenchRuntime(), []);
