@@ -32,6 +32,16 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   content and permissive artifact schemas live under `apps/web`; the runtime
   package and job-search reference workflow are unchanged.
 
+### Changed
+
+- **Migrated `middleware.ts` → `proxy.ts` (Next.js 16 file convention).** Renamed
+  the file to clear the `middleware` deprecation warning; the auth/CSP/rate-limit
+  logic is byte-identical (Clerk public-route gating, per-request nonce + CSP,
+  edge rate limiter, JSON 401 for `/api`, same `config.matcher`). Note: `proxy`
+  runs on the **Node.js runtime** (`middleware` defaulted to Edge) — Vercel's
+  recommended direction and functionally equivalent here. Verified by build:web
+  (no warning, `ƒ Proxy`), e2e 5/5, and typecheck/lint/84 unit tests.
+
 ### Fixed
 
 - **Production sign-in: allow Clerk's custom Frontend API domain in the CSP.**
