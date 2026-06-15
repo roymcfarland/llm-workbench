@@ -83,6 +83,15 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Refreshed the dependency audit baseline.** A batch of newly-published
+  advisories had turned the `audit:check` gate red (blocking all PRs). `npm audit
+  fix` patched three with non-breaking fixes — `@babel/core` arbitrary file read
+  (GHSA-4x5r-pxfx-6jf8), `form-data` CRLF injection (GHSA-hmw2-7cc7-3qxx), and
+  `ws` DoS (GHSA-96hv-2xvq-fx4p) — lockfile-only, no major bumps. One new no-fix
+  advisory was allowlisted with rationale: `js-yaml` (GHSA-h67p-54hq-rp68), a
+  quadratic-DoS reachable only through build-time `gray-matter` front-matter
+  parsing of our own content (fix needs the breaking `gray-matter@2`). The
+  existing DOMPurify/`@ai-sdk`/`postcss` allowlist entries are unchanged.
 - **Production CSP no longer needs `'unsafe-eval'`.** The run-detail client now
   registers demo and scenario schemas with build-time Ajv standalone validators
   and a coverage guard that fails loudly if any client schema is missing its

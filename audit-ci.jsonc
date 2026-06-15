@@ -23,6 +23,12 @@
     // postcss — 1 moderate. GHSA-qx2v-qp2m-jg93: XSS via unescaped </style>, transitive
     // through Next.js (also surfaces on next, @clerk/nextjs, @sentry/nextjs). No fix
     // published. REVISIT on the next Next.js upgrade.
-    "GHSA-qx2v-qp2m-jg93"
+    "GHSA-qx2v-qp2m-jg93",
+    // js-yaml — GHSA-h67p-54hq-rp68: quadratic-complexity DoS in merge-key handling via
+    // repeated aliases, transitive through gray-matter (blog front-matter parsing).
+    // js-yaml only ever parses our OWN authored markdown front-matter at BUILD time,
+    // never untrusted or runtime input, so the DoS vector isn't reachable. The only fix
+    // is gray-matter@2 (breaking). REVISIT on a gray-matter@2 migration.
+    "GHSA-h67p-54hq-rp68"
   ]
 }
