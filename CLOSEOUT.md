@@ -1,41 +1,48 @@
-# Closeout: migrate middleware.ts → proxy.ts (Next 16)
+# Closeout: remove dead GitHub links from the UI (private repo)
 
 ## Summary
 
-Next.js 16 deprecated the `middleware` file convention in favor of `proxy` (the
-build printed a deprecation warning). Renamed `apps/web/middleware.ts` →
-`apps/web/proxy.ts`. The official codemod no-op'd because our handler is a
-**default export** (`export default clerkMiddleware(...)`), not a named
-`middleware` function — and the proxy convention explicitly accepts a default
-export, so the migration is a pure file rename with byte-identical logic: Clerk
-public-route allowlist, per-request nonce + CSP, edge rate limiter, JSON 401 for
-`/api` + `/trpc`, and the same `config.matcher`.
+The repository is private, so every clickable link to it 404s. Removed the five
+user-facing GitHub links and the imports that became unused as a result:
 
-**RUNTIME NOTE:** `middleware` defaulted to the Edge runtime; `proxy` runs on the
-**Node.js runtime** (the `runtime` option is not configurable in proxy files).
-This is Vercel's recommended direction and is functionally equivalent here — the
-code uses only cross-runtime APIs (`crypto.getRandomValues`, `btoa`, `atob`,
-`@upstash/*`, Clerk, `NextResponse`).
+- `site-footer.tsx` — the "GitHub" link and the "Security" link
+  (`${GITHUB_URL}/blob/main/SECURITY.md`); dropped the `GITHUB_URL` import.
+- `landing-final-cta.tsx` — the ghost "View on GitHub" button; dropped the import.
+- `app/page.tsx` — the "Source" link in the hero meta line. **Import kept** — the
+  JSON-LD `codeRepository` still uses `GITHUB_URL`.
+- `app/docs/protocol/page.tsx` — the "Source on GitHub" chip; dropped the import.
+
+The adjacent **Proprietary/LICENSE** link on the landing page and the footer
+licensing links are licensing links, not GitHub links, and were left as-is per
+the chosen scope ("all clickable GitHub links"). Non-clickable machine/SEO
+references (`sameAs`, `codeRepository`, the `Source repository` lines in
+`llms.txt` / `llms-full.txt` / `humans.txt` / `agents.md`) and the
+`/.well-known/security.txt` contact are also intentionally left for a separate
+pass (some need a replacement target, not just deletion).
 
 ## Files Changed
 
-- `apps/web/middleware.ts` → `apps/web/proxy.ts` (rename; no content change)
+- `apps/web/components/landing/site-footer.tsx`
+- `apps/web/components/landing/landing-final-cta.tsx`
+- `apps/web/app/page.tsx`
+- `apps/web/app/docs/protocol/page.tsx`
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
 ## Verification
 
-- `npm run build:web` exits 0; the "middleware deprecated" warning is gone; the
-  route table shows `ƒ Proxy (Middleware)`.
-- `LLM_WB_E2E_DISABLE_DNS_SHIM=1 npm run test:e2e -w apps/web` — 5/5 passed
-  (strict-CSP render on `/` and `/runs/demo` with no script/eval violations;
-  public routes; demo→demo hydration). Confirms the proxy behaves identically
-  on the Node runtime.
-- `npm run typecheck` / `lint -w @llm-workbench/web` exit 0; `npm test -w
-  @llm-workbench/web` → 12 files / 84 tests pass.
+- `grep -rn "href=" apps/web --include="*.tsx" | grep GITHUB_URL` → no matches
+  (no clickable GitHub links remain).
+- `npm run typecheck -w @llm-workbench/web` exits 0; `npm run lint -w
+  @llm-workbench/web` exits 0 (no unused imports — dropped exactly where
+  `GITHUB_URL` went unused, kept in `page.tsx` where the JSON-LD still uses it).
+- `npm run build:web` compiles successfully; all pages (`/`, `/docs/protocol`)
+  still render.
 
 ## Notes
 
-Auth-gated behavior (Clerk sign-in redirect / `/api` 401) is runtime-agnostic
-and unchanged; verify on the PR preview (`curl -sI .../playground` → 3xx to
-sign-in; `curl .../api/runs` → 401) before merge.
+Markup-only removal; no logic touched. Follow-up candidates (not in this PR):
+neutralize the machine/SEO `GITHUB_URL` refs, give `security.txt` a reachable
+contact, and decide on the licensing/`COMMERCIAL.md` links — `GITHUB_URL` itself
+is `github.com/llmworkbench/llm-workbench`, a different org than the real
+`roymcfarland/llm-workbench`, so it reads like a placeholder.

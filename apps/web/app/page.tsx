@@ -162,15 +162,6 @@ export default async function LandingPage() {
                 >
                   {LICENSE_NAME}
                 </a>
-                {" · "}
-                <a
-                  href={GITHUB_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline-offset-4 hover:underline"
-                >
-                  Source
-                </a>
               </p>
             </div>
 

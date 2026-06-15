@@ -44,6 +44,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Removed dead GitHub links from the UI (the repository is private).** Every
+  clickable link to the repo 404s, so the five user-facing GitHub links are
+  gone: footer "GitHub" + "Security", the landing-page "Source", the final-CTA
+  "View on GitHub", and the protocol-docs "Source on GitHub" (plus the imports
+  that went unused). Non-clickable machine/SEO references (`sameAs`,
+  `codeRepository`, the `Source repository` lines in `llms.txt`/`agents.md`) and
+  the licensing/`security.txt` links are intentionally left for a separate pass.
 - **Production sign-in: allow Clerk's custom Frontend API domain in the CSP.**
   Production Clerk runs on a custom domain (`clerk.llmworkbench.io`) that the
   `*.clerk.com` / `*.clerk.accounts.dev` wildcards do not match, so the strict

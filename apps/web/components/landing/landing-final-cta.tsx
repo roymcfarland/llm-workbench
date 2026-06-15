@@ -5,7 +5,6 @@ import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 
 import { Button } from "@/components/ui/button";
 import { PlaygroundMarketingLink } from "@/components/playground-marketing-link";
-import { GITHUB_URL } from "@/lib/site";
 
 type LandingFinalCtaProps = {
   runsCount: number | null;
@@ -51,11 +50,6 @@ export function LandingFinalCta({ runsCount }: LandingFinalCtaProps) {
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link href="/runs/demo">Watch a demo run</Link>
-            </Button>
-            <Button asChild size="lg" variant="ghost">
-              <a href={GITHUB_URL} target="_blank" rel="noreferrer">
-                View on GitHub
-              </a>
             </Button>
           </div>
           <p className="mt-8 font-mono text-[11px] text-[var(--color-muted-foreground)]">
