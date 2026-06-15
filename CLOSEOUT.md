@@ -1,47 +1,42 @@
-# Closeout: four blog posts
+# Closeout: allow Clerk custom Frontend API domain in the CSP
 
 ## Summary
 
-Added four Markdown blog posts under `apps/web/content/blog`, dated across the
-gap since the previous post (2026-05-12 → 2026-06-13) for a steady publishing
-cadence:
+Production sign-in could not render the GitHub/Google buttons. Root cause: the
+production Clerk instance uses a **custom Frontend API domain**
+(`clerk.llmworkbench.io`), but the CSP only allowed `*.clerk.com` /
+`*.clerk.accounts.dev`. The strict production CSP therefore blocked the
+browser's fetch to `clerk.llmworkbench.io/v1/environment` (the request that
+lists enabled social providers), so the social buttons never appeared.
 
-- `anatomy-of-a-run-bundle.md` (2026-05-12) — protocol / run-bundle deep dive.
-- `why-our-demo-runs-a-delorean.md` (2026-05-21) — why the public demo runs
-  beloved-story scenarios on the real engine.
-- `hunting-unsafe-eval.md` (2026-06-02) — removing `'unsafe-eval'` from the
-  production CSP via precompiled Ajv validators.
-- `shipping-log-june-2026.md` (2026-06-13) — a what's-new recap; links
-  internally to `/blog/hunting-unsafe-eval`.
-
-No application code changed. Slugs derive from filenames, so the recap's
-internal `/blog/hunting-unsafe-eval` link resolves to the unsafe-eval post.
+Fix: `csp.ts` now derives the Clerk Frontend API host from the publishable key
+(`pk_(test|live)_<base64("<host>$")>`) and allows it in `connect-src` (https +
+wss), `script-src`, and `frame-src`. This covers both dev instances
+(`*.clerk.accounts.dev`, already wildcarded) and the prod custom domain. The
+host is validated against a strict hostname regex; absent/invalid keys add
+nothing (existing behavior unchanged).
 
 ## Files Changed
 
-- `apps/web/content/blog/anatomy-of-a-run-bundle.md` (new)
-- `apps/web/content/blog/why-our-demo-runs-a-delorean.md` (new)
-- `apps/web/content/blog/hunting-unsafe-eval.md` (new)
-- `apps/web/content/blog/shipping-log-june-2026.md` (new)
+- `apps/web/lib/security/csp.ts`
+- `apps/web/lib/security/csp.test.ts`
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
 ## Verification
 
-- `npm test -w @llm-workbench/web` exits 0: 12 files, 81 tests. The blog index
-  tests validate every post's front matter (zod), headings (h2–h4), and
-  rendered HTML across all 13 posts.
-- `npm run build:web` compiles successfully; static generation runs 64/64
-  (includes each new post's OG/Twitter image routes via `generateStaticParams`,
-  so the build exercises every new post's front matter).
-- `npm run ci` exits 0 (root build, all workspace tests, typecheck, lint,
-  build:web).
-- `apps/web/content/blog` now holds 13 `.md` files (9 prior + 4 new). `/blog`
-  is server-rendered and lists posts newest-first, so the four interleave by
-  date; `/blog/[slug]` resolves each, including `hunting-unsafe-eval`.
+- `npm test -w @llm-workbench/web` (csp.test.ts) — new tests assert the derived
+  `https://clerk.llmworkbench.io` + `wss://...` appear in connect/script/frame
+  when a `pk_live` key is set, and that nothing is added when the key is absent.
+  `loadCsp` now stubs `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=""` by default so the
+  exact-string script-src assertions stay deterministic.
+- `npm run ci` exits 0 (build, all workspace tests, typecheck, lint, build:web).
+- Diagnosis evidence: prod `/v1/environment` shows `oauth_github` + `oauth_google`
+  ENABLED; prod `connect-src` lacked `clerk.llmworkbench.io` (the pk_live FAPI).
 
 ## Notes
 
-Markdown-only content slice. No middleware/allowlist change needed — `/blog`
-and `/blog/(.*)` are already public routes. Publication dates are intentionally
-spread across the May–June window rather than all stamped "today".
+Preview deploys use the dev Clerk instance (`*.clerk.accounts.dev`, already
+covered), so the prod custom-domain behavior is verified on production after
+merge: `curl -s -D- https://www.llmworkbench.io/sign-in` should show
+`clerk.llmworkbench.io` in `connect-src`, and social sign-in should render.

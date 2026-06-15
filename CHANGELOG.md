@@ -34,6 +34,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Production sign-in: allow Clerk's custom Frontend API domain in the CSP.**
+  Production Clerk runs on a custom domain (`clerk.llmworkbench.io`) that the
+  `*.clerk.com` / `*.clerk.accounts.dev` wildcards do not match, so the strict
+  production CSP blocked the browser from fetching Clerk's `/v1/environment` —
+  which is what renders the social (GitHub/Google) buttons. `csp.ts` now derives
+  the Clerk Frontend API host from `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and allows
+  it in `connect-src`, `script-src`, and `frame-src` (covers dev instances and
+  the prod custom domain alike). No effect when the key is unset.
 - **Rate limiter recognizes Vercel's Upstash (`KV_*`) env names.** Vercel's
   "Upstash for Redis" Marketplace integration injects `KV_REST_API_URL` /
   `KV_REST_API_TOKEN`, not `UPSTASH_REDIS_REST_*`. The edge rate limiter now
