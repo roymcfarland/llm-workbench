@@ -44,6 +44,16 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **CI audit gate now gates on high/critical severity (was: all severities).**
+  The previous `"low": true` audit-ci config failed CI on any advisory of any
+  severity unless hand-listed by GHSA id — an unwinnable treadmill against this
+  tree's moderate/low transitive advisories, which are dominated by phantom
+  (monaco vendors its own DOMPurify; the npm package is never executed) and
+  no-clean-fix (opentelemetry/postcss/js-yaml/ai-sdk) advisories the npm DB
+  re-mints faster than they can be listed. The gate now fails only on
+  high/critical (currently 0); the accepted moderates are documented in
+  `audit-ci.jsonc` with re-triage notes. Constant red CI that gets force-merged
+  is a worse security signal than green CI that fails on what is actionable.
 - **Removed dead GitHub links from the UI (the repository is private).** Every
   clickable link to the repo 404s, so the five user-facing GitHub links are
   gone: footer "GitHub" + "Security", the landing-page "Source", the final-CTA
