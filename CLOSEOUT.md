@@ -1,42 +1,41 @@
-# Closeout: allow Clerk custom Frontend API domain in the CSP
+# Closeout: migrate middleware.ts → proxy.ts (Next 16)
 
 ## Summary
 
-Production sign-in could not render the GitHub/Google buttons. Root cause: the
-production Clerk instance uses a **custom Frontend API domain**
-(`clerk.llmworkbench.io`), but the CSP only allowed `*.clerk.com` /
-`*.clerk.accounts.dev`. The strict production CSP therefore blocked the
-browser's fetch to `clerk.llmworkbench.io/v1/environment` (the request that
-lists enabled social providers), so the social buttons never appeared.
+Next.js 16 deprecated the `middleware` file convention in favor of `proxy` (the
+build printed a deprecation warning). Renamed `apps/web/middleware.ts` →
+`apps/web/proxy.ts`. The official codemod no-op'd because our handler is a
+**default export** (`export default clerkMiddleware(...)`), not a named
+`middleware` function — and the proxy convention explicitly accepts a default
+export, so the migration is a pure file rename with byte-identical logic: Clerk
+public-route allowlist, per-request nonce + CSP, edge rate limiter, JSON 401 for
+`/api` + `/trpc`, and the same `config.matcher`.
 
-Fix: `csp.ts` now derives the Clerk Frontend API host from the publishable key
-(`pk_(test|live)_<base64("<host>$")>`) and allows it in `connect-src` (https +
-wss), `script-src`, and `frame-src`. This covers both dev instances
-(`*.clerk.accounts.dev`, already wildcarded) and the prod custom domain. The
-host is validated against a strict hostname regex; absent/invalid keys add
-nothing (existing behavior unchanged).
+**RUNTIME NOTE:** `middleware` defaulted to the Edge runtime; `proxy` runs on the
+**Node.js runtime** (the `runtime` option is not configurable in proxy files).
+This is Vercel's recommended direction and is functionally equivalent here — the
+code uses only cross-runtime APIs (`crypto.getRandomValues`, `btoa`, `atob`,
+`@upstash/*`, Clerk, `NextResponse`).
 
 ## Files Changed
 
-- `apps/web/lib/security/csp.ts`
-- `apps/web/lib/security/csp.test.ts`
+- `apps/web/middleware.ts` → `apps/web/proxy.ts` (rename; no content change)
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
 ## Verification
 
-- `npm test -w @llm-workbench/web` (csp.test.ts) — new tests assert the derived
-  `https://clerk.llmworkbench.io` + `wss://...` appear in connect/script/frame
-  when a `pk_live` key is set, and that nothing is added when the key is absent.
-  `loadCsp` now stubs `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=""` by default so the
-  exact-string script-src assertions stay deterministic.
-- `npm run ci` exits 0 (build, all workspace tests, typecheck, lint, build:web).
-- Diagnosis evidence: prod `/v1/environment` shows `oauth_github` + `oauth_google`
-  ENABLED; prod `connect-src` lacked `clerk.llmworkbench.io` (the pk_live FAPI).
+- `npm run build:web` exits 0; the "middleware deprecated" warning is gone; the
+  route table shows `ƒ Proxy (Middleware)`.
+- `LLM_WB_E2E_DISABLE_DNS_SHIM=1 npm run test:e2e -w apps/web` — 5/5 passed
+  (strict-CSP render on `/` and `/runs/demo` with no script/eval violations;
+  public routes; demo→demo hydration). Confirms the proxy behaves identically
+  on the Node runtime.
+- `npm run typecheck` / `lint -w @llm-workbench/web` exit 0; `npm test -w
+  @llm-workbench/web` → 12 files / 84 tests pass.
 
 ## Notes
 
-Preview deploys use the dev Clerk instance (`*.clerk.accounts.dev`, already
-covered), so the prod custom-domain behavior is verified on production after
-merge: `curl -s -D- https://www.llmworkbench.io/sign-in` should show
-`clerk.llmworkbench.io` in `connect-src`, and social sign-in should render.
+Auth-gated behavior (Clerk sign-in redirect / `/api` 401) is runtime-agnostic
+and unchanged; verify on the PR preview (`curl -sI .../playground` → 3xx to
+sign-in; `curl .../api/runs` → 401) before merge.
