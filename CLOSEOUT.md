@@ -1,41 +1,40 @@
-# Closeout: migrate middleware.ts → proxy.ts (Next 16)
+# Closeout: refresh the dependency audit baseline
 
 ## Summary
 
-Next.js 16 deprecated the `middleware` file convention in favor of `proxy` (the
-build printed a deprecation warning). Renamed `apps/web/middleware.ts` →
-`apps/web/proxy.ts`. The official codemod no-op'd because our handler is a
-**default export** (`export default clerkMiddleware(...)`), not a named
-`middleware` function — and the proxy convention explicitly accepts a default
-export, so the migration is a pure file rename with byte-identical logic: Clerk
-public-route allowlist, per-request nonce + CSP, edge rate limiter, JSON 401 for
-`/api` + `/trpc`, and the same `config.matcher`.
+A batch of newly-published npm advisories turned the `audit:check` gate red on
+`main`, blocking every PR. Patched what had non-breaking fixes and allowlisted
+the one remaining no-fix advisory with rationale.
 
-**RUNTIME NOTE:** `middleware` defaulted to the Edge runtime; `proxy` runs on the
-**Node.js runtime** (the `runtime` option is not configurable in proxy files).
-This is Vercel's recommended direction and is functionally equivalent here — the
-code uses only cross-runtime APIs (`crypto.getRandomValues`, `btoa`, `atob`,
-`@upstash/*`, Clerk, `NextResponse`).
+- **Patched via `npm audit fix`** (lockfile-only, no major bumps): `@babel/core`
+  arbitrary file read (GHSA-4x5r-pxfx-6jf8), `form-data` CRLF injection
+  (GHSA-hmw2-7cc7-3qxx), `ws` DoS (GHSA-96hv-2xvq-fx4p).
+- **Newly allowlisted** in `audit-ci.jsonc`: `js-yaml` GHSA-h67p-54hq-rp68
+  (quadratic-complexity DoS in merge-key handling, transitive via `gray-matter`
+  blog front-matter parsing — only ever parses our own authored content at BUILD
+  time, never untrusted/runtime input; fix needs the breaking `gray-matter@2`).
+- **Unchanged allowlist entries:** the 8 DOMPurify advisories (Monaco vendors its
+  own copy — the npm package is declared-but-unimported; `npm audit fix` cannot
+  move it), `@ai-sdk/provider-utils` (needs ai@6), and `postcss` (Next.js
+  transitive). These were already allowlisted with revisit triggers.
 
 ## Files Changed
 
-- `apps/web/middleware.ts` → `apps/web/proxy.ts` (rename; no content change)
+- `package-lock.json` (the three `npm audit fix` patches)
+- `audit-ci.jsonc` (allowlist the one new no-fix advisory)
 - `CHANGELOG.md`
 - `CLOSEOUT.md`
 
 ## Verification
 
-- `npm run build:web` exits 0; the "middleware deprecated" warning is gone; the
-  route table shows `ƒ Proxy (Middleware)`.
-- `LLM_WB_E2E_DISABLE_DNS_SHIM=1 npm run test:e2e -w apps/web` — 5/5 passed
-  (strict-CSP render on `/` and `/runs/demo` with no script/eval violations;
-  public routes; demo→demo hydration). Confirms the proxy behaves identically
-  on the Node runtime.
-- `npm run typecheck` / `lint -w @llm-workbench/web` exit 0; `npm test -w
-  @llm-workbench/web` → 12 files / 84 tests pass.
+- `npm run audit:check` exits 0 — "Passed npm security audit." The three patched
+  advisories no longer appear; the allowlisted set is acknowledged.
+- `npm ci` exits 0 — the updated lockfile installs cleanly from scratch
+  (platform-complete; no single-OS regenerate, per the lockfile lesson).
+- `npm run ci` exits 0 — build, all workspace tests, typecheck, lint, build:web.
 
 ## Notes
 
-Auth-gated behavior (Clerk sign-in redirect / `/api` 401) is runtime-agnostic
-and unchanged; verify on the PR preview (`curl -sI .../playground` → 3xx to
-sign-in; `curl .../api/runs` → 401) before merge.
+This unblocks the whole PR pipeline (the gate was failing on `main`, not on any
+one branch). Open PRs branched before this need `main` merged in to pick up the
+patched lockfile + allowlist before their CI goes green.
