@@ -6,6 +6,9 @@ async function loadCsp(
   env: Record<string, string> = {},
 ): Promise<typeof import("./csp")> {
   vi.resetModules();
+  // Deterministic by default: no derived Clerk Frontend API host unless a test
+  // explicitly provides a publishable key.
+  vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
   for (const [key, value] of Object.entries(env)) {
     vi.stubEnv(key, value);
   }
@@ -78,6 +81,32 @@ describe("contentSecurityPolicy", () => {
 
     expect(scriptSrc(contentSecurityPolicy())).toBe(
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.vercel-scripts.com",
+    );
+  });
+
+  it("allows the Clerk custom Frontend API domain derived from the publishable key", async () => {
+    const pk = `pk_live_${Buffer.from("clerk.llmworkbench.io$").toString("base64")}`;
+    const { contentSecurityPolicy } = await loadCsp({
+      NODE_ENV: "production",
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk,
+    });
+
+    const policy = contentSecurityPolicy("nonce-value");
+    const directive = (name: string) =>
+      policy.split("; ").find((p) => p.startsWith(`${name} `)) ?? "";
+
+    // The *.clerk.* wildcards don't cover the prod custom domain, so it must be
+    // allowed explicitly — for the environment fetch (connect), clerk-js, frames.
+    expect(directive("connect-src")).toContain("https://clerk.llmworkbench.io");
+    expect(directive("connect-src")).toContain("wss://clerk.llmworkbench.io");
+    expect(directive("script-src")).toContain("https://clerk.llmworkbench.io");
+    expect(directive("frame-src")).toContain("https://clerk.llmworkbench.io");
+  });
+
+  it("adds no derived Clerk host when the publishable key is absent", async () => {
+    const { contentSecurityPolicy } = await loadCsp({ NODE_ENV: "production" });
+    expect(contentSecurityPolicy("nonce-value")).not.toContain(
+      "llmworkbench.io",
     );
   });
 
