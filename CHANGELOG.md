@@ -35,6 +35,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Publish automation + secret scanning.** Added [changesets](https://github.com/changesets/changesets)
+  for coordinated versioning/publishing of the five `@llm-workbench/*` packages
+  (`.changeset/config.json`, `access: public`) and a `Release` GitHub Actions
+  workflow that opens a "Version Packages" PR and publishes to npm with build
+  `--provenance`. The release job is **dormant by default** — gated on a
+  `RELEASE_ENABLED` repo variable + an `NPM_TOKEN` secret, both set at go-live.
+  Also added a `gitleaks` secret-scan CI gate with a `.gitleaks.toml` allowlist
+  for the known-benign CI/e2e test placeholders.
 - **Per-package READMEs.** Added README files for `@llm-workbench/runtime`, `ui`,
   `adapters-react`, and `ai-sdk` (npm package pages), each with install, an API
   surface table, and a link to the root README. OSS-ified the existing

@@ -1,0 +1,54 @@
+name: Release
+
+# Changesets-driven release. On push to main:
+#   - if pending changesets exist, opens/updates a "Version Packages" PR
+#   - when that PR merges (no pending changesets left), publishes the changed
+#     @llm-workbench/* packages to npm with build provenance.
+#
+# DORMANT BY DEFAULT: the job only runs when the repo variable
+# `RELEASE_ENABLED` is set to "true". Until go-live this job is skipped, so it
+# never attempts a publish (which would otherwise fail red without a token, or
+# publish prematurely with one). To activate at go-live:
+#   1. create an npm granular automation token and add it as the NPM_TOKEN secret
+#   2. set the repo variable RELEASE_ENABLED=true
+#      (gh variable set RELEASE_ENABLED --body true)
+
+on:
+  push:
+    branches: [main]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Version or publish
+    if: ${{ vars.RELEASE_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the version commit / tags
+      pull-requests: write # open the "Version Packages" PR
+      id-token: write # npm publish provenance
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Create Release PR or publish to npm
+        uses: changesets/action@v1
+        with:
+          version: npm run changeset:version
+          publish: npm run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"

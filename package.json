@@ -23,9 +23,13 @@
     "lint:packages": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
     "audit:check": "audit-ci --config audit-ci.jsonc",
     "smoke:esm": "node scripts/esm-smoke.mjs",
-    "ci": "npm run build && npm run smoke:esm && npm test && npm run typecheck -w @llm-workbench/web && npm run lint -w @llm-workbench/web && npm run lint:packages && npm run build:web"
+    "ci": "npm run build && npm run smoke:esm && npm test && npm run typecheck -w @llm-workbench/web && npm run lint -w @llm-workbench/web && npm run lint:packages && npm run build:web",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "release": "npm run build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "audit-ci": "^7.1.0",
     "eslint": "^9.39.4",
     "tsx": "^4.22.4",
