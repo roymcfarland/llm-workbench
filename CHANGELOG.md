@@ -8,6 +8,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **MIT license + publish-ready package manifests.** Replaced all six `LICENSE`
+  files (root + the five packages) with the MIT License; removed the proprietary
+  `NOTICE`; set `"license": "MIT"` across every manifest. The five `packages/*`
+  are now publishable — removed `"private"`, added `publishConfig.access:"public"`,
+  `repository`+`directory`, `homepage`, `bugs`, `author`, `description`, and
+  `keywords`. Root, `apps/web`, and `examples/*` keep `"private": true` (never
+  published). `npm pack --dry-run` confirms each tarball ships the MIT `LICENSE`
+  with no source/test leakage.
 - **License posture flipped to open source (MIT) in `PROJECT.md`.** The
   authoritative spec now declares the project MIT-licensed, the `packages/*`
   libraries published to npm under `@llm-workbench/*`, and the repository public.
