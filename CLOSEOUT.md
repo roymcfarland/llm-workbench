@@ -1,32 +1,39 @@
-# Closeout: SPDX headers relicensed to MIT (internal hygiene)
+# Closeout: publish via npm OIDC Trusted Publishing (drop NPM_TOKEN)
 
 ## Summary
 
-Completes the MIT relicense by sweeping the last `LicenseRef-Proprietary` SPDX
-identifiers — the internal `scripts/*` tooling and the precompiled-validator
-generator — to `MIT`. These are repo-internal files (build/test/bootstrap +
-deployment helpers, and a build-time codegen step); none ship in the published
-`@llm-workbench/*` packages. Pure header/identifier change; no runtime behavior
-changes. The follow-up flagged in the previous slice's closeout.
+Replaces the long-lived `NPM_TOKEN` secret in the `Release` workflow with npm
+**OIDC Trusted Publishing**. GitHub Actions mints a short-lived OIDC token
+(`id-token: write`, already granted) that npm exchanges for publish rights, so
+there is no secret to rotate and no 90-day expiry to track. Provenance
+attestations are generated automatically by trusted publishing, so the explicit
+`--provenance` / `NPM_CONFIG_PROVENANCE` is no longer needed.
+
+This is the post-launch swap planned at go-live: the first publish (0.3.0) had
+to be token-based because trusted publishing can only be configured for packages
+that already exist on npm. They exist now, so the token can be retired.
 
 ## Changes
 
-- **`scripts/*` (13 files)** — `// SPDX-License-Identifier: LicenseRef-Proprietary`
-  → `MIT` across `bootstrap.mjs`, `vitest.config.mjs`, the `*.test.mjs` suites,
-  and `lib/{args,clerk,http,log,plan,supabase,tokens,vercel}.mjs`.
-- **`scripts/gen-validators.mts`** — relicensed its own header and the SPDX line
-  it *emits* into the generated module (line 32), so regenerated output is MIT.
-- **Regenerated** `apps/web/lib/security/precompiled-validators.generated.mjs`
-  via `npm run gen:validators` (now carries the MIT header), and updated the
-  hand-maintained companion `precompiled-validators.generated.mjs.d.ts`.
+- **`.github/workflows/release.yml`**
+  - Removed `NPM_TOKEN`, `NODE_AUTH_TOKEN`, and `NPM_CONFIG_PROVENANCE` from the
+    changesets/action env (kept `GITHUB_TOKEN` for the Version PR / tags).
+  - Added an `npm install -g npm@latest` step (trusted publishing requires
+    `npm >= 11.5.1`; the bundled npm may be older).
+  - Documented the one-time per-package Trusted Publisher setup in the header.
+  - Kept the `RELEASE_ENABLED` dormancy gate and `id-token: write`.
 
 ## Verification
 
-- `grep -rn LicenseRef-Proprietary` (excluding `node_modules`/`.git`) → zero
-  remaining SPDX headers (only this closeout's prose references the old string).
-- `npm run gen:validators` → regenerated cleanly; generated `.mjs` header is MIT.
-- `npm run test:scripts` → 20 passed (2 files).
+- `release.yml` parses as valid YAML.
+- A no-op release run (no pending changesets) does not authenticate — it logs
+  "No unpublished projects to publish" and exits 0 — so merging this is safe
+  before the Trusted Publishers are configured.
 
-## Not in scope
+## Follow-up (out of this PR — needs npmjs.com access)
 
-- Nothing outstanding from the MIT relicense after this slice.
+1. Configure Trusted Publisher for all five `@llm-workbench/*` packages
+   (org `roymcfarland`, repo `llm-workbench`, workflow `release.yml`).
+2. Cut a `0.3.1` validating release through OIDC; confirm 5/5 publish with
+   automatic provenance.
+3. `gh secret delete NPM_TOKEN` once OIDC publishing is confirmed.

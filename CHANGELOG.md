@@ -8,6 +8,15 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Publishing switched to npm OIDC Trusted Publishing (no `NPM_TOKEN`).** The
+  `Release` workflow now authenticates to npm with a short-lived OIDC token
+  minted from GitHub Actions (`id-token: write`) instead of a long-lived
+  `NPM_TOKEN` secret — nothing to rotate or expire. Provenance attestations are
+  generated automatically by trusted publishing (dropped the explicit
+  `--provenance`/`NPM_CONFIG_PROVENANCE`), and the runner upgrades npm to the
+  latest (trusted publishing requires `npm >= 11.5.1`). Requires a one-time
+  Trusted Publisher configuration per package on npmjs.com (documented in the
+  workflow header).
 - **Internal SPDX headers relicensed to MIT.** Swept the remaining
   `LicenseRef-Proprietary` SPDX identifiers to `MIT` across the `scripts/*`
   tooling (build/test/bootstrap + Vercel/Clerk/Supabase/HTTP helpers) and the
