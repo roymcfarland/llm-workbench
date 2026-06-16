@@ -41,7 +41,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `@llm-workbench/mcp` README (was proprietary-framed and linked the wrong repo
   URL). npm includes each `README.md` in the published tarball.
 - **Community / contributor docs.** Adopted the Contributor Covenant 2.1 as the
-  project Code of Conduct (added via GitHub's recognized template) and added
+  project Code of Conduct (the canonical Contributor Covenant 2.1 text as
+  `CODE_OF_CONDUCT.md`) and added
   GitHub issue + pull-request templates
   (`.github/ISSUE_TEMPLATE/{bug_report,feature_request}.md`, `config.yml`,
   `.github/PULL_REQUEST_TEMPLATE.md`). Landed the open-source
