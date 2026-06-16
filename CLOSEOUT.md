@@ -1,34 +1,32 @@
-# Closeout: PROJECT.md — authorize automated blog generation (clear non-goal #55)
+# Closeout: resync package-lock.json to released workspace versions
 
 ## Summary
 
-Spec-only governance amendment that unblocks the automated weekly blog
-publisher. The "not a model provider" non-goal was broad enough that a
-context-free Verifier could reject the publisher PR for adding a Vercel AI
-Gateway call. This amendment scopes that non-goal to the
-`@llm-workbench/runtime` control plane and explicitly permits `apps/web` and
-repository site-ops tooling to call the Gateway (which `apps/web` already does),
-then adds a resolved Q5 authorizing the publisher with its own Verifier
-behavior. Per the builder/verifier loop's Lesson 98, the rule is cleared in this
-PR before the feature PR is drafted.
+Lockfile-only hygiene fix. The changesets "Version Packages" PR (#53) bumped
+every workspace `package.json` to its released version but did not run an
+install, so `package-lock.json` on `main` still recorded the pre-release
+versions (`@llm-workbench/* 0.2.0`, `apps/web 0.1.0`, `examples/* 0.0.0`). Any
+subsequent `npm install` resyncs those versions, which is why an unrelated
+feature PR (the blog publisher, #57) surfaced the resync as incidental lockfile
+churn. Regenerating the lockfile here, in its own correctly-scoped PR, fixes the
+drift at the source and keeps future feature diffs clean.
 
 ## Changes
 
-- **`PROJECT.md`**
-  - Non-goal "Not a model provider": narrowed to the runtime/control-plane;
-    added a carve-out for `apps/web` + site-ops tooling using the AI Gateway.
-  - Added **Q5. Automated blog / content generation** under "Open questions
-    (resolved)": in scope as site-ops tooling, source-grounded + schema-validated
-    + dormant-by-default, with Verifier behavior (don't reject the publisher on
-    the model-provider non-goal; require it stay gated and schema/CI-valid).
+- **`package-lock.json`** — regenerated with npm 11 from the current
+  `package.json` set. Workspace self-versions now match (`0.3.0` / `0.1.1` /
+  `0.0.1`); stale `peer` metadata normalized. **No** dependency added, removed,
+  or version-bumped (0 new `resolved`/`integrity` entries).
+- **`CHANGELOG.md` / `CLOSEOUT.md`** — ledger.
 
 ## Verification
 
-- No code or config changed — `PROJECT.md` only (plus this ledger).
-- The amendment does not touch any other non-goal (eval, routing, marketplace,
-  realtime, etc.); Q5 explicitly states the publisher performs none of those.
+- `git diff main -- package-lock.json`: 0 new/removed `resolved`/`integrity`
+  lines — pure version + `peer`-metadata resync.
+- `npm run audit:check`: green (high 0, critical 0).
+- CI (`build & test` node 22/24) runs `npm ci`, which requires
+  `package.json` ↔ `package-lock.json` agreement — the gate proves the resync.
 
 ## Not in scope
 
-- The publisher implementation (workflow, generator script, source config,
-  tests) — the next slice, built via the builder/verifier loop.
+No `package.json`, source, workflow, or dependency changes — lockfile only.

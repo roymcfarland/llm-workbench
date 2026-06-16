@@ -8,6 +8,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Resynced `package-lock.json` to the released workspace versions.** The
+  changesets "Version Packages" step bumps each `package.json` but does not run
+  an install, so the lockfile still recorded the pre-release workspace versions
+  (`@llm-workbench/* 0.2.0`, `apps/web 0.1.0`, `examples/* 0.0.0`). Regenerated
+  the lockfile with npm 11 so it matches `package.json` (`0.3.0` / `0.1.1` /
+  `0.0.1`) and normalized stale `peer` metadata. Lockfile-only — no dependency
+  added, removed, or version-bumped; `npm run audit:check` green. Stops every
+  future PR from carrying this resync as incidental churn.
 - **`PROJECT.md`: authorized automated blog generation as site-ops tooling.**
   Clarified the "not a model provider" non-goal so it scopes the
   `@llm-workbench/runtime` control plane only — the reference deployment
