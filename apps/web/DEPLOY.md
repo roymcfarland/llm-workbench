@@ -12,12 +12,8 @@ into production on Vercel + Supabase + Clerk + Vercel AI Gateway.
 > checklist below remains authoritative for users without Node access or
 > who want to understand what the script does.
 
-> **License reminder.** This entire repository is **proprietary** software
-> owned by Roy McFarland and Brightline Ltd. Use, modification, deployment,
-> and operation are limited to Authorized Users (Roy McFarland personally
-> and entities controlled by Roy McFarland) except by separate written
-> agreement. See [`LICENSE`](../../LICENSE) and
-> [`COMMERCIAL.md`](../../COMMERCIAL.md).
+> **License.** This repository is open source under the **MIT License** — free
+> to use, modify, and distribute, including commercially. See [`LICENSE`](../../LICENSE).
 
 ---
 

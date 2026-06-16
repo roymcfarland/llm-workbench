@@ -39,15 +39,13 @@ calls explicit APIs to record what happened. Protocol v${WORKBENCH_PROTOCOL_VERS
 
 ## License
 
-${LICENSE_NAME}. Source-available, not OSI open source. Free to read, fork,
-modify, redistribute (noncommercial), and use for personal projects, research,
-education, and public-benefit work. Commercial use requires a separate paid
-license.
+${LICENSE_NAME} — OSI-approved open source. Free to use, modify, and
+distribute, including commercially. The five core libraries are published to
+npm under the @llm-workbench scope.
 
 ## Contact
 
-Open issues at ${GITHUB_URL}/issues. For commercial inquiries, see
-${GITHUB_URL}/blob/main/COMMERCIAL.md.
+Open issues or pull requests at ${GITHUB_URL}.
 `;
   return new Response(body, {
     status: 200,

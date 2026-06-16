@@ -162,6 +162,15 @@ export default async function LandingPage() {
                 >
                   {LICENSE_NAME}
                 </a>
+                {" · "}
+                <a
+                  href={GITHUB_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline-offset-4 hover:underline"
+                >
+                  Source
+                </a>
               </p>
             </div>
 
@@ -312,7 +321,7 @@ function buildJsonLd({
           name: "What is the license?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Proprietary. All rights reserved. Use, modification, and operation are limited to Authorized Users (Roy McFarland personally and entities controlled by Roy McFarland, including Brightline Ltd) except by separate written agreement.",
+            text: "MIT. LLM Workbench is open source — free to use, modify, and distribute, including commercially. The five core libraries are published to npm under the @llm-workbench scope, and the source is on GitHub.",
           },
         },
       ],

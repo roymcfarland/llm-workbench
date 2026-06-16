@@ -39,7 +39,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is it open source? Is it a product?",
-    a: "LLM Workbench is a proprietary platform (the source isn't public). You can use the full thing via the live demo and playground; commercial licensing details are in COMMERCIAL.md.",
+    a: "Both. LLM Workbench is open source under the MIT license — the full source is on GitHub and the core libraries are on npm under the @llm-workbench scope. You can also use it instantly via the live demo and playground, no setup required.",
   },
   {
     q: "How do I try it?",
