@@ -1,45 +1,47 @@
-# Closeout: MIT license + publish-ready package manifests
+# Closeout: publish automation + secret scanning (final staging slice)
 
 ## Summary
 
-Slice 2 of the open-source publishing arc (gated on the PROJECT.md posture flip,
-#42). Converts the repository's license from proprietary to MIT and makes the five
-`packages/*` libraries publish-ready under the `@llm-workbench/*` scope, while
-keeping the root, `apps/web`, and `examples/*` private (never published).
+Last slice of the OSS staging bucket. Wires up coordinated npm publishing
+(changesets + a provenance release workflow) and a gitleaks secret-scan gate —
+both staged **dormant** so nothing publishes or changes until the explicit
+go-live. After this, every remaining task is the coordinated launch.
 
 ## Changes
 
-- **LICENSE × 6** — root + `packages/{runtime,ui,adapters-react,ai-sdk,mcp}/LICENSE`
-  replaced with the MIT License, `Copyright (c) 2026 Roy McFarland`.
-- **NOTICE removed** — it was a proprietary artifact ("All rights reserved",
-  "Authorized Users"); MIT does not use a NOTICE file.
-- **`"license": "MIT"`** set on every `package.json` (root, 5 packages, `apps/web`,
-  both examples), replacing `"SEE LICENSE IN LICENSE"`.
-- **Five packages made publishable** — removed `"private"`; added
-  `publishConfig: { "access": "public" }`, `repository` (with per-package
-  `directory`), `homepage` (`https://www.llmworkbench.io`), `bugs`, `author`
-  (`Roy McFarland`), a one-line `description`, and `keywords`.
-- **Non-published manifests** — root, `apps/web`, `examples/*` keep `"private": true`.
+- **Changesets** — `@changesets/cli` devDep; `.changeset/config.json`
+  (`access: "public"`, `baseBranch: "main"`); root scripts `changeset`,
+  `changeset:version`, and `release` (`npm run build && changeset publish`).
+  Changesets targets exactly the five non-private `packages/*`; root, `apps/web`,
+  and `examples/*` are auto-ignored (private).
+- **`.github/workflows/release.yml`** — on push to main, opens a "Version
+  Packages" PR for pending changesets, and publishes with `NPM_CONFIG_PROVENANCE`
+  + `id-token: write`. **Gated `if: vars.RELEASE_ENABLED == 'true'`** so the job
+  is skipped (neutral, never red, never publishes) until go-live.
+- **`.gitleaks.toml`** — extends the default ruleset and allowlists the three
+  known-benign CI/e2e placeholders (public Clerk example publishable key, a fake
+  `sk_test` stub decoding to "test secret key for e2e", and a constant name).
+- **`.github/workflows/gitleaks.yml`** — runs gitleaks on PRs + main (free for
+  this non-org repo).
 
 ## Verification
 
-- `npm run build` ✓ (all 5 packages emit).
-- `npm pack --dry-run` on each of the five packages: tarball includes the MIT
-  `LICENSE` (1.1 kB) and `dist`; **no `src/` or `*.test.*` leakage** (asserted
-  per-package via the `--json` file list).
-- `npm run smoke:esm` ✓ (plain-Node import of runtime + ai-sdk + mcp unaffected).
-- `npm run ci` exit 0 — full build, all tests (302+), web typecheck/lint/build green.
-- `package-lock.json` updated to reflect the workspace metadata changes (9 lines;
-  no dependency add/remove).
+- `gitleaks detect --config .gitleaks.toml` over full history → **no leaks found**
+  (the allowlist clears all prior benign findings; the CI gate will pass).
+- `npx changeset status` → wired; no pending changesets (expected).
+- Both workflow YAMLs parse clean; `npm run build` green after the devDep.
+- Release job is inert until `RELEASE_ENABLED=true` + `NPM_TOKEN` are set.
 
-## Out of scope (next slices)
+## Go-live activation (Phase 5, user)
 
-- Slice 4 — restore the GitHub links #39 removed + fix the stale `GITHUB_URL` +
-  OSS-ify the site/README "proprietary" framing.
-- Slice 5 — per-package READMEs (4 of 5 packages still lack one) + README badges.
-- Slice 6 — community docs (CONTRIBUTING rewrite, CODE_OF_CONDUCT, SECURITY, templates).
-- Slice 7 — changesets + npm publish workflow.
+1. `npm login` locally, or create an npm granular automation token → add as the
+   `NPM_TOKEN` repo secret.
+2. `gh variable set RELEASE_ENABLED --body true`.
+3. Add a changeset (`npm run changeset`) describing the initial public release,
+   merge it; the Release workflow opens the Version PR, then publishes on merge.
 
-Packages are now MIT-licensed and publish-ready, but **not yet published** — the
-first publish happens at go-live (Phase 5) after the release workflow lands and the
-npm org is created.
+## Remaining (go-live bundle — needs explicit go-ahead)
+
+Restore the site's GitHub links + OSS site copy + retire `COMMERCIAL.md` + fix
+`apps/web/lib/site.ts` (GITHUB_URL org, drop COMMERCIAL_URL) · announcement blog
+post · flip repo public · first `npm publish` · personal profile README.

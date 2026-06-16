@@ -1,0 +1,25 @@
+name: Secret scan
+
+# Scans the repo for committed secrets on every PR and push to main, using the
+# allowlist in .gitleaks.toml. Free for this personal/public repo (no license
+# needed for non-org repos).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
