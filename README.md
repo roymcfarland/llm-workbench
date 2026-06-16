@@ -1,6 +1,11 @@
 # LLM Workbench
 
-**A proprietary control plane for LLM-powered products.**
+[![npm version](https://img.shields.io/npm/v/@llm-workbench/runtime.svg)](https://www.npmjs.com/package/@llm-workbench/runtime)
+[![CI](https://github.com/roymcfarland/llm-workbench/actions/workflows/ci.yml/badge.svg)](https://github.com/roymcfarland/llm-workbench/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/node/v/@llm-workbench/runtime.svg)](https://nodejs.org)
+
+**An open-source control plane for LLM-powered products.**
 
 LLM Workbench gives AI applications a production-grade human interface for
 the messy parts that matter: workflow state, artifacts, rules, human review
@@ -15,10 +20,9 @@ call OpenAI, Anthropic, local models, or any other provider directly. Your host
 application owns prompts, tools, models, and policy. LLM Workbench records what
 happened and gives humans a clean control surface over it.
 
-> **License in one line:** Proprietary. All rights reserved. Use, modification,
-> and operation are limited to Authorized Users (Roy McFarland personally and
-> entities controlled by Roy McFarland, including Brightline Ltd) except by
-> separate written agreement. See [License](#license).
+> **License:** [MIT](LICENSE) — free to use, modify, and distribute. The five
+> core libraries are published to npm under the
+> [`@llm-workbench`](https://www.npmjs.com/org/llm-workbench) scope.
 
 ## Status
 
@@ -39,6 +43,26 @@ enforce on every PR.
 - **Interactive demo (no signup):** https://www.llmworkbench.io/runs/demo — a
   read-only LLM Workbench run rendered exactly as an authenticated run is.
 - **Overview & docs:** https://www.llmworkbench.io · https://www.llmworkbench.io/docs/protocol
+
+## Install
+
+```bash
+npm install @llm-workbench/runtime
+```
+
+Optional companion packages:
+
+```bash
+npm install @llm-workbench/ui @llm-workbench/adapters-react   # React control surface
+npm install @llm-workbench/ai-sdk                              # Vercel AI SDK tracing
+npm install @llm-workbench/mcp                                 # expose runs over MCP
+```
+
+All five libraries are published under the
+[`@llm-workbench`](https://www.npmjs.com/org/llm-workbench) scope (MIT, ESM,
+Node 22+). The runtime has no React or framework dependency — it runs in the
+browser, Node, or edge-style runtimes. Jump to the
+[60-second integration](#60-second-integration) for a complete example.
 
 ## For Reviewers
 
@@ -146,7 +170,10 @@ apps/
 | `@llm-workbench/ai-sdk` | Vercel AI SDK v5 wrappers (`tracedGenerateText`, `tracedStreamText`, `tracedGenerateObject`, `tracedStreamObject`, `traceTools`) that emit correlated `model_io`, `tool_call`, and gateway-cost trace events automatically. |
 | `@llm-workbench/mcp` | Model Context Protocol server factory plus HTTP handler (`createWorkbenchMcpHttpHandler`) for exposing the runtime over MCP — see [`packages/mcp/README.md`](packages/mcp/README.md). |
 
-## Quick Start
+## Local Development
+
+To work on the monorepo itself (rather than consume the published packages),
+clone it and run:
 
 ```bash
 npm install
@@ -156,7 +183,7 @@ npm run demo               # Vite demo app at http://localhost:5173
 npm run demo:http-server   # Reference REST store for HttpRunRepository
 ```
 
-Node.js **22+** is required (`engines` in root `package.json`). CI runs on **Node 22 and 24** (`.github/workflows/ci.yml`).
+Node.js **22+** is required (`engines` in root `package.json`). CI runs on **Node 22 and 24** (`.github/workflows/ci.yml`). See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
 ## 60-Second Integration
 
@@ -244,22 +271,16 @@ Drop the shell anywhere in your app:
 
 ## License
 
-LLM Workbench is **proprietary**. All rights reserved.
-
-Use, modification, deployment, and operation are limited to Authorized Users
-(Roy McFarland personally and any entity controlled by Roy McFarland,
-including Brightline Ltd) except by separate written agreement. The full
-text of this grant is in [`LICENSE`](LICENSE), and an identical copy lives in
-each `packages/*/LICENSE` directory.
-
-For licensing inquiries, contact Roy McFarland.
+LLM Workbench is released under the **[MIT License](LICENSE)** — free to use,
+modify, and distribute, including commercially. The same license applies to every
+package under `packages/*`.
 
 ## Contributing
 
-Outside contributions are not currently accepted. Issue reports are welcome
-through [GitHub Issues](https://github.com/roymcfarland/llm-workbench/issues),
-but pull requests from third parties will be closed without merge unless a
-separate written agreement is in place.
+Contributions are welcome. Open an issue to discuss a change or report a bug via
+[GitHub Issues](https://github.com/roymcfarland/llm-workbench/issues), and see
+[CONTRIBUTING.md](CONTRIBUTING.md) for local setup and the PR process. Please also
+read the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Security
 
