@@ -1,47 +1,44 @@
-# Closeout: publish automation + secret scanning (final staging slice)
+# Closeout: open-source-ify the reference web app (MIT framing + restore GitHub links)
 
 ## Summary
 
-Last slice of the OSS staging bucket. Wires up coordinated npm publishing
-(changesets + a provenance release workflow) and a gitleaks secret-scan gate —
-both staged **dormant** so nothing publishes or changes until the explicit
-go-live. After this, every remaining task is the coordinated launch.
+Part of the go-live bundle. Purges proprietary framing from the public-facing
+reference app and restores the GitHub links #39 removed, so that when the repo
+goes public the site is consistent and truthful (MIT, source on GitHub, packages
+on npm). **Must merge at go-live, not before** — the restored GitHub links point
+at the repo and the copy claims "open source on npm", both of which only become
+true when the repo is public and the packages are published.
 
-## Changes
+## Changes (14 files)
 
-- **Changesets** — `@changesets/cli` devDep; `.changeset/config.json`
-  (`access: "public"`, `baseBranch: "main"`); root scripts `changeset`,
-  `changeset:version`, and `release` (`npm run build && changeset publish`).
-  Changesets targets exactly the five non-private `packages/*`; root, `apps/web`,
-  and `examples/*` are auto-ignored (private).
-- **`.github/workflows/release.yml`** — on push to main, opens a "Version
-  Packages" PR for pending changesets, and publishes with `NPM_CONFIG_PROVENANCE`
-  + `id-token: write`. **Gated `if: vars.RELEASE_ENABLED == 'true'`** so the job
-  is skipped (neutral, never red, never publishes) until go-live.
-- **`.gitleaks.toml`** — extends the default ruleset and allowlists the three
-  known-benign CI/e2e placeholders (public Clerk example publishable key, a fake
-  `sk_test` stub decoding to "test secret key for e2e", and a constant name).
-- **`.github/workflows/gitleaks.yml`** — runs gitleaks on PRs + main (free for
-  this non-org repo).
+- **`apps/web/lib/site.ts`** — `GITHUB_URL` `llmworkbench` → `roymcfarland`;
+  `LICENSE_NAME` `Proprietary` → `MIT`; removed `COMMERCIAL_URL`; added `NPM_ORG_URL`.
+- **Restored #39's GitHub links** — footer "GitHub" + "Security", landing-page
+  "Source", final-CTA "View on GitHub", protocol-docs "Source on GitHub" chip
+  (re-added the `GITHUB_URL` imports they dropped).
+- **License copy → MIT** — footer licensing paragraph (dropped the commercial
+  link), landing JSON-LD "What is the license?" answer, `llms.txt`,
+  `llms-full.txt`, `agents.md`, `humans.txt`, OpenAPI `license` object, FAQ
+  "Is it open source?" answer, run-completion email footer, `DEPLOY.md` banner.
+- **Retired `COMMERCIAL.md`** and removed every reference to it.
 
 ## Verification
 
-- `gitleaks detect --config .gitleaks.toml` over full history → **no leaks found**
-  (the allowlist clears all prior benign findings; the CI gate will pass).
-- `npx changeset status` → wired; no pending changesets (expected).
-- Both workflow YAMLs parse clean; `npm run build` green after the devDep.
-- Release job is inert until `RELEASE_ENABLED=true` + `NPM_TOKEN` are set.
+- `npm run typecheck -w @llm-workbench/web` ✓, `npm run lint -w @llm-workbench/web` ✓.
+- `npm test -w @llm-workbench/web` → 84 passed (no snapshot asserted old copy).
+- `npm run build:web` → compiled successfully.
+- Repo-wide sweep: no `proprietary` / "Authorized Users" / `COMMERCIAL_URL` /
+  noncommercial copy remains in `apps/web` (excluding tests/generated).
 
-## Go-live activation (Phase 5, user)
+## Not in scope (separate slices)
 
-1. `npm login` locally, or create an npm granular automation token → add as the
-   `NPM_TOKEN` repo secret.
-2. `gh variable set RELEASE_ENABLED --body true`.
-3. Add a changeset (`npm run changeset`) describing the initial public release,
-   merge it; the Release workflow opens the Version PR, then publishes on merge.
+- `LicenseRef-Proprietary` SPDX headers across `scripts/*` + the validator
+  generator — a small internal-hygiene sweep (follow-up).
+- The launch announcement blog post (#2) — go-live content.
 
-## Remaining (go-live bundle — needs explicit go-ahead)
+## Human review gate (visual / go-live)
 
-Restore the site's GitHub links + OSS site copy + retire `COMMERCIAL.md` + fix
-`apps/web/lib/site.ts` (GITHUB_URL org, drop COMMERCIAL_URL) · announcement blog
-post · flip repo public · first `npm publish` · personal profile README.
+Verify on the PR's Vercel preview before merge: footer + landing license copy,
+the restored GitHub links resolve to `github.com/roymcfarland/llm-workbench`
+(they'll 404 until the repo is public — expected; this PR merges at go-live),
+and `/llms.txt` · `/agents.md` · `/api/openapi.json` show MIT.

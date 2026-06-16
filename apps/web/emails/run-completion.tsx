@@ -242,7 +242,7 @@ export function RunCompletionEmail(props: RunCompletionEmailProps) {
                 'ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Monaco, monospace',
             }}
           >
-            © llm-workbench · Brightline Ltd. Proprietary, all rights reserved.
+            © llm-workbench · Brightline Ltd. Open source under the MIT license.
           </Text>
         </Container>
       </Body>

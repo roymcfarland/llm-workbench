@@ -8,6 +8,17 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Web app re-positioned as open source (MIT).** Replaced all proprietary /
+  "Authorized Users" / noncommercial / "commercial license" framing across the
+  reference app with MIT/open-source language: the footer, the landing-page
+  JSON-LD license answer, `llms.txt`, `llms-full.txt`, `agents.md`, `humans.txt`,
+  the OpenAPI `license` object, the FAQ, the run-completion email, and
+  `DEPLOY.md`. Fixed `GITHUB_URL` (the stale `llmworkbench` org → `roymcfarland`),
+  set `LICENSE_NAME` to `MIT`, removed `COMMERCIAL_URL`, and added `NPM_ORG_URL`.
+  Restored the five user-facing GitHub links removed in #39 (footer GitHub +
+  Security, landing "Source", final-CTA "View on GitHub", protocol-docs "Source
+  on GitHub"). Retired `COMMERCIAL.md`.
+
 - **Root README repositioned for open source.** Added npm/CI/license/Node badges,
   an `npm install @llm-workbench/runtime` Install section, and MIT license framing;
   reframed "Quick Start" as "Local Development"; "Contributing" now welcomes
