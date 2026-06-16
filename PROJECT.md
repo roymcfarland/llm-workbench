@@ -52,7 +52,7 @@ Tenancy is enforced at the API layer via `requireTenant()` in `apps/web/lib/auth
 
 The following are explicitly **out of scope** for this product. Agents should reject or flag work that moves the codebase in any of these directions unless this document is updated first.
 
-- **Not a model provider.** LLM Workbench does not call OpenAI, Anthropic, local models, or any other LLM provider directly. The host application owns prompts, tools, and model selection.
+- **Not a model provider.** The `@llm-workbench/runtime` control plane does not call OpenAI, Anthropic, local models, or any other LLM provider directly — the host application owns prompts, tools, and model selection. This non-goal scopes the *runtime / control-plane*; it does **not** restrict the reference deployment (`apps/web`) or repository site-ops tooling from calling the Vercel AI Gateway, which they already do (e.g. the playground resume-compile action and the automated blog publisher — see Q5).
 - **Not a chat UI.** No general-purpose conversational interface, no chat-message threading, no role-played personas. The UI is a control surface for runs, not for chat.
 - **Not a vendor-locked telemetry product.** Telemetry stays as structured trace events with optional OTel mapping. No proprietary ingest endpoint, no required SaaS sink.
 - **Not a model-routing or model-selection product.** No routing logic, model A/B comparison harness, prompt-A/B testing, or model-quality scoring.
@@ -112,6 +112,16 @@ The repository is public at `github.com/roymcfarland/llm-workbench`. The five `p
 - A release/publish workflow (changesets `version` + `publish`, npm `--provenance`) is **expected**. Do not fail PRs that add or modify npm-publish automation; instead fail any PR that *removes* the publish pipeline once it exists.
 - The five `packages/*` must be publishable (no `"private": true`; `"publishConfig": { "access": "public" }`). The root, `apps/web`, and `examples/*` are never published and keep `"private": true`.
 - `npm publish` / `changeset publish` invocations in release automation are permitted and expected.
+
+### Q5. Automated blog / content generation
+
+**Answer: In scope as site-ops tooling for `apps/web`, via the Vercel AI Gateway.**
+
+A scheduled GitHub Actions workflow may generate `apps/web` blog posts by grounding a Vercel AI Gateway model call in real, freshly fetched sources, validating the result against the blog front-matter schema (`apps/web/lib/blog/schema.ts`) and the project's CI gates, and publishing only when valid (otherwise skipping that run). This is website operations for the reference deployment — not a runtime / control-plane capability — and does not make LLM Workbench a model provider, an eval / LLM-as-judge harness, or a model-routing product (it performs none of those).
+
+**Verifier behavior:**
+- Do not fail a PR that adds or modifies the automated blog publisher (its workflow, generator script, RSS/source config, or tests) on the grounds of the "not a model provider" non-goal — that non-goal scopes `@llm-workbench/runtime`, not `apps/web` site-ops tooling.
+- The publisher workflow must stay dormant by default (gated behind a repo variable) and must not commit a post that fails the blog front-matter schema or the CI gates.
 
 ---
 
