@@ -1,76 +1,55 @@
-# Closeout: remove dead GitHub links from the UI (private repo)
+# Closeout: make `@llm-workbench/runtime` importable under plain Node ESM
 
 ## Summary
 
-The repository is private, so every clickable link to it 404s. Removed the five
-user-facing GitHub links and the imports that became unused as a result:
+The runtime package was bundler-only: its public API worked under Next.js, Vite,
+and vitest (all of which bundle CommonJS deps), but a real consumer importing the
+published package under Node's own ESM loader crashed immediately. This is the
+first concrete step toward the package actually being a usable SDK.
 
-- `site-footer.tsx` — the "GitHub" link and the "Security" link
-  (`${GITHUB_URL}/blob/main/SECURITY.md`); dropped the `GITHUB_URL` import.
-- `landing-final-cta.tsx` — the ghost "View on GitHub" button; dropped the import.
-- `app/page.tsx` — the "Source" link in the hero meta line. **Import kept** — the
-  JSON-LD `codeRepository` still uses `GITHUB_URL`.
-- `app/docs/protocol/page.tsx` — the "Source on GitHub" chip; dropped the import.
+Root cause: `fast-json-patch` is a CommonJS module whose named exports are not
+statically detectable by Node's ESM `cjs-module-lexer`. Two source files used
+`import { applyPatch, type Operation } from "fast-json-patch"`. Under a bundler
+that resolves fine; under plain `node` it throws
+`SyntaxError: Named export 'applyPatch' not found`.
 
-The adjacent **Proprietary/LICENSE** link on the landing page and the footer
-licensing links are licensing links, not GitHub links, and were left as-is per
-the chosen scope ("all clickable GitHub links"). Non-clickable machine/SEO
-references (`sameAs`, `codeRepository`, the `Source repository` lines in
-`llms.txt` / `llms-full.txt` / `humans.txt` / `agents.md`) and the
-`/.well-known/security.txt` contact are also intentionally left for a separate
-pass (some need a replacement target, not just deletion).
+## Changes
 
-## Also in this PR: CI audit-gate fix (unblocks merge)
+- `packages/runtime/src/runtime/artifactController.ts` — default-import
+  `fast-json-patch` and destructure `applyPatch`; `Operation` kept as a pure
+  `import type` (erased at runtime).
+- `packages/runtime/src/schema/registry.ts` — same fix. (The adjacent
+  `import { Ajv } from "ajv"` is **left as-is**: ajv's named export *is*
+  statically detectable, verified importable under plain Node — no change needed.)
+- `scripts/esm-smoke.mjs` (NEW) — regression guard. Imports
+  `@llm-workbench/runtime` + `ai-sdk` + `mcp` under plain Node and drives a run
+  (including `patchArtifact`, which exercises `fast-json-patch`). Fails CI if any
+  becomes un-importable. The bundled vitest suite *structurally cannot* catch
+  this class of regression, which is exactly how the bug shipped.
+- `package.json` — `smoke:esm` script; wired into `ci` (runs after `build`).
+- `.github/workflows/ci.yml` — `ESM smoke` step after "Build all packages".
 
-This PR was blocked by an unrelated CI failure: the `Audit gate` step
-(`audit-ci --config audit-ci.jsonc`) was set to `"low": true` — fail on **any**
-advisory of any severity unless hand-listed by GHSA id. That is structurally
-unwinnable for this dependency tree, whose 28 moderate/low advisories (0 high,
-0 critical) are dominated by:
+## Scope notes
 
-- **Phantom** — `dompurify` is pulled by monaco-editor, which vendors its own
-  copy and never imports the npm package. The advisory DB mints new DOMPurify
-  bypass advisories continuously (the prior "allowlist all 12" was already stale
-  by 4 — `GHSA-8988`, `GHSA-vxr8`, `GHSA-gvmj`, `GHSA-rp9w` — before it landed),
-  so per-GHSA allowlisting is a treadmill that never stays green.
-- **No clean fix** — `@opentelemetry/core` (via Sentry/lighthouse), `postcss`
-  (via Next), `js-yaml` (via gray-matter, build-time front-matter only), and
-  `@ai-sdk/provider-utils`, each fixable only by a breaking upgrade of a parent
-  we don't control.
+- Only `fast-json-patch` named-value imports were affected; `ajv` imports cleanly
+  under plain Node, and `ai-sdk` + `mcp` already imported cleanly (verified). The
+  React packages (`ui`, `adapters-react`) are bundler/browser targets by nature
+  and are out of scope for plain-Node import.
+- This addresses the *interop* half of "usable as an SDK." The *distribution*
+  half (the package is `private: true` / unpublished) is a separate, deliberate
+  decision (PROJECT.md Q4) and not touched here.
 
-Fix: gate on **high/critical only** (`"high": true`, empty allowlist) and
-document the accepted moderates in `audit-ci.jsonc` with re-triage notes. This
-matches the industry-standard `npm audit --audit-level=high` posture and the
-repo's original gate; a genuinely dangerous advisory still breaks the build,
-while phantom/unfixable moderate noise stops blocking unrelated PRs.
+## Evidence
 
-## Files Changed
-
-- `apps/web/components/landing/site-footer.tsx`
-- `apps/web/components/landing/landing-final-cta.tsx`
-- `apps/web/app/page.tsx`
-- `apps/web/app/docs/protocol/page.tsx`
-- `audit-ci.jsonc` — gate posture high/critical + documented accepted moderates
-- `.github/workflows/ci.yml` — audit step renamed to reflect the gate
-- `CHANGELOG.md`
-- `CLOSEOUT.md`
-
-## Verification
-
-- `grep -rn "href=" apps/web --include="*.tsx" | grep GITHUB_URL` → no matches
-  (no clickable GitHub links remain).
-- `npm run audit:check` → exit 0, "Passed npm security audit" (was: exit 1 on
-  DOMPurify advisories).
-- `npm run typecheck -w @llm-workbench/web` exits 0; `npm run lint -w
-  @llm-workbench/web` exits 0 (no unused imports — dropped exactly where
-  `GITHUB_URL` went unused, kept in `page.tsx` where the JSON-LD still uses it).
-- `npm run build:web` compiles successfully; all pages (`/`, `/docs/protocol`)
-  still render.
-
-## Notes
-
-Markup-only removal; no logic touched. Follow-up candidates (not in this PR):
-neutralize the machine/SEO `GITHUB_URL` refs, give `security.txt` a reachable
-contact, and decide on the licensing/`COMMERCIAL.md` links — `GITHUB_URL` itself
-is `github.com/llmworkbench/llm-workbench`, a different org than the real
-`roymcfarland/llm-workbench`, so it reads like a placeholder.
+- Before: a from-scratch `node` script importing the package threw
+  `SyntaxError: Named export 'applyPatch' not found ... 'fast-json-patch' is a
+  CommonJS module`.
+- After — plain-Node consumer (workspace symlink): imported the package, gated a
+  step (blocked → approved), wrote + JSON-patched an artifact, logged model I/O,
+  completed the step, summarized telemetry, and exported a SHA-256-signed bundle.
+- After — **external install**: `npm pack` → installed the tarball into a clean
+  project *outside the monorepo* (`type: module`, no bundler) → imported and drove
+  a run producing a signed bundle. Runtime deps are self-contained
+  (`ajv`, `fast-json-patch`, `zod`; zero workspace deps), so it packs standalone.
+- `npm run smoke:esm` → green. `npm run ci` → exit 0 (302 vitest tests, web build
+  compiled). Runtime suite: 148 passed (bundler consumers unbroken).

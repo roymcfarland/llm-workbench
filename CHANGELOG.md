@@ -44,6 +44,19 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`@llm-workbench/runtime` is now importable under plain Node ESM (was
+  bundler-only).** `artifactController.ts` and `schema/registry.ts` used named
+  imports from `fast-json-patch`, a CommonJS package whose named exports are not
+  statically detectable by Node's ESM loader — so a real consumer importing the
+  published package under `node` threw `SyntaxError: Named export 'applyPatch'
+  not found`, even though every bundled vitest test passed (Vite hides the
+  interop gap). Switched to a default-import + destructure. Verified by packing
+  the tarball, installing it into a clean external project, and driving a full
+  run under plain `node`. Added `scripts/esm-smoke.mjs` (`npm run smoke:esm`,
+  wired into `ci` and the CI workflow) as a regression guard that imports
+  runtime + ai-sdk + mcp under plain Node and drives a run — a guard the bundled
+  test suite structurally cannot provide. (ai-sdk and mcp already imported
+  cleanly; runtime was the only affected package.)
 - **CI audit gate now gates on high/critical severity (was: all severities).**
   The previous `"low": true` audit-ci config failed CI on any advisory of any
   severity unless hand-listed by GHSA id — an unwinnable treadmill against this

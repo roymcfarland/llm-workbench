@@ -1,4 +1,9 @@
-import { applyPatch, type Operation } from "fast-json-patch";
+// fast-json-patch is CommonJS; under plain Node ESM its named exports are not
+// statically detectable, so `import { applyPatch }` throws at runtime (it works
+// only under bundlers). Default-import the module and destructure.
+import fastJsonPatch from "fast-json-patch";
+import type { Operation } from "fast-json-patch";
+const { applyPatch } = fastJsonPatch;
 import { WorkbenchError } from "../errors.js";
 import {
   encodeArtifactPayloadBytes,
