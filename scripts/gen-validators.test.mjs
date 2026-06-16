@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: LicenseRef-Proprietary
+// SPDX-License-Identifier: MIT
 import { readFile } from "node:fs/promises";
 
 import { describe, expect, it } from "vitest";
