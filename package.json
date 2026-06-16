@@ -1,7 +1,7 @@
 {
   "name": "llm-workbench",
   "private": true,
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MIT",
   "engines": {
     "node": ">=22"
   },

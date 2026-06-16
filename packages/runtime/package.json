@@ -1,8 +1,29 @@
 {
   "name": "@llm-workbench/runtime",
   "version": "0.2.0",
-  "private": true,
-  "license": "SEE LICENSE IN LICENSE",
+  "description": "Headless, model-agnostic runtime for LLM workflows — records state, artifacts, rules, human-review gates, traces, cost telemetry, and tamper-evident run bundles.",
+  "keywords": [
+    "llm",
+    "ai",
+    "agents",
+    "observability",
+    "workflow",
+    "tracing",
+    "human-in-the-loop",
+    "run-bundle"
+  ],
+  "author": "Roy McFarland (https://github.com/roymcfarland)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roymcfarland/llm-workbench.git",
+    "directory": "packages/runtime"
+  },
+  "homepage": "https://www.llmworkbench.io",
+  "bugs": "https://github.com/roymcfarland/llm-workbench/issues",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",

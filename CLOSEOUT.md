@@ -1,48 +1,45 @@
-# Closeout: flip PROJECT.md license/visibility posture to open source (MIT)
+# Closeout: MIT license + publish-ready package manifests
 
 ## Summary
 
-Keystone slice of the open-source publishing arc. `PROJECT.md` is the authoritative
-spec the Builder/Verifier loop enforces; it previously *forbade* every change the
-OSS flip requires (it failed any PR that removed `"private"`, set a permissive
-license, published to npm, or made the repo public). This slice inverts the spec so
-the loop *enforces* the open-source posture instead — unblocking all downstream
-license-file, manifest, public-docs, and publishing slices. **Docs-only: no code,
-`LICENSE` files, or `package.json` flags change here.**
+Slice 2 of the open-source publishing arc (gated on the PROJECT.md posture flip,
+#42). Converts the repository's license from proprietary to MIT and makes the five
+`packages/*` libraries publish-ready under the `@llm-workbench/*` scope, while
+keeping the root, `apps/web`, and `examples/*` private (never published).
 
 ## Changes
 
-- **Purpose section** — "proprietary control plane … Commercial posture: proprietary.
-  All rights reserved … Authorized Users" → "open-source control plane … License
-  posture: open source under the MIT License", noting the `packages/*` publish to npm
-  under `@llm-workbench/*` while root/`apps/web`/`examples/*` stay `"private": true`,
-  and the repo is public at `github.com/roymcfarland/llm-workbench`.
-- **Q1 (license)** — retitled "License shape and enforcement"; answer flipped to MIT.
-  Verifier rules inverted: fail non-`MIT` license fields or any reintroduction of
-  proprietary/"Authorized Users" language; fail `"private": true` on a publishable
-  `packages/*` package (but require it on root/`apps/web`/`examples/*`); new
-  `packages/*` must ship an MIT `LICENSE` + `@llm-workbench/*` publish config.
-- **Q4 (visibility/publishing)** — retitled; answer flipped to "Public and published".
-  Verifier rules inverted: fail attempts to re-privatize the repo; a changesets-based
-  release/publish workflow with npm `--provenance` is now *expected* (fail removal of
-  it once it exists); the five `packages/*` must be publishable.
-- **CHANGELOG** — `### Changed` entry recording the posture flip.
-
-## Out of scope (the slices this unblocks)
-
-- Slice 2 — replace the 6 `LICENSE` files with MIT + set `"license": "MIT"` in every manifest.
-- Slice 3 — publish-ready manifests (remove `private` from the 5 packages; add `publishConfig`,
-  `repository`, `homepage`, `bugs`, `author`, `keywords`).
-- Slices 4–6 — restore GitHub links + OSS-ify the site/README + community docs.
-- Slice 7 — changesets + publish workflow.
-
-## Known pre-existing drift (not touched here)
-
-Q2 still forbids a `proxy.ts` middleware, but PR #38 already migrated `middleware.ts`
-→ `proxy.ts` on `main`. That contradiction predates this slice and is out of scope;
-it should be reconciled in a dedicated docs PR.
+- **LICENSE × 6** — root + `packages/{runtime,ui,adapters-react,ai-sdk,mcp}/LICENSE`
+  replaced with the MIT License, `Copyright (c) 2026 Roy McFarland`.
+- **NOTICE removed** — it was a proprietary artifact ("All rights reserved",
+  "Authorized Users"); MIT does not use a NOTICE file.
+- **`"license": "MIT"`** set on every `package.json` (root, 5 packages, `apps/web`,
+  both examples), replacing `"SEE LICENSE IN LICENSE"`.
+- **Five packages made publishable** — removed `"private"`; added
+  `publishConfig: { "access": "public" }`, `repository` (with per-package
+  `directory`), `homepage` (`https://www.llmworkbench.io`), `bugs`, `author`
+  (`Roy McFarland`), a one-line `description`, and `keywords`.
+- **Non-published manifests** — root, `apps/web`, `examples/*` keep `"private": true`.
 
 ## Verification
 
-Docs-only change to `PROJECT.md` + `CHANGELOG.md` + `CLOSEOUT.md`. No build/test impact;
-CI must stay green (build, tests, lint, audit gate unaffected).
+- `npm run build` ✓ (all 5 packages emit).
+- `npm pack --dry-run` on each of the five packages: tarball includes the MIT
+  `LICENSE` (1.1 kB) and `dist`; **no `src/` or `*.test.*` leakage** (asserted
+  per-package via the `--json` file list).
+- `npm run smoke:esm` ✓ (plain-Node import of runtime + ai-sdk + mcp unaffected).
+- `npm run ci` exit 0 — full build, all tests (302+), web typecheck/lint/build green.
+- `package-lock.json` updated to reflect the workspace metadata changes (9 lines;
+  no dependency add/remove).
+
+## Out of scope (next slices)
+
+- Slice 4 — restore the GitHub links #39 removed + fix the stale `GITHUB_URL` +
+  OSS-ify the site/README "proprietary" framing.
+- Slice 5 — per-package READMEs (4 of 5 packages still lack one) + README badges.
+- Slice 6 — community docs (CONTRIBUTING rewrite, CODE_OF_CONDUCT, SECURITY, templates).
+- Slice 7 — changesets + npm publish workflow.
+
+Packages are now MIT-licensed and publish-ready, but **not yet published** — the
+first publish happens at go-live (Phase 5) after the release workflow lands and the
+npm org is created.
