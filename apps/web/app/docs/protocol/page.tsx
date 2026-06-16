@@ -6,6 +6,7 @@ import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 import { renderMarkdownWithHeadings } from "@/lib/landing/markdown";
 import { PROTOCOL_OVERVIEW } from "@/lib/landing/protocol-prose";
 import {
+  GITHUB_URL,
   OG_IMAGE_ALT,
   SITE_NAME,
   siteOrigin,
@@ -160,6 +161,14 @@ export default async function ProtocolDocsPage() {
                 className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
               >
                 /.well-known/mcp.json
+              </a>
+              <a
+                href={GITHUB_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
+              >
+                Source on GitHub
               </a>
             </div>
           </header>

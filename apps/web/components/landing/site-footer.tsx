@@ -6,7 +6,7 @@ import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 import {
   BRIGHTLINE_LABS_NAME,
   BRIGHTLINE_LABS_URL,
-  COMMERCIAL_URL,
+  GITHUB_URL,
   LICENSE_NAME,
   LICENSE_URL,
   SITE_NAME,
@@ -24,20 +24,9 @@ export function SiteFooter() {
           </p>
           <p className="mt-4 text-xs leading-relaxed text-[var(--color-muted-foreground)]">
             <strong className="font-medium text-[var(--color-foreground)]">
-              Licensing.
+              Open source.
             </strong>{" "}
-            Proprietary. All rights reserved. Use, modification, and operation
-            are limited to Authorized Users (Roy McFarland personally and
-            entities controlled by Roy McFarland, including{" "}
-            <a
-              href={BRIGHTLINE_LABS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline-offset-4 hover:underline"
-            >
-              {BRIGHTLINE_LABS_NAME}
-            </a>
-            ) except by separate written agreement. See the{" "}
+            Released under the{" "}
             <a
               href={LICENSE_URL}
               target="_blank"
@@ -45,15 +34,16 @@ export function SiteFooter() {
               className="underline-offset-4 hover:underline"
             >
               {LICENSE_NAME} license
-            </a>
-            {" "}or{" "}
+            </a>{" "}
+            — free to use, modify, and distribute. Built and maintained by Roy
+            McFarland under{" "}
             <a
-              href={COMMERCIAL_URL}
+              href={BRIGHTLINE_LABS_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="underline-offset-4 hover:underline"
             >
-              contact for licensing inquiries
+              {BRIGHTLINE_LABS_NAME}
             </a>
             .
           </p>
@@ -67,6 +57,11 @@ export function SiteFooter() {
             For humans
           </h3>
           <ul className="mt-3 flex flex-col gap-2 text-sm">
+            <li>
+              <a href={GITHUB_URL} className="hover:underline">
+                GitHub
+              </a>
+            </li>
             <li>
               <Link href="/blog" className="hover:underline">
                 Blog
@@ -84,6 +79,14 @@ export function SiteFooter() {
             </li>
             <li>
               <PlaygroundMarketingLink className="hover:underline" />
+            </li>
+            <li>
+              <a
+                href={`${GITHUB_URL}/blob/main/SECURITY.md`}
+                className="hover:underline"
+              >
+                Security
+              </a>
             </li>
           </ul>
         </nav>

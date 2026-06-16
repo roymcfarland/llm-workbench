@@ -108,9 +108,8 @@ purposes.
 
 ## License & terms
 
-LLM Workbench is licensed under ${LICENSE_NAME}. You may consume the public
-surfaces above for noncommercial work, research, and evaluation. Commercial
-use requires a separate paid license — see ${GITHUB_URL}/blob/main/COMMERCIAL.md.
+LLM Workbench is open source under the ${LICENSE_NAME} license — free to use,
+modify, and distribute, including commercially. Source: ${GITHUB_URL}.
 Agent integrations should:
 
 - identify themselves with a stable \`User-Agent\` (e.g. \`my-agent/1.2 (+https://example.com)\`),

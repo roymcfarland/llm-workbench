@@ -171,8 +171,8 @@ function buildOpenApi(origin: string) {
         url: `${origin}/agents.md`,
       },
       license: {
-        name: "Proprietary",
-        url: `${origin}/agents.md`,
+        name: "MIT",
+        url: "https://github.com/roymcfarland/llm-workbench/blob/main/LICENSE",
       },
     },
     servers: [{ url: origin, description: "Reference deployment" }],

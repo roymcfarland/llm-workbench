@@ -22,12 +22,11 @@ export function blogPostOgImageAlt(postTitle: string): string {
 }
 export const SITE_TAGLINE =
   "Model-agnostic LLM control plane: tamper-evident, human-gated, replayable run bundles." as const;
-// Placeholder GitHub URL — repo is not yet public at this slug. Update when it lands.
-export const GITHUB_URL = "https://github.com/llmworkbench/llm-workbench" as const;
-export const LICENSE_NAME = "Proprietary" as const;
+export const GITHUB_URL = "https://github.com/roymcfarland/llm-workbench" as const;
+export const LICENSE_NAME = "MIT" as const;
 export const LICENSE_URL = `${GITHUB_URL}/blob/main/LICENSE` as const;
-/** Plain-language licensing inquiry pointer. */
-export const COMMERCIAL_URL = `${GITHUB_URL}/blob/main/COMMERCIAL.md` as const;
+/** npm organization scope for the published packages. */
+export const NPM_ORG_URL = "https://www.npmjs.com/org/llm-workbench" as const;
 export const DEFAULT_ORIGIN = "https://workbench.example.com" as const;
 
 /**
