@@ -35,6 +35,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Per-package READMEs.** Added README files for `@llm-workbench/runtime`, `ui`,
+  `adapters-react`, and `ai-sdk` (npm package pages), each with install, an API
+  surface table, and a link to the root README. OSS-ified the existing
+  `@llm-workbench/mcp` README (was proprietary-framed and linked the wrong repo
+  URL). npm includes each `README.md` in the published tarball.
 - **Community / contributor docs.** Adopted the Contributor Covenant 2.1 as the
   project Code of Conduct (added via GitHub's recognized template) and added
   GitHub issue + pull-request templates
