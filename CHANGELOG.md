@@ -8,6 +8,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Root README repositioned for open source.** Added npm/CI/license/Node badges,
+  an `npm install @llm-workbench/runtime` Install section, and MIT license framing;
+  reframed "Quick Start" as "Local Development"; "Contributing" now welcomes
+  outside contributions (links `CONTRIBUTING.md` + `CODE_OF_CONDUCT.md`). All
+  proprietary/"Authorized Users" language removed. Product content (What You Get,
+  Architecture, 60-second integration, Runtime Principles) is unchanged.
 - **MIT license + publish-ready package manifests.** Replaced all six `LICENSE`
   files (root + the five packages) with the MIT License; removed the proprietary
   `NOTICE`; set `"license": "MIT"` across every manifest. The five `packages/*`
