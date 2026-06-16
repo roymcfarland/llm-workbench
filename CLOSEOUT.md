@@ -1,44 +1,32 @@
-# Closeout: open-source-ify the reference web app (MIT framing + restore GitHub links)
+# Closeout: SPDX headers relicensed to MIT (internal hygiene)
 
 ## Summary
 
-Part of the go-live bundle. Purges proprietary framing from the public-facing
-reference app and restores the GitHub links #39 removed, so that when the repo
-goes public the site is consistent and truthful (MIT, source on GitHub, packages
-on npm). **Must merge at go-live, not before** — the restored GitHub links point
-at the repo and the copy claims "open source on npm", both of which only become
-true when the repo is public and the packages are published.
+Completes the MIT relicense by sweeping the last `LicenseRef-Proprietary` SPDX
+identifiers — the internal `scripts/*` tooling and the precompiled-validator
+generator — to `MIT`. These are repo-internal files (build/test/bootstrap +
+deployment helpers, and a build-time codegen step); none ship in the published
+`@llm-workbench/*` packages. Pure header/identifier change; no runtime behavior
+changes. The follow-up flagged in the previous slice's closeout.
 
-## Changes (14 files)
+## Changes
 
-- **`apps/web/lib/site.ts`** — `GITHUB_URL` `llmworkbench` → `roymcfarland`;
-  `LICENSE_NAME` `Proprietary` → `MIT`; removed `COMMERCIAL_URL`; added `NPM_ORG_URL`.
-- **Restored #39's GitHub links** — footer "GitHub" + "Security", landing-page
-  "Source", final-CTA "View on GitHub", protocol-docs "Source on GitHub" chip
-  (re-added the `GITHUB_URL` imports they dropped).
-- **License copy → MIT** — footer licensing paragraph (dropped the commercial
-  link), landing JSON-LD "What is the license?" answer, `llms.txt`,
-  `llms-full.txt`, `agents.md`, `humans.txt`, OpenAPI `license` object, FAQ
-  "Is it open source?" answer, run-completion email footer, `DEPLOY.md` banner.
-- **Retired `COMMERCIAL.md`** and removed every reference to it.
+- **`scripts/*` (13 files)** — `// SPDX-License-Identifier: LicenseRef-Proprietary`
+  → `MIT` across `bootstrap.mjs`, `vitest.config.mjs`, the `*.test.mjs` suites,
+  and `lib/{args,clerk,http,log,plan,supabase,tokens,vercel}.mjs`.
+- **`scripts/gen-validators.mts`** — relicensed its own header and the SPDX line
+  it *emits* into the generated module (line 32), so regenerated output is MIT.
+- **Regenerated** `apps/web/lib/security/precompiled-validators.generated.mjs`
+  via `npm run gen:validators` (now carries the MIT header), and updated the
+  hand-maintained companion `precompiled-validators.generated.mjs.d.ts`.
 
 ## Verification
 
-- `npm run typecheck -w @llm-workbench/web` ✓, `npm run lint -w @llm-workbench/web` ✓.
-- `npm test -w @llm-workbench/web` → 84 passed (no snapshot asserted old copy).
-- `npm run build:web` → compiled successfully.
-- Repo-wide sweep: no `proprietary` / "Authorized Users" / `COMMERCIAL_URL` /
-  noncommercial copy remains in `apps/web` (excluding tests/generated).
+- `grep -rn LicenseRef-Proprietary` (excluding `node_modules`/`.git`) → zero
+  remaining SPDX headers (only this closeout's prose references the old string).
+- `npm run gen:validators` → regenerated cleanly; generated `.mjs` header is MIT.
+- `npm run test:scripts` → 20 passed (2 files).
 
-## Not in scope (separate slices)
+## Not in scope
 
-- `LicenseRef-Proprietary` SPDX headers across `scripts/*` + the validator
-  generator — a small internal-hygiene sweep (follow-up).
-- The launch announcement blog post (#2) — go-live content.
-
-## Human review gate (visual / go-live)
-
-Verify on the PR's Vercel preview before merge: footer + landing license copy,
-the restored GitHub links resolve to `github.com/roymcfarland/llm-workbench`
-(they'll 404 until the repo is public — expected; this PR merges at go-live),
-and `/llms.txt` · `/agents.md` · `/api/openapi.json` show MIT.
+- Nothing outstanding from the MIT relicense after this slice.

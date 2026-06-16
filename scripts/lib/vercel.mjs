@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: LicenseRef-Proprietary
+// SPDX-License-Identifier: MIT
 //
 // Vercel token-path provisioner. Drives the public Vercel REST API
 // (https://api.vercel.com) using $VERCEL_TOKEN. Idempotent when

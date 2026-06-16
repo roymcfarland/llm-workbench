@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: LicenseRef-Proprietary
+// SPDX-License-Identifier: MIT
 //
 // Tiny dependency-free argv parser tailored for the bootstrap CLI.
 // Supports `--flag`, `--flag=value`, and `--flag value`. Unknown flags

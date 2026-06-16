@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: LicenseRef-Proprietary
+// SPDX-License-Identifier: MIT
 //
 // Unit tests for the bootstrap script. We deliberately exercise the
 // pure helpers (plan builder, token validation, env-var collection)
