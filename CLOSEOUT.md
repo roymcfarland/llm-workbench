@@ -1,39 +1,34 @@
-# Closeout: publish via npm OIDC Trusted Publishing (drop NPM_TOKEN)
+# Closeout: PROJECT.md — authorize automated blog generation (clear non-goal #55)
 
 ## Summary
 
-Replaces the long-lived `NPM_TOKEN` secret in the `Release` workflow with npm
-**OIDC Trusted Publishing**. GitHub Actions mints a short-lived OIDC token
-(`id-token: write`, already granted) that npm exchanges for publish rights, so
-there is no secret to rotate and no 90-day expiry to track. Provenance
-attestations are generated automatically by trusted publishing, so the explicit
-`--provenance` / `NPM_CONFIG_PROVENANCE` is no longer needed.
-
-This is the post-launch swap planned at go-live: the first publish (0.3.0) had
-to be token-based because trusted publishing can only be configured for packages
-that already exist on npm. They exist now, so the token can be retired.
+Spec-only governance amendment that unblocks the automated weekly blog
+publisher. The "not a model provider" non-goal was broad enough that a
+context-free Verifier could reject the publisher PR for adding a Vercel AI
+Gateway call. This amendment scopes that non-goal to the
+`@llm-workbench/runtime` control plane and explicitly permits `apps/web` and
+repository site-ops tooling to call the Gateway (which `apps/web` already does),
+then adds a resolved Q5 authorizing the publisher with its own Verifier
+behavior. Per the builder/verifier loop's Lesson 98, the rule is cleared in this
+PR before the feature PR is drafted.
 
 ## Changes
 
-- **`.github/workflows/release.yml`**
-  - Removed `NPM_TOKEN`, `NODE_AUTH_TOKEN`, and `NPM_CONFIG_PROVENANCE` from the
-    changesets/action env (kept `GITHUB_TOKEN` for the Version PR / tags).
-  - Added an `npm install -g npm@latest` step (trusted publishing requires
-    `npm >= 11.5.1`; the bundled npm may be older).
-  - Documented the one-time per-package Trusted Publisher setup in the header.
-  - Kept the `RELEASE_ENABLED` dormancy gate and `id-token: write`.
+- **`PROJECT.md`**
+  - Non-goal "Not a model provider": narrowed to the runtime/control-plane;
+    added a carve-out for `apps/web` + site-ops tooling using the AI Gateway.
+  - Added **Q5. Automated blog / content generation** under "Open questions
+    (resolved)": in scope as site-ops tooling, source-grounded + schema-validated
+    + dormant-by-default, with Verifier behavior (don't reject the publisher on
+    the model-provider non-goal; require it stay gated and schema/CI-valid).
 
 ## Verification
 
-- `release.yml` parses as valid YAML.
-- A no-op release run (no pending changesets) does not authenticate — it logs
-  "No unpublished projects to publish" and exits 0 — so merging this is safe
-  before the Trusted Publishers are configured.
+- No code or config changed — `PROJECT.md` only (plus this ledger).
+- The amendment does not touch any other non-goal (eval, routing, marketplace,
+  realtime, etc.); Q5 explicitly states the publisher performs none of those.
 
-## Follow-up (out of this PR — needs npmjs.com access)
+## Not in scope
 
-1. Configure Trusted Publisher for all five `@llm-workbench/*` packages
-   (org `roymcfarland`, repo `llm-workbench`, workflow `release.yml`).
-2. Cut a `0.3.1` validating release through OIDC; confirm 5/5 publish with
-   automatic provenance.
-3. `gh secret delete NPM_TOKEN` once OIDC publishing is confirmed.
+- The publisher implementation (workflow, generator script, source config,
+  tests) — the next slice, built via the builder/verifier loop.

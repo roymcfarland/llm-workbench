@@ -8,6 +8,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **`PROJECT.md`: authorized automated blog generation as site-ops tooling.**
+  Clarified the "not a model provider" non-goal so it scopes the
+  `@llm-workbench/runtime` control plane only — the reference deployment
+  (`apps/web`) and repository site-ops tooling may call the Vercel AI Gateway
+  (as `apps/web` already does). Added resolved **Q5** authorizing a scheduled,
+  source-grounded, schema-validated blog publisher, with Verifier behavior so it
+  is not mistaken for a runtime model-provider/eval/routing capability. Spec-only
+  change that unblocks the publisher slice.
 - **Publishing switched to npm OIDC Trusted Publishing (no `NPM_TOKEN`).** The
   `Release` workflow now authenticates to npm with a short-lived OIDC token
   minted from GitHub Actions (`id-token: write`) instead of a long-lived
