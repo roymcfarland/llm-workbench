@@ -1,8 +1,12 @@
 # `@llm-workbench/mcp`
 
-**Proprietary** — Transport-agnostic Model Context Protocol (MCP) glue for the LLM Workbench runtime.
+**MIT-licensed** — transport-agnostic Model Context Protocol (MCP) glue for the [LLM Workbench](../../README.md) runtime.
 
-Use this package when you want assistants or tools speaking MCP to start runs, resolve gates, or inspect traces against any [`RunRepository`](https://github.com/llmworkbench/llm-workbench/tree/main/packages/runtime) implementation.
+Use this package when you want assistants or tools speaking MCP to start runs, resolve gates, or inspect traces against any [`RunRepository`](../runtime) implementation.
+
+```bash
+npm install @llm-workbench/mcp @llm-workbench/runtime
+```
 
 ## API surface
 
@@ -15,5 +19,5 @@ Authentication and tenancy are **host-defined**: supply a repository already sco
 
 ## Docs elsewhere
 
-- Product overview and license split: repository root [`README.md`](../../README.md).
+- Product overview and architecture: repository root [`README.md`](../../README.md).
 - Deployed MCP endpoint + discovery: [`DEPLOY.md`](../../apps/web/DEPLOY.md) smoke-test table and `/.well-known/mcp.json`.
