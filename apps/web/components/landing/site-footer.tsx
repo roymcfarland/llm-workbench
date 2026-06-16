@@ -7,7 +7,6 @@ import {
   BRIGHTLINE_LABS_NAME,
   BRIGHTLINE_LABS_URL,
   COMMERCIAL_URL,
-  GITHUB_URL,
   LICENSE_NAME,
   LICENSE_URL,
   SITE_NAME,
@@ -69,11 +68,6 @@ export function SiteFooter() {
           </h3>
           <ul className="mt-3 flex flex-col gap-2 text-sm">
             <li>
-              <a href={GITHUB_URL} className="hover:underline">
-                GitHub
-              </a>
-            </li>
-            <li>
               <Link href="/blog" className="hover:underline">
                 Blog
               </Link>
@@ -90,14 +84,6 @@ export function SiteFooter() {
             </li>
             <li>
               <PlaygroundMarketingLink className="hover:underline" />
-            </li>
-            <li>
-              <a
-                href={`${GITHUB_URL}/blob/main/SECURITY.md`}
-                className="hover:underline"
-              >
-                Security
-              </a>
             </li>
           </ul>
         </nav>
