@@ -1,32 +1,50 @@
-# Closeout: resync package-lock.json to released workspace versions
+# Closeout: weekly source-grounded blog auto-publisher
 
 ## Summary
 
-Lockfile-only hygiene fix. The changesets "Version Packages" PR (#53) bumped
-every workspace `package.json` to its released version but did not run an
-install, so `package-lock.json` on `main` still recorded the pre-release
-versions (`@llm-workbench/* 0.2.0`, `apps/web 0.1.0`, `examples/* 0.0.0`). Any
-subsequent `npm install` resyncs those versions, which is why an unrelated
-feature PR (the blog publisher, #57) surfaced the resync as incidental lockfile
-churn. Regenerating the lockfile here, in its own correctly-scoped PR, fixes the
-drift at the source and keeps future feature diffs clean.
+Added dormant-by-default site-ops tooling for a weekly, source-grounded blog
+publisher. The workflow fetches curated RSS sources, generates structured output
+through the Vercel AI Gateway, validates the generated post against the existing
+blog contract, and publishes only through a CI-gated auto-merged PR.
 
 ## Changes
 
-- **`package-lock.json`** — regenerated with npm 11 from the current
-  `package.json` set. Workspace self-versions now match (`0.3.0` / `0.1.1` /
-  `0.0.1`); stale `peer` metadata normalized. **No** dependency added, removed,
-  or version-bumped (0 new `resolved`/`integrity` entries).
-- **`CHANGELOG.md` / `CLOSEOUT.md`** — ledger.
+- **`scripts/blog-sources.json`** — curated RSS feed list and tuning knobs.
+- **`scripts/lib/blog-autopublish-core.mjs`** — pure slug, source selection,
+  prompt, markdown assembly, and generated-post validation helpers.
+- **`scripts/blog-autopublish.test.mjs`** — Vitest coverage for the pure core
+  plus a schema tie-in to `apps/web/lib/blog/schema.ts`.
+- **`scripts/blog-autopublish.mjs`** — fetch/generate/validate/write
+  orchestrator with `publish`, `dry-run`, and `fetch-only` modes.
+- **`.github/workflows/blog-autopublish.yml`** — weekly cron and manual dispatch,
+  dormant behind `BLOG_AUTOPUBLISH_ENABLED`, with dry-run artifact support.
+- **`.github/workflows/ci.yml`** — added `autopublish/**` push CI so bot PR
+  required checks attach to the generated branch commit.
+- **`docs/blog-autopublish.md`** — operator guide covering sources, grounding,
+  validation, enablement, safe testing, schedule, publishing, and safety gates.
+- **`package.json` / `package-lock.json`** — added `rss-parser` and
+  `npm run blog:autopublish`.
+- **`.gitignore`** — ignored the dry-run preview artifact.
+- **`CHANGELOG.md`** — documented the weekly auto-publisher under Unreleased.
+- **`CLOSEOUT.md`** — this slice closeout.
 
 ## Verification
 
-- `git diff main -- package-lock.json`: 0 new/removed `resolved`/`integrity`
-  lines — pure version + `peer`-metadata resync.
-- `npm run audit:check`: green (high 0, critical 0).
-- CI (`build & test` node 22/24) runs `npm ci`, which requires
-  `package.json` ↔ `package-lock.json` agreement — the gate proves the resync.
+- `npm install`
+- `npm run test:scripts`
+- `npm run audit:check`
+- `node --check scripts/blog-autopublish.mjs`
+- `node --check scripts/lib/blog-autopublish-core.mjs`
+- `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/blog-autopublish.yml')); yaml.safe_load(open('.github/workflows/ci.yml')); print('workflows: valid YAML')"`
+- `BLOG_MODE=fetch-only npm run blog:autopublish` when outbound network is
+  available.
 
 ## Not in scope
 
-No `package.json`, source, workflow, or dependency changes — lockfile only.
+No blog schema, blog loader, existing post, `packages/*`, release workflow, or
+`PROJECT.md` changes.
+
+## Post-merge live check
+
+Before setting `BLOG_AUTOPUBLISH_ENABLED=true`, run the first real post through
+`workflow_dispatch` in `dry-run` mode and eyeball the `blog-preview` artifact.

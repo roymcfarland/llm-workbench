@@ -1,0 +1,85 @@
+name: Blog autopublish
+
+# Weekly source-grounded blog post via the Vercel AI Gateway. Site-ops tooling
+# for apps/web (PROJECT.md Q5). DORMANT BY DEFAULT for scheduled runs — gated on
+# the BLOG_AUTOPUBLISH_ENABLED repo variable. Manual dispatch always runs (for
+# testing), defaulting to a no-publish dry-run.
+#
+# Setup: add the AI_GATEWAY_API_KEY secret; set repo var BLOG_AUTOPUBLISH_ENABLED=true
+# to enable the weekly schedule. Optional: BLOG_MODEL var to override the model.
+
+on:
+  schedule:
+    - cron: "0 14 * * 1" # Mondays 14:00 UTC
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode"
+        type: choice
+        default: dry-run
+        options: [dry-run, publish, fetch-only]
+
+concurrency: blog-autopublish
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  publish:
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.BLOG_AUTOPUBLISH_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Resolve mode
+        id: mode
+        run: echo "mode=${{ github.event_name == 'schedule' && 'publish' || inputs.mode }}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate
+        id: gen
+        env:
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+          BLOG_MODEL: ${{ vars.BLOG_MODEL }}
+          BLOG_MODE: ${{ steps.mode.outputs.mode }}
+        run: npm run blog:autopublish
+
+      - name: Upload preview (dry-run)
+        if: ${{ steps.mode.outputs.mode == 'dry-run' && steps.gen.outputs.preview != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-preview
+          path: ${{ steps.gen.outputs.preview }}
+
+      - name: Validate generated post (publish)
+        if: ${{ steps.mode.outputs.mode == 'publish' && steps.gen.outputs.created != '' }}
+        run: |
+          npm test -w @llm-workbench/web
+          npm run build:web
+
+      - name: Open PR + enable auto-merge (publish)
+        if: ${{ steps.mode.outputs.mode == 'publish' && steps.gen.outputs.created != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          DATE="$(date -u +%Y-%m-%d)"
+          BRANCH="autopublish/blog-${DATE}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add "${{ steps.gen.outputs.created }}"
+          git commit -m "docs(blog): weekly auto-published post (${DATE})"
+          git push -u origin "$BRANCH"
+          PR_URL="$(gh pr create --base main --head "$BRANCH" \
+            --title "docs(blog): weekly auto-published post (${DATE})" \
+            --body "Automated weekly post, grounded in fetched AI-news sources and validated by the blog schema + CI. Title: ${{ steps.gen.outputs.title }}")"
+          echo "PR: $PR_URL"
+          gh pr merge --auto --squash "$BRANCH"
