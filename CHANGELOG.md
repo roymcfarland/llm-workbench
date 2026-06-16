@@ -35,6 +35,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Launch announcement blog post.** `apps/web/content/blog/llm-workbench-is-now-open-source.md`
+  — announces the MIT/open-source release on npm, what shipped, and the
+  engineering it took to make the packages genuinely installable. Dated
+  2026-06-16; publishes with the go-live.
 - **Publish automation + secret scanning.** Added [changesets](https://github.com/changesets/changesets)
   for coordinated versioning/publishing of the five `@llm-workbench/*` packages
   (`.changeset/config.json`, `access: public`) and a `Release` GitHub Actions
