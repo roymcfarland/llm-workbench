@@ -1,6 +1,6 @@
 {
   "name": "@llm-workbench/ai-sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Vercel AI SDK wrappers that emit correlated model-I/O, tool-call, and cost trace events into an LLM Workbench run.",
   "keywords": [
     "llm",
@@ -40,7 +40,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@llm-workbench/runtime": "0.2.0"
+    "@llm-workbench/runtime": "0.3.0"
   },
   "peerDependencies": {
     "ai": "^5.0.0",
