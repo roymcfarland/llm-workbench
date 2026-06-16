@@ -50,5 +50,5 @@ Out of scope (reportable to the relevant project, not here):
   and per-artifact JSON Pointer paths registered on the schema registry.
 
 If you're integrating LLM Workbench in a product that handles regulated
-data, please get in touch via [`COMMERCIAL.md`](COMMERCIAL.md) — paid
-licensees can request additional hardening reviews.
+data and want to discuss hardening, reach out via the maintainer's GitHub
+profile (<https://github.com/roymcfarland>).
