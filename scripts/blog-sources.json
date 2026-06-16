@@ -1,0 +1,14 @@
+{
+  "lookbackDays": 14,
+  "maxPerFeed": 3,
+  "minItems": 6,
+  "minWords": 500,
+  "maxWords": 1500,
+  "feeds": [
+    { "name": "Simon Willison", "url": "https://simonwillison.net/atom/everything/" },
+    { "name": "Hugging Face", "url": "https://huggingface.co/blog/feed.xml" },
+    { "name": "OpenAI", "url": "https://openai.com/blog/rss.xml" },
+    { "name": "Google DeepMind", "url": "https://deepmind.google/blog/rss.xml" },
+    { "name": "Google AI", "url": "https://blog.google/technology/ai/rss/" }
+  ]
+}

@@ -70,6 +70,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Weekly source-grounded blog auto-publisher.** A scheduled GitHub Actions
+  workflow (`.github/workflows/blog-autopublish.yml`) that fetches curated
+  AI-news RSS sources, grounds a cited post via the Vercel AI Gateway
+  (`anthropic/claude-opus-4-8` by default), validates it against the blog
+  front-matter schema + `npm test`/`build:web`, and auto-publishes via an
+  auto-merged PR — skipping the week if sources are sparse or the post fails
+  validation. Dormant by default (`BLOG_AUTOPUBLISH_ENABLED`); manual dispatch
+  supports a safe dry-run. Generator + pure-helper tests live under `scripts/`.
 - **Launch announcement blog post.** `apps/web/content/blog/llm-workbench-is-now-open-source.md`
   — announces the MIT/open-source release on npm, what shipped, and the
   engineering it took to make the packages genuinely installable. Dated

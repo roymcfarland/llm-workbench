@@ -2,8 +2,10 @@ name: CI
 
 on:
   push:
+    # autopublish/** is included so the auto-publish bot's branch push runs CI; GITHUB_TOKEN-created PRs don't fire pull_request, so the required checks must come from the push event.
     branches:
       - main
+      - "autopublish/**"
   pull_request:
 
 jobs:
