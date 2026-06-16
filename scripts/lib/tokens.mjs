@@ -1,5 +1,5 @@
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: LicenseRef-Proprietary
+// SPDX-License-Identifier: MIT
 //
 // Pure helpers for the token path. `extractTokens` reads the standard
 // env vars; `requiredTokenError` returns a structured `{message,hint}`

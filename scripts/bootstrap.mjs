@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Copyright 2026 Roy McFarland
-// SPDX-License-Identifier: LicenseRef-Proprietary
+// SPDX-License-Identifier: MIT
 //
 // `npm run bootstrap` — one-command provisioner for the LLM Workbench
 // hosted reference plane (apps/web). Replaces the manual checklist in

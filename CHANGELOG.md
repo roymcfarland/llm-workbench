@@ -8,6 +8,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Internal SPDX headers relicensed to MIT.** Swept the remaining
+  `LicenseRef-Proprietary` SPDX identifiers to `MIT` across the `scripts/*`
+  tooling (build/test/bootstrap + Vercel/Clerk/Supabase/HTTP helpers) and the
+  validator generator (`scripts/gen-validators.mts`), then regenerated
+  `apps/web/lib/security/precompiled-validators.generated.mjs` and updated its
+  hand-maintained `.d.ts`. Internal hygiene completing the MIT relicense — no
+  runtime or published-package behavior changes; `npm run test:scripts` green.
 - **Web app re-positioned as open source (MIT).** Replaced all proprietary /
   "Authorized Users" / noncommercial / "commercial license" framing across the
   reference app with MIT/open-source language: the footer, the landing-page
