@@ -35,10 +35,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- **Community / contributor docs.** Added `CODE_OF_CONDUCT.md` (adopts the
-  Contributor Covenant 2.1 by reference) and GitHub issue + pull-request
-  templates (`.github/ISSUE_TEMPLATE/{bug_report,feature_request}.md`,
-  `config.yml`, `.github/PULL_REQUEST_TEMPLATE.md`). Landed the open-source
+- **Community / contributor docs.** Adopted the Contributor Covenant 2.1 as the
+  project Code of Conduct (added via GitHub's recognized template) and added
+  GitHub issue + pull-request templates
+  (`.github/ISSUE_TEMPLATE/{bug_report,feature_request}.md`, `config.yml`,
+  `.github/PULL_REQUEST_TEMPLATE.md`). Landed the open-source
   `CONTRIBUTING.md` rewrite (from the proprietary "contributions not accepted"
   stance to a contribution guide with dev setup, conventions, and a PR checklist
   incl. `npm run smoke:esm`). Removed the proprietary "paid licensees /
