@@ -1,0 +1,12 @@
+# @llm-workbench/adapters-react
+
+## 0.3.0
+
+### Minor Changes
+
+- f181660: Initial public release — LLM Workbench is now open source under the MIT License and published to npm under the `@llm-workbench` scope.
+
+### Patch Changes
+
+- Updated dependencies [f181660]
+  - @llm-workbench/runtime@0.3.0
