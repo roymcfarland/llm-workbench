@@ -6,6 +6,19 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **License posture flipped to open source (MIT) in `PROJECT.md`.** The
+  authoritative spec now declares the project MIT-licensed, the `packages/*`
+  libraries published to npm under `@llm-workbench/*`, and the repository public.
+  Q1 (license) and Q4 (visibility/publishing) and their Verifier-behavior rules
+  were inverted accordingly — the loop now *enforces* the open-source posture
+  (MIT license fields, publishable packages, a release/publish pipeline) instead
+  of forbidding it. This is the keystone change that unblocks the license-file,
+  manifest, public-docs, and publishing slices that follow. No code, `LICENSE`
+  files, or `package.json` flags change in this slice — those land next, gated on
+  this spec.
+
 ### Added
 
 - **Four new blog posts.** Added `Anatomy of a run bundle`, `Why our demo runs

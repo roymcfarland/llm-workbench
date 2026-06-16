@@ -6,9 +6,9 @@
 
 ## Purpose
 
-**LLM Workbench is a proprietary control plane for LLM-powered products, built and maintained by Roy McFarland under the Brightline Ltd umbrella.** It provides a headless, model-agnostic runtime that records workflow state, artifacts, rules, human-review gates, trace history, model I/O, and cost telemetry, plus a React UI shell and a hosted reference deployment (`apps/web`) wired to Clerk authentication, Supabase persistence, and the Vercel AI Gateway. The host application owns prompts, tools, and model selection; the runtime records what happened and gives humans a clean control surface over it.
+**LLM Workbench is an open-source control plane for LLM-powered products, built and maintained by Roy McFarland.** It provides a headless, model-agnostic runtime that records workflow state, artifacts, rules, human-review gates, trace history, model I/O, and cost telemetry, plus a React UI shell and a hosted reference deployment (`apps/web`) wired to Clerk authentication, Supabase persistence, and the Vercel AI Gateway. The host application owns prompts, tools, and model selection; the runtime records what happened and gives humans a clean control surface over it.
 
-**Commercial posture: proprietary.** All rights reserved. Use, modification, and operation are limited to Authorized Users (Roy McFarland personally and entities controlled by Roy McFarland, including Brightline Ltd) except by separate written agreement.
+**License posture: open source under the MIT License.** The five core libraries under `packages/*` are published to npm under the public `@llm-workbench/*` scope. The hosted reference app (`apps/web`) and the `examples/*` apps are part of the public repository but are **not** published as npm packages (they remain `"private": true`). The repository is public at `github.com/roymcfarland/llm-workbench`.
 
 ---
 
@@ -71,17 +71,16 @@ The following are explicitly **out of scope** for this product. Agents should re
 
 The following questions were raised by static analysis of the repository and have been answered here. Agents should treat these answers as durable unless this document is updated.
 
-### Q1. Proprietary license shape and enforcement
+### Q1. License shape and enforcement
 
-**Answer: Named-grant proprietary.**
+**Answer: Open source under the MIT License.**
 
-The repository is strictly proprietary. The license grants use, modification, and operation rights exclusively to Authorized Users (Roy McFarland personally and entities controlled by Roy McFarland, including Brightline Ltd). No other license is granted.
+The repository and its `packages/*` libraries are licensed under the MIT License (see the root `LICENSE` and each `packages/*/LICENSE`). The five core packages are published to npm under the public `@llm-workbench/*` scope. This posture supersedes the prior proprietary, named-grant license; any residual proprietary/"all rights reserved"/"Authorized Users" language is obsolete and must be corrected wherever it appears.
 
 **Verifier behavior:**
-- Fail any PR that sets `"private": false` on any `package.json`.
-- Fail any PR that sets `"license"` to anything other than `"UNLICENSED"` or `"SEE LICENSE IN LICENSE"`.
-- Fail any PR that adds a new `packages/*`, `apps/*`, or `examples/*` directory without a `LICENSE` file containing the proprietary text.
-- Fail any PR that modifies an existing `LICENSE` file in a direction that adds a permissive grant (Apache, MIT, BSD, GPL, PolyForm, MPL, ISC, Unlicense).
+- Fail any PR that sets a package's `"license"` field to anything other than `"MIT"`, or that modifies a `LICENSE` file in a direction that removes or narrows the MIT grant (e.g., reintroduces proprietary, "all rights reserved", or "Authorized Users" language, or swaps in a non-MIT license).
+- Fail any PR that adds `"private": true` to a publishable `packages/*` package — the five core packages must remain publishable. The root `package.json`, `apps/web`, and every `examples/*` package are **not** published and must keep `"private": true`; fail any PR that removes `private` from those.
+- Fail any PR that adds a new `packages/*` directory without (a) an MIT `LICENSE` file and (b) publish configuration consistent with the `@llm-workbench/*` scope (`"publishConfig": { "access": "public" }`, a `repository` field, and no `"private": true`).
 
 ### Q2. Next.js middleware naming convention
 
@@ -102,17 +101,17 @@ Large files degrade agent context windows and increase merge conflicts. A 500-li
 - Warn on any PR that adds to a `.ts` or `.tsx` file (excluding `*.test.ts`/`*.test.tsx` and generated files) pushing it over 500 lines.
 - *Conditional:* Once dedicated split PRs land for `packages/runtime/src/runtime/session.ts` (currently 835 lines) and `packages/ui/src/WorkbenchShell.tsx` (currently 716 lines), the Verifier must hard-fail any PR that pushes a file over 800 lines. Until those splits land, the 800-line cap is aspirational.
 
-### Q4. Repository visibility and publish lock
+### Q4. Repository visibility and publishing
 
-**Answer: Private and non-publishing.**
+**Answer: Public and published.**
 
-The repository is private and must remain private. No packages are published to npm.
+The repository is public at `github.com/roymcfarland/llm-workbench`. The five `packages/*` libraries are published to npm under the public `@llm-workbench/*` scope, coordinated by a release workflow (changesets-based). This supersedes the prior private, non-publishing lock.
 
 **Verifier behavior:**
-- Fail any PR that changes repo visibility (e.g., via GitHub Actions scripts).
-- Fail any PR that re-introduces a `release.yml` workflow for npm publishing.
-- Fail any PR that removes `"private": true` from any `package.json`.
-- Fail any PR that adds an `npm publish` invocation to any script.
+- Fail any PR that attempts to make the repository private again (e.g., via a GitHub Actions script or settings change).
+- A release/publish workflow (changesets `version` + `publish`, npm `--provenance`) is **expected**. Do not fail PRs that add or modify npm-publish automation; instead fail any PR that *removes* the publish pipeline once it exists.
+- The five `packages/*` must be publishable (no `"private": true`; `"publishConfig": { "access": "public" }`). The root, `apps/web`, and `examples/*` are never published and keep `"private": true`.
+- `npm publish` / `changeset publish` invocations in release automation are permitted and expected.
 
 ---
 
