@@ -1,55 +1,48 @@
-# Closeout: make `@llm-workbench/runtime` importable under plain Node ESM
+# Closeout: flip PROJECT.md license/visibility posture to open source (MIT)
 
 ## Summary
 
-The runtime package was bundler-only: its public API worked under Next.js, Vite,
-and vitest (all of which bundle CommonJS deps), but a real consumer importing the
-published package under Node's own ESM loader crashed immediately. This is the
-first concrete step toward the package actually being a usable SDK.
-
-Root cause: `fast-json-patch` is a CommonJS module whose named exports are not
-statically detectable by Node's ESM `cjs-module-lexer`. Two source files used
-`import { applyPatch, type Operation } from "fast-json-patch"`. Under a bundler
-that resolves fine; under plain `node` it throws
-`SyntaxError: Named export 'applyPatch' not found`.
+Keystone slice of the open-source publishing arc. `PROJECT.md` is the authoritative
+spec the Builder/Verifier loop enforces; it previously *forbade* every change the
+OSS flip requires (it failed any PR that removed `"private"`, set a permissive
+license, published to npm, or made the repo public). This slice inverts the spec so
+the loop *enforces* the open-source posture instead — unblocking all downstream
+license-file, manifest, public-docs, and publishing slices. **Docs-only: no code,
+`LICENSE` files, or `package.json` flags change here.**
 
 ## Changes
 
-- `packages/runtime/src/runtime/artifactController.ts` — default-import
-  `fast-json-patch` and destructure `applyPatch`; `Operation` kept as a pure
-  `import type` (erased at runtime).
-- `packages/runtime/src/schema/registry.ts` — same fix. (The adjacent
-  `import { Ajv } from "ajv"` is **left as-is**: ajv's named export *is*
-  statically detectable, verified importable under plain Node — no change needed.)
-- `scripts/esm-smoke.mjs` (NEW) — regression guard. Imports
-  `@llm-workbench/runtime` + `ai-sdk` + `mcp` under plain Node and drives a run
-  (including `patchArtifact`, which exercises `fast-json-patch`). Fails CI if any
-  becomes un-importable. The bundled vitest suite *structurally cannot* catch
-  this class of regression, which is exactly how the bug shipped.
-- `package.json` — `smoke:esm` script; wired into `ci` (runs after `build`).
-- `.github/workflows/ci.yml` — `ESM smoke` step after "Build all packages".
+- **Purpose section** — "proprietary control plane … Commercial posture: proprietary.
+  All rights reserved … Authorized Users" → "open-source control plane … License
+  posture: open source under the MIT License", noting the `packages/*` publish to npm
+  under `@llm-workbench/*` while root/`apps/web`/`examples/*` stay `"private": true`,
+  and the repo is public at `github.com/roymcfarland/llm-workbench`.
+- **Q1 (license)** — retitled "License shape and enforcement"; answer flipped to MIT.
+  Verifier rules inverted: fail non-`MIT` license fields or any reintroduction of
+  proprietary/"Authorized Users" language; fail `"private": true` on a publishable
+  `packages/*` package (but require it on root/`apps/web`/`examples/*`); new
+  `packages/*` must ship an MIT `LICENSE` + `@llm-workbench/*` publish config.
+- **Q4 (visibility/publishing)** — retitled; answer flipped to "Public and published".
+  Verifier rules inverted: fail attempts to re-privatize the repo; a changesets-based
+  release/publish workflow with npm `--provenance` is now *expected* (fail removal of
+  it once it exists); the five `packages/*` must be publishable.
+- **CHANGELOG** — `### Changed` entry recording the posture flip.
 
-## Scope notes
+## Out of scope (the slices this unblocks)
 
-- Only `fast-json-patch` named-value imports were affected; `ajv` imports cleanly
-  under plain Node, and `ai-sdk` + `mcp` already imported cleanly (verified). The
-  React packages (`ui`, `adapters-react`) are bundler/browser targets by nature
-  and are out of scope for plain-Node import.
-- This addresses the *interop* half of "usable as an SDK." The *distribution*
-  half (the package is `private: true` / unpublished) is a separate, deliberate
-  decision (PROJECT.md Q4) and not touched here.
+- Slice 2 — replace the 6 `LICENSE` files with MIT + set `"license": "MIT"` in every manifest.
+- Slice 3 — publish-ready manifests (remove `private` from the 5 packages; add `publishConfig`,
+  `repository`, `homepage`, `bugs`, `author`, `keywords`).
+- Slices 4–6 — restore GitHub links + OSS-ify the site/README + community docs.
+- Slice 7 — changesets + publish workflow.
 
-## Evidence
+## Known pre-existing drift (not touched here)
 
-- Before: a from-scratch `node` script importing the package threw
-  `SyntaxError: Named export 'applyPatch' not found ... 'fast-json-patch' is a
-  CommonJS module`.
-- After — plain-Node consumer (workspace symlink): imported the package, gated a
-  step (blocked → approved), wrote + JSON-patched an artifact, logged model I/O,
-  completed the step, summarized telemetry, and exported a SHA-256-signed bundle.
-- After — **external install**: `npm pack` → installed the tarball into a clean
-  project *outside the monorepo* (`type: module`, no bundler) → imported and drove
-  a run producing a signed bundle. Runtime deps are self-contained
-  (`ajv`, `fast-json-patch`, `zod`; zero workspace deps), so it packs standalone.
-- `npm run smoke:esm` → green. `npm run ci` → exit 0 (302 vitest tests, web build
-  compiled). Runtime suite: 148 passed (bundler consumers unbroken).
+Q2 still forbids a `proxy.ts` middleware, but PR #38 already migrated `middleware.ts`
+→ `proxy.ts` on `main`. That contradiction predates this slice and is out of scope;
+it should be reconciled in a dedicated docs PR.
+
+## Verification
+
+Docs-only change to `PROJECT.md` + `CHANGELOG.md` + `CLOSEOUT.md`. No build/test impact;
+CI must stay green (build, tests, lint, audit gate unaffected).
