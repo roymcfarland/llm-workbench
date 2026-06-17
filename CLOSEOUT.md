@@ -1,33 +1,40 @@
-# Closeout: keep package-lock.json in sync during changeset versioning
+# Closeout: seed genuine demo runs for the public run counter
 
 ## Summary
 
-Prevents the lockfile drift that PR #58 had to resync by hand. The changesets
-"Version Packages" step bumps every workspace `package.json` but never ran an
-install, so `package-lock.json` fell out of sync each release and later surfaced
-as unrelated churn in feature PRs. This fixes it at the source: `changeset
-version` is now followed by `npm install --package-lock-only`, so the version PR
-includes the synced lockfile.
+Added a maintainer-only script that can seed Supabase `runs` with genuine demo
+run bundles built by the runtime from the existing public landing scenarios.
+The default path is a credential-free dry-run so the bundle generation and
+summary can be verified locally before any production write.
 
 ## Changes
 
-- **`package.json`** — `changeset:version` script is now
-  `changeset version && npm install --package-lock-only` (was `changeset
-  version`). The `Release` workflow runs this command via `changesets/action`,
-  so the lockfile is committed into the Version Packages PR alongside the bumped
-  manifests.
+- **`apps/web/scripts/seed-demo-runs.mts`** — exports `buildSeedRows({ count,
+  now })`, rotates through the five public scenarios, builds each bundle through
+  `WorkbenchRuntime`, serializes the runtime state inline, and exposes a CLI
+  with dry-run summary, `--apply` upsert, and `--clean`.
+- **`apps/web/scripts/seed-demo-runs.test.ts`** — validates the pure planner
+  shape, stable IDs, tenant/status, descending timestamps, and serialized run
+  shape without snapshotting non-deterministic runtime content.
+- **`apps/web/package.json`** — adds `npm run seed:demo-runs -w
+  @llm-workbench/web`.
 - **`CHANGELOG.md` / `CLOSEOUT.md`** — ledger.
 
 ## Verification
 
-- `package.json` parses as valid JSON; `changeset:version` resolves to the new
-  command.
-- No dependency or version change in this PR — it only edits the script string.
-- CI (`build & test` node 22/24) runs `npm ci` and the full build, proving the
-  manifest edit is well-formed. The behavior change itself is exercised by the
-  next real release (the next Version Packages PR will carry a synced lockfile).
+- `npm run typecheck -w @llm-workbench/web`
+- `npm run lint -w @llm-workbench/web`
+- `npm test -w @llm-workbench/web`
+- `npm run seed:demo-runs -w @llm-workbench/web`
 
-## Not in scope
+## Not-in-scope / safety
 
-- No dependency changes, no `release.yml` changes (the workflow already invokes
-  `npm run changeset:version`), no source changes.
+- Dry-run is the default and does not require Supabase credentials or query the
+  network.
+- Production writes require `--apply` plus `NEXT_PUBLIC_SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY`.
+- Seeding is idempotent: rows use stable `seed-demo-*` IDs and upsert on `id`.
+- Cleanup is targeted and reversible via `--clean`, scoped to
+  `tenant_id = "seed-demo"`.
+- The actual production write is a manual maintainer step, expected to be
+  preceded by a dry-run check.

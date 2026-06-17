@@ -96,6 +96,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Maintainer demo-run seeding script.** Added
+  `apps/web/scripts/seed-demo-runs.mts`, a dev/ops script that builds genuine
+  demo run bundles with `WorkbenchRuntime` from the public landing scenarios and
+  can seed them into Supabase to populate the public run counter. It is
+  maintainer-run only (not wired into the app or CI), dry-run by default,
+  idempotent via stable `seed-demo-*` ids and upsert-on-id, and reversible with
+  `--clean`.
 - **Brand favicon, iOS app icon, and web app manifest.** Added
   `apps/web/app/icon.svg`, `apps/web/app/apple-icon.tsx` (generated via
   `next/og`), and `apps/web/app/manifest.ts` (linked from layout metadata),
