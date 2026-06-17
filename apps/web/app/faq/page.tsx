@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { OG_IMAGE_ALT } from "@/lib/site";
-
 const faqs: { q: string; a: string }[] = [
   {
     q: "What is LLM Workbench?",
@@ -72,18 +70,12 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "LLM Workbench",
     locale: "en_US",
-    images: [
-      { url: "/opengraph-image", width: 1200, height: 630, alt: OG_IMAGE_ALT },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "FAQ · LLM Workbench",
     description:
       "Answers about LLM Workbench run bundles, human gates, replay, privacy, and how to try it.",
-    images: [
-      { url: "/twitter-image", width: 1200, height: 630, alt: OG_IMAGE_ALT },
-    ],
   },
 };
 
