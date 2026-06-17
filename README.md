@@ -26,6 +26,17 @@ happened and gives humans a clean control surface over it.
 
 ## Status
 
+`v0.3.x` (June 2026): **LLM Workbench is now open source under the MIT License**
+and published to npm under the [`@llm-workbench`](https://www.npmjs.com/org/llm-workbench)
+scope (five packages: `runtime`, `ui`, `adapters-react`, `ai-sdk`, `mcp`). This
+release focused on making the packages genuinely installable and safe to depend on:
+a CI smoke test that imports the built packages under plain Node ESM (not just a
+bundler), removal of the last `unsafe-eval` from the production CSP by precompiling
+JSON-Schema validators at build time, cleared dependency advisories, a
+production-scoped audit gate in CI, secret scanning, and packages published with
+build provenance. See the launch post:
+[llm-workbench-is-now-open-source](https://www.llmworkbench.io/blog/llm-workbench-is-now-open-source).
+
 `v0.2.0` (2026-04-27): the runtime adds Trace 2.0 (hierarchical spans, OTel
 GenAI mapper), hierarchical supervision (`runChildrenOf`, `cancelRunCascade`),
 and an externalizable `ArtifactStore`; `@llm-workbench/ai-sdk` wraps Vercel
