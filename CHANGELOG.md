@@ -8,6 +8,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Footer attribution and Brightline Labs naming.**
+  Updated the footer wording from "under" to "at" and "Attribution:" to "From";
+  renamed the shared brand display constant from `Brightline Ltd` to
+  `Brightline Labs`, which propagates to the footer, `humans.txt`, and both OG
+  image routes; and updated the hardcoded email-footer literal in
+  `emails/run-completion.tsx`. `robots.txt` already exists as a route handler
+  and was left unchanged.
 - **`PROJECT.md` Q2 corrected for the Next.js 16 proxy migration.** Updated the
   stale middleware naming answer to reflect the `middleware.ts` → `proxy.ts`
   migration from #38 and the verifier rule that extensionless `next/og` image
