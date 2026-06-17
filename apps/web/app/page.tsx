@@ -89,20 +89,20 @@ export default async function LandingPage() {
 
           <section
             aria-labelledby="hero-heading"
-            className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14 lg:py-20"
+            className="relative z-10 mx-auto grid w-full max-w-6xl gap-6 px-6 py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-stretch lg:gap-x-14 lg:gap-y-6 lg:py-20"
           >
-            <div className="flex flex-col gap-6">
-              <p
-                className="landing-reveal inline-flex w-fit items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/55 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)] shadow-sm backdrop-blur-md"
-                style={{ animationDelay: "0s" }}
-              >
-                <span
-                  aria-hidden="true"
-                  className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"
-                />
-                LLM Workbench · Protocol v{WORKBENCH_PROTOCOL_VERSION}
-              </p>
+            <p
+              className="landing-reveal order-1 inline-flex w-fit items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/55 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted-foreground)] shadow-sm backdrop-blur-md lg:col-start-1 lg:row-start-1 lg:self-start"
+              style={{ animationDelay: "0s" }}
+            >
+              <span
+                aria-hidden="true"
+                className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"
+              />
+              LLM Workbench · Protocol v{WORKBENCH_PROTOCOL_VERSION}
+            </p>
 
+            <div className="order-2 flex flex-col gap-6 lg:col-start-1 lg:row-start-2">
               <h1
                 id="hero-heading"
                 className="landing-reveal font-serif text-4xl font-semibold tracking-tight text-balance drop-shadow-sm sm:text-5xl lg:text-[4.1rem] lg:leading-[1.02]"
@@ -143,36 +143,39 @@ export default async function LandingPage() {
                   <Link href="/runs/demo">View a demo run</Link>
                 </Button>
               </div>
-
-              <p
-                className="landing-reveal font-mono text-[11px] text-[var(--color-muted-foreground)]"
-                style={{ animationDelay: "0.28s" }}
-              >
-                <span className="text-[var(--color-foreground)]">
-                  {runsCount === null ? "—" : runsCount.toLocaleString()}
-                </span>{" "}
-                runs persisted · v{WORKBENCH_PROTOCOL_VERSION} ·{" "}
-                <a
-                  href={LICENSE_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline-offset-4 hover:underline"
-                >
-                  {LICENSE_NAME}
-                </a>
-                {" · "}
-                <a
-                  href={GITHUB_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline-offset-4 hover:underline"
-                >
-                  Source
-                </a>
-              </p>
             </div>
 
-            <div className="landing-reveal relative" style={{ animationDelay: "0.14s" }}>
+            <p
+              className="landing-reveal order-3 font-mono text-[11px] text-[var(--color-muted-foreground)] lg:col-start-1 lg:row-start-3"
+              style={{ animationDelay: "0.28s" }}
+            >
+              <span className="text-[var(--color-foreground)]">
+                {runsCount === null ? "—" : runsCount.toLocaleString()}
+              </span>{" "}
+              runs persisted · v{WORKBENCH_PROTOCOL_VERSION} ·{" "}
+              <a
+                href={LICENSE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="underline-offset-4 hover:underline"
+              >
+                {LICENSE_NAME}
+              </a>
+              {" · "}
+              <a
+                href={GITHUB_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="underline-offset-4 hover:underline"
+              >
+                Source
+              </a>
+            </p>
+
+            <div
+              className="landing-reveal order-4 relative mt-4 lg:col-start-2 lg:row-start-2 lg:mt-0 lg:flex lg:h-full lg:min-h-0 lg:self-stretch"
+              style={{ animationDelay: "0.14s" }}
+            >
               <div
                 data-static-fallback
                 className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/45 p-3 shadow-2xl backdrop-blur-md data-[hidden=true]:hidden"
@@ -191,8 +194,8 @@ export default async function LandingPage() {
                   JavaScript is disabled — showing a static workflow snapshot.
                 </p>
               </noscript>
-              <div className="mt-0 lg:min-h-[24rem]">
-                <HeroLiveRun className="lg:min-h-[24rem]" />
+              <div className="mt-0 lg:absolute lg:inset-0 lg:flex lg:h-full lg:w-full lg:self-stretch">
+                <HeroLiveRun className="lg:h-full lg:self-stretch" />
               </div>
             </div>
           </section>
