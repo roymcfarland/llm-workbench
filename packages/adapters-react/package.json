@@ -1,6 +1,6 @@
 {
   "name": "@llm-workbench/adapters-react",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "React hooks for subscribing components to live LLM Workbench runtime state.",
   "keywords": [
     "llm",
@@ -40,7 +40,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@llm-workbench/runtime": "0.3.0"
+    "@llm-workbench/runtime": "0.3.1"
   },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0"
