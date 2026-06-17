@@ -36,7 +36,7 @@ export function SiteFooter() {
               {LICENSE_NAME} license
             </a>{" "}
             — free to use, modify, and distribute. Built and maintained by Roy
-            McFarland under{" "}
+            McFarland at{" "}
             <a
               href={BRIGHTLINE_LABS_URL}
               target="_blank"
@@ -131,7 +131,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-[var(--color-border)] px-6 py-5">
         <p className="text-center text-xs text-[var(--color-muted-foreground)]">
-          <span className="text-[var(--color-foreground)]">Attribution: </span>
+          <span className="text-[var(--color-foreground)]">From </span>
           <a
             href={BRIGHTLINE_LABS_URL}
             target="_blank"

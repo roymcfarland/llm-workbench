@@ -1,36 +1,37 @@
-# Closeout: site favicon, app icons, and web manifest
+# Closeout: footer copy and Brightline Labs rename
 
 ## Summary
 
-Added the missing favicon, iOS app icon, and web app manifest for `apps/web`,
-matched to the existing LLM Workbench gradient-orb brand mark.
+Updated the web footer attribution copy and renamed the Brightline brand display
+from `Brightline Ltd` to `Brightline Labs` across the shared constant and the
+remaining hardcoded email-footer literal.
 
 ## Changes
 
-- **`apps/web/app/icon.svg`** — static SVG favicon with the dark rounded square
-  and centered cyan-to-purple-to-pink orb.
-- **`apps/web/app/apple-icon.tsx`** — `next/og`-generated 180x180 PNG app icon
-  using the Node.js runtime and matching orb/glow treatment.
-- **`apps/web/app/manifest.ts`** — web app manifest with app metadata, dark
-  theme/background colors, and favicon/apple-icon entries.
-- **`apps/web/app/layout.tsx`** — linked `/manifest.webmanifest` from the
-  exported metadata object.
-- **`apps/web/proxy.ts`** — added `/apple-icon(.*)` to the public-route matcher
-  so the generated iOS icon is reachable without Clerk authentication.
-- **`PROJECT.md`** — corrected stale Q2 middleware guidance to the Next.js 16
-  `proxy.ts` convention after this PR surfaced the stale-spec conflict.
-- **`CHANGELOG.md`** — documented the favicon/app-icon/manifest slice under
-  Unreleased.
-- **`CLOSEOUT.md`** — this slice closeout.
+- **`apps/web/lib/site.ts`** — changed `BRIGHTLINE_LABS_NAME` from
+  `Brightline Ltd` to `Brightline Labs`; consumers such as the footer,
+  `humans.txt`, and both OG image routes pick up the new display name through
+  the shared constant.
+- **`apps/web/components/landing/site-footer.tsx`** — changed the open-source
+  attribution wording from "under" to "at" and the bottom attribution prefix
+  from "Attribution:" to "From".
+- **`apps/web/emails/run-completion.tsx`** — updated the hardcoded email-footer
+  brand literal from `Brightline Ltd` to `Brightline Labs`.
+- **`CHANGELOG.md`** — documented the footer copy and Brightline Labs rename
+  under Unreleased.
 
 ## Verification
 
 - `npm run typecheck -w @llm-workbench/web`
 - `npm run lint -w @llm-workbench/web`
 - `npm run build:web`
-- Local route spot checks for `/icon.svg`, `/manifest.webmanifest`, and
-  `/apple-icon`.
+- `grep -rn "Brightline Ltd" apps/web --include="*.ts" --include="*.tsx"`
+- `curl -s localhost:3000/robots.txt | grep -i sitemap`
 
 ## Not in scope
 
-No changes to existing OG/Twitter image routes or `lib/og-image-markup.tsx`.
+- No change to `app/robots.txt/route.ts`; it already serves the complete
+  `robots.txt`.
+- No `sitemap.ts` changes.
+- No changes to OG-markup or `humans.txt`; their output updates via the
+  `BRIGHTLINE_LABS_NAME` constant.
