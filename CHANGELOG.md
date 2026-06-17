@@ -8,6 +8,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Release versioning now keeps `package-lock.json` in sync.** The
+  `changeset:version` script runs `npm install --package-lock-only` after
+  `changeset version`, so the "Version Packages" PR bumps the lockfile's
+  workspace versions alongside `package.json`. Previously the lockfile drifted
+  every release (the version step never installed), which surfaced as unrelated
+  churn in later feature PRs (fixed once in the #58 resync; this prevents the
+  recurrence at the source).
 - **Footer attribution and Brightline Labs naming.**
   Updated the footer wording from "under" to "at" and "Attribution:" to "From";
   renamed the shared brand display constant from `Brightline Ltd` to

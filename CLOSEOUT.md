@@ -1,37 +1,33 @@
-# Closeout: footer copy and Brightline Labs rename
+# Closeout: keep package-lock.json in sync during changeset versioning
 
 ## Summary
 
-Updated the web footer attribution copy and renamed the Brightline brand display
-from `Brightline Ltd` to `Brightline Labs` across the shared constant and the
-remaining hardcoded email-footer literal.
+Prevents the lockfile drift that PR #58 had to resync by hand. The changesets
+"Version Packages" step bumps every workspace `package.json` but never ran an
+install, so `package-lock.json` fell out of sync each release and later surfaced
+as unrelated churn in feature PRs. This fixes it at the source: `changeset
+version` is now followed by `npm install --package-lock-only`, so the version PR
+includes the synced lockfile.
 
 ## Changes
 
-- **`apps/web/lib/site.ts`** — changed `BRIGHTLINE_LABS_NAME` from
-  `Brightline Ltd` to `Brightline Labs`; consumers such as the footer,
-  `humans.txt`, and both OG image routes pick up the new display name through
-  the shared constant.
-- **`apps/web/components/landing/site-footer.tsx`** — changed the open-source
-  attribution wording from "under" to "at" and the bottom attribution prefix
-  from "Attribution:" to "From".
-- **`apps/web/emails/run-completion.tsx`** — updated the hardcoded email-footer
-  brand literal from `Brightline Ltd` to `Brightline Labs`.
-- **`CHANGELOG.md`** — documented the footer copy and Brightline Labs rename
-  under Unreleased.
+- **`package.json`** — `changeset:version` script is now
+  `changeset version && npm install --package-lock-only` (was `changeset
+  version`). The `Release` workflow runs this command via `changesets/action`,
+  so the lockfile is committed into the Version Packages PR alongside the bumped
+  manifests.
+- **`CHANGELOG.md` / `CLOSEOUT.md`** — ledger.
 
 ## Verification
 
-- `npm run typecheck -w @llm-workbench/web`
-- `npm run lint -w @llm-workbench/web`
-- `npm run build:web`
-- `grep -rn "Brightline Ltd" apps/web --include="*.ts" --include="*.tsx"`
-- `curl -s localhost:3000/robots.txt | grep -i sitemap`
+- `package.json` parses as valid JSON; `changeset:version` resolves to the new
+  command.
+- No dependency or version change in this PR — it only edits the script string.
+- CI (`build & test` node 22/24) runs `npm ci` and the full build, proving the
+  manifest edit is well-formed. The behavior change itself is exercised by the
+  next real release (the next Version Packages PR will carry a synced lockfile).
 
 ## Not in scope
 
-- No change to `app/robots.txt/route.ts`; it already serves the complete
-  `robots.txt`.
-- No `sitemap.ts` changes.
-- No changes to OG-markup or `humans.txt`; their output updates via the
-  `BRIGHTLINE_LABS_NAME` constant.
+- No dependency changes, no `release.yml` changes (the workflow already invokes
+  `npm run changeset:version`), no source changes.
