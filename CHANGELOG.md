@@ -6,6 +6,18 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Security
+
+- **Bumped `@sentry/nextjs` from 10.50 to 10.58.** Clears the
+  `@sentry/node` plus `@opentelemetry/*` moderate advisory cascade (about 17
+  advisories) without a major upgrade. Deferred, documented moderate/low
+  advisories remain for `postcss` via Next.js (build-time, trusted project CSS),
+  `dompurify` via Monaco (constrained client use), and `js-yaml` via
+  `gray-matter@4` (`gray-matter` pins `js-yaml@^3` and uses `safeLoad`, which
+  `js-yaml@4` removed; inputs are trusted blog front matter / dev-only
+  changesets). Root overrides do not propagate to these workspace transitives,
+  and the CI high/critical audit gate remains green.
+
 ### Changed
 
 - **Landing and site chrome polished.** Rebalanced the hero to co-equal,
