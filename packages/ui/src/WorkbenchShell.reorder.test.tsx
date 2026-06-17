@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   buildRuleReorderHandler,
   computeReorderedRuleIds,
-} from "./WorkbenchShell.js";
+} from "./WorkbenchRules.js";
 
 function makeRuleSet(ids: string[]): RuleSet {
   return {

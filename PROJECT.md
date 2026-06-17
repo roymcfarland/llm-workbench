@@ -100,13 +100,13 @@ and the `isPublicRoute`/SEO matcher) lives at `apps/web/proxy.ts`; there is no
 
 ### Q3. File-size and structure rules
 
-**Answer: Warn-only at 500 lines; hard-fail at 800 lines (conditional).**
+**Answer: Warn-only at 500 lines; hard-fail at 800 lines.**
 
 Large files degrade agent context windows and increase merge conflicts. A 500-line soft cap is established to encourage modularity.
 
 **Verifier behavior:**
 - Warn on any PR that adds to a `.ts` or `.tsx` file (excluding `*.test.ts`/`*.test.tsx` and generated files) pushing it over 500 lines.
-- *Conditional:* Once dedicated split PRs land for `packages/runtime/src/runtime/session.ts` (currently 835 lines) and `packages/ui/src/WorkbenchShell.tsx` (currently 716 lines), the Verifier must hard-fail any PR that pushes a file over 800 lines. Until those splits land, the 800-line cap is aspirational.
+- Hard-fail any PR that pushes a non-generated `.ts` or `.tsx` source file over 800 lines. This hard cap is now active: both named split PRs have landed, with `packages/runtime/src/runtime/session.ts` at 185 lines and `packages/ui/src/WorkbenchShell.tsx` split under the 500-line soft cap.
 
 ### Q4. Repository visibility and publishing
 

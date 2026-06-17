@@ -26,6 +26,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **`WorkbenchShell.tsx` split under the 500-line soft cap.** Extracted the
+  trace list into `WorkbenchTrace` and rule-row/reorder helpers into
+  `WorkbenchRules`, keeping public UI exports and runtime behavior unchanged.
+  Refreshed `PROJECT.md` Q3 and armed the 800-line hard-fail now that both named
+  files are compliant.
 - **Landing hero console alignment tightened.** Aligned the live console to span
   the headline-to-CTA block by lifting the protocol badge and runs-count line
   out of the desktop grid row, stretching the console with `items-stretch` /
