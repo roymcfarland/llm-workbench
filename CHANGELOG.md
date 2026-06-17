@@ -6,6 +6,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Page-specific OG/Twitter cards for `/faq` and `/docs/protocol` reuse the
+  branded index markup, so those pages no longer fall back to the root card.
+
 ### Fixed
 
 - Site-wide responsive pass — added a root `overflow-x-clip` guard, constrained

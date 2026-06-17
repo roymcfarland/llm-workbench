@@ -11,8 +11,8 @@ import { contentSecurityPolicy } from "@/lib/security/csp";
 //
 // SEO / crawlers: keep `isPublicRoute` aligned with `app/robots.txt`, `app/sitemap.ts`,
 // and playground CTAs (`components/playground-marketing-link.tsx`). Next.js OG routes
-// (`/opengraph-image`, `/twitter-image`) and blog image routes stay public — crawlers do
-// not send cookies.
+// (`/opengraph-image`, `/twitter-image`) and page-specific image routes stay
+// public — crawlers do not send cookies.
 const isPublicRoute = createRouteMatcher([
   "/",
   "/opengraph-image(.*)",
@@ -24,6 +24,8 @@ const isPublicRoute = createRouteMatcher([
   "/docs/(.*)",
   "/runs/demo",
   "/faq",
+  "/faq/opengraph-image(.*)",
+  "/faq/twitter-image(.*)",
   "/blog",
   "/blog/(.*)",
   "/feed.xml",

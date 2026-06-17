@@ -17,6 +17,14 @@ export const BLOG_INDEX_DESCRIPTION =
 export const BLOG_INDEX_OG_ALT =
   "LLM Workbench blog — audit-ready run bundles, human gates, and model-agnostic tracing." as const;
 
+/** Alt text for the FAQ OG/Twitter image routes. */
+export const FAQ_OG_ALT =
+  "LLM Workbench — Frequently asked questions" as const;
+
+/** Alt text for the protocol docs OG/Twitter image routes. */
+export const PROTOCOL_OG_ALT =
+  "LLM Workbench — the run-bundle protocol" as const;
+
 export function blogPostOgImageAlt(postTitle: string): string {
   return `${postTitle} — ${SITE_NAME} blog`;
 }
