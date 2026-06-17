@@ -13,6 +13,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Blog-autopublish publish mode now authenticates its branch push and PR with
+  `BLOG_AUTOPUBLISH_PAT`, a repo-scoped PAT, instead of `GITHUB_TOKEN`, so the
+  bot's PR triggers CI and auto-merge completes. `GITHUB_TOKEN`-authored events
+  do not trigger workflows, which left PR #74 stuck `BLOCKED`.
 - Blog-autopublish publish-mode validation now runs `npm run build` before the
   web tests and `build:web`, so `apps/web` can resolve the
   `@llm-workbench/*` packages. The publish path previously failed to resolve

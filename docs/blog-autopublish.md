@@ -44,11 +44,16 @@ npm run build:web
 Scheduled runs are dormant by default. To turn them on:
 
 - Add the `AI_GATEWAY_API_KEY` repository secret.
+- Add the `BLOG_AUTOPUBLISH_PAT` repository secret: a fine-grained PAT scoped
+  to this repository with **Contents: Read and write** and
+  **Pull requests: Read and write**. This token has an expiry and must be
+  rotated before it lapses, or the weekly publish PR will not auto-merge.
 - Set the repository variable `BLOG_AUTOPUBLISH_ENABLED=true`.
 - Optionally set `BLOG_MODEL` to override the default
   `anthropic/claude-opus-4-8` model.
 
-The key is read only from the environment. It is never written to logs or source.
+The AI Gateway key is read only from the environment. It is never written to
+logs or source.
 
 ## Safe Testing
 
@@ -77,10 +82,9 @@ Edit `.github/workflows/blog-autopublish.yml` to change the cadence.
 
 In publish mode the workflow generates a post on the default checkout, validates
 it, creates an `autopublish/blog-YYYY-MM-DD` branch, opens a PR, and enables
-auto-merge. `.github/workflows/ci.yml` runs CI on `autopublish/**` branch pushes
-so required checks attach to the bot commit even though `GITHUB_TOKEN`-created
-PRs do not fire `pull_request`. Once checks pass, GitHub auto-merges the PR and
-the normal Vercel deployment path takes over from `main`.
+auto-merge using `BLOG_AUTOPUBLISH_PAT`. The PAT-authored branch push and PR let
+`.github/workflows/ci.yml` run required checks and let GitHub auto-merge the PR
+once checks pass. The normal Vercel deployment path then takes over from `main`.
 
 ## Safety Guarantees
 

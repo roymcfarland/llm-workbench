@@ -5,8 +5,10 @@ name: Blog autopublish
 # the BLOG_AUTOPUBLISH_ENABLED repo variable. Manual dispatch always runs (for
 # testing), defaulting to a no-publish dry-run.
 #
-# Setup: add the AI_GATEWAY_API_KEY secret; set repo var BLOG_AUTOPUBLISH_ENABLED=true
-# to enable the weekly schedule. Optional: BLOG_MODEL var to override the model.
+# Setup: add the AI_GATEWAY_API_KEY secret and BLOG_AUTOPUBLISH_PAT secret
+# (fine-grained, this repo only, Contents: R/W + Pull requests: R/W) so the bot's
+# PR triggers CI + auto-merge; set repo var BLOG_AUTOPUBLISH_ENABLED=true to
+# enable the weekly schedule. Optional: BLOG_MODEL var to override the model.
 
 on:
   schedule:
@@ -31,6 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.BLOG_AUTOPUBLISH_PAT }}
 
       - uses: actions/setup-node@v4
         with:
@@ -68,7 +72,7 @@ jobs:
       - name: Open PR + enable auto-merge (publish)
         if: ${{ steps.mode.outputs.mode == 'publish' && steps.gen.outputs.created != '' }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BLOG_AUTOPUBLISH_PAT }}
         run: |
           set -euo pipefail
           DATE="$(date -u +%Y-%m-%d)"
