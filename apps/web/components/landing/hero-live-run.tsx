@@ -11,6 +11,8 @@ import {
 } from "@llm-workbench/runtime";
 import { WorkflowGraph } from "@llm-workbench/ui";
 
+import { cn } from "@/lib/utils";
+
 const timeJumpWorkflow = {
   id: "timeJump",
   version: 1,
@@ -155,7 +157,11 @@ function summarize(e: TraceEvent): TraceRow {
   }
 }
 
-export function HeroLiveRun() {
+type HeroLiveRunProps = {
+  className?: string;
+};
+
+export function HeroLiveRun({ className }: HeroLiveRunProps) {
   const reducedMotion = useReducedMotion();
   const runtime = useMemo(() => new WorkbenchRuntime(), []);
   const startedRef = useRef(false);
@@ -343,9 +349,12 @@ export function HeroLiveRun() {
 
   return (
     <div
-      className="relative isolate grid w-full grid-cols-1 gap-3 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-3 shadow-[0_30px_80px_-40px_oklch(0.65_0.18_260/0.6)] backdrop-blur [contain:layout] [overflow-anchor:none] md:grid-cols-[1fr_220px]"
+      className={cn(
+        "relative isolate grid w-full grid-cols-1 gap-3 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-3 shadow-[0_30px_80px_-40px_oklch(0.65_0.18_260/0.6)] backdrop-blur [contain:layout] [overflow-anchor:none] md:grid-cols-[1fr_220px]",
+        className,
+      )}
     >
-      <div className="relative isolate aspect-[4/3] min-h-[220px] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/40">
+      <div className="relative isolate aspect-[4/3] min-h-[220px] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/40 lg:aspect-auto lg:min-h-0 lg:self-stretch">
         {runId && state ? (
           <WorkflowGraph
             key={graphKey}
@@ -360,7 +369,7 @@ export function HeroLiveRun() {
           </div>
         )}
       </div>
-      <aside className="relative z-10 flex h-[220px] min-h-[220px] flex-col gap-1 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/95 p-3 font-mono text-[10.5px] leading-snug backdrop-blur-sm md:w-[220px] md:flex-shrink-0">
+      <aside className="relative z-10 flex h-[220px] min-h-[220px] flex-col gap-1 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)]/95 p-3 font-mono text-[10.5px] leading-snug backdrop-blur-sm md:w-[220px] md:flex-shrink-0 lg:h-auto lg:min-h-0 lg:self-stretch">
         <div className="mb-1 shrink-0 flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
           <span>trace</span>
           <span className="rounded bg-emerald-500/15 px-1 text-emerald-300">

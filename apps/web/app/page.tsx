@@ -191,8 +191,8 @@ export default async function LandingPage() {
                   JavaScript is disabled — showing a static workflow snapshot.
                 </p>
               </noscript>
-              <div className="mt-0">
-                <HeroLiveRun />
+              <div className="mt-0 lg:min-h-[24rem]">
+                <HeroLiveRun className="lg:min-h-[24rem]" />
               </div>
             </div>
           </section>

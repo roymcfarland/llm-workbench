@@ -20,6 +20,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Landing hero rings and trace console restored.** Restored the wireframe
+  halo rings to the hero atmosphere while keeping the x-wing removed, and
+  enlarged the live trace console to span the headline-to-CTA block.
 - **Landing and site chrome polished.** Rebalanced the hero to co-equal,
   centered columns; removed the drifting-craft and wire-halo-rings hero
   decorations; and moved the desktop header theme toggle to the far left of the
