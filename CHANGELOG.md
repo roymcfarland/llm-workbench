@@ -13,6 +13,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Blog-autopublish publish-mode validation now runs `npm run build` before the
+  web tests and `build:web`, so `apps/web` can resolve the
+  `@llm-workbench/*` packages. The publish path previously failed to resolve
+  `@llm-workbench/runtime`.
 - Site-wide responsive pass — added a root `overflow-x-clip` guard, constrained
   over-wide decorative elements, gave the protocol prose a readable measure; and
   verified no horizontal overflow across the public pages at 375/768/1024.

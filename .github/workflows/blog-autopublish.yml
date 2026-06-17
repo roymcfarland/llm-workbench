@@ -61,6 +61,7 @@ jobs:
       - name: Validate generated post (publish)
         if: ${{ steps.mode.outputs.mode == 'publish' && steps.gen.outputs.created != '' }}
         run: |
+          npm run build
           npm test -w @llm-workbench/web
           npm run build:web
 
