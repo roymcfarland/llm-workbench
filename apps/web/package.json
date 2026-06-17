@@ -11,6 +11,7 @@
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run --passWithNoTests",
     "clean:next": "node ./scripts/clean-next.mjs",
+    "seed:demo-runs": "tsx scripts/seed-demo-runs.mts",
     "test:e2e": "node ./scripts/run-playwright-e2e.mjs",
     "test:e2e:full": "node ./scripts/run-e2e-full.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
