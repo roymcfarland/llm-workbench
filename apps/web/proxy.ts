@@ -17,6 +17,7 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/opengraph-image(.*)",
   "/twitter-image(.*)",
+  "/apple-icon(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/health",

@@ -8,6 +8,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **`PROJECT.md` Q2 corrected for the Next.js 16 proxy migration.** Updated the
+  stale middleware naming answer to reflect the `middleware.ts` → `proxy.ts`
+  migration from #38 and the verifier rule that extensionless `next/og` image
+  routes stay public.
 - **Resynced `package-lock.json` to the released workspace versions.** The
   changesets "Version Packages" step bumps each `package.json` but does not run
   an install, so the lockfile still recorded the pre-release workspace versions
@@ -78,6 +82,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Brand favicon, iOS app icon, and web app manifest.** Added
+  `apps/web/app/icon.svg`, `apps/web/app/apple-icon.tsx` (generated via
+  `next/og`), and `apps/web/app/manifest.ts` (linked from layout metadata),
+  matching the existing OG gradient-orb brand mark. Added `/apple-icon` to the
+  `proxy.ts` public-route matcher so the iOS icon is reachable
+  unauthenticated. No existing OG/Twitter image route changed.
 - **Weekly source-grounded blog auto-publisher.** A scheduled GitHub Actions
   workflow (`.github/workflows/blog-autopublish.yml`) that fetches curated
   AI-news RSS sources, grounds a cited post via the Vercel AI Gateway
