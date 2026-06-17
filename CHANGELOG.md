@@ -8,6 +8,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Tidied internal process artifacts out of the repo root.** Moved the one-off
+  verifier audits (`VERIFIER-AUDIT-PR8.md`, `VERIFIER-AUDIT-PR10.md`) to
+  `docs/process/`, and retired the transient root `CLOSEOUT.md` — per-slice
+  closeouts now live in their PR descriptions. Updated the `PROJECT.md` and
+  `README.md` references accordingly. The repo root now shows only the files a
+  visitor expects (README, CHANGELOG, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY,
+  ROADMAP, PROJECT); the builder/verifier rigor stays documented in `PROJECT.md`
+  and `docs/process/`.
 - **Release versioning now keeps `package-lock.json` in sync.** The
   `changeset:version` script runs `npm install --package-lock-only` after
   `changeset version`, so the "Version Packages" PR bumps the lockfile's
