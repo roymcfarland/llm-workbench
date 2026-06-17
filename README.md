@@ -85,10 +85,10 @@ to merge. A coding agent then implements the scoped PR, and a separate verifier
 agent independently checks it against [PROJECT.md](PROJECT.md) with a
 structured APPROVE/REJECT verdict.
 
-The process artifacts at repo root are there on purpose. [PROJECT.md](PROJECT.md)
-is the contract both agents are held to. [CLOSEOUT.md](CLOSEOUT.md) is the
-latest slice's build record. [VERIFIER-AUDIT-PR8.md](VERIFIER-AUDIT-PR8.md)
-and [VERIFIER-AUDIT-PR10.md](VERIFIER-AUDIT-PR10.md) are independent
+The process artifacts are there on purpose. [PROJECT.md](PROJECT.md)
+is the contract both agents are held to; each slice's build record (closeout)
+lives in its PR description. [VERIFIER-AUDIT-PR8.md](docs/process/VERIFIER-AUDIT-PR8.md)
+and [VERIFIER-AUDIT-PR10.md](docs/process/VERIFIER-AUDIT-PR10.md) are independent
 verification transcripts from specific PRs.
 
 ## Why It Exists
