@@ -6,7 +6,6 @@ import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
 
 import { Button } from "@/components/ui/button";
 import { CodeDiff } from "@/components/landing/code-diff";
-import { DriftingCraft } from "@/components/landing/drifting-craft";
 import { HeroAtmosphereSlot } from "@/components/landing/hero-atmosphere-slot";
 import { HeroLiveRun } from "@/components/landing/hero-live-run";
 import { LandingFinalCta } from "@/components/landing/landing-final-cta";
@@ -71,7 +70,7 @@ export default async function LandingPage() {
       />
 
       <div className="relative isolate overflow-hidden">
-        <div className="relative min-h-[min(100dvh,56rem)]">
+        <div className="relative flex min-h-[min(100dvh,56rem)] items-center">
           <div className="absolute inset-0 -z-30 pointer-events-none">
             <HeroAtmosphereSlot className="h-full min-h-[min(100dvh,56rem)] w-full" />
           </div>
@@ -79,7 +78,6 @@ export default async function LandingPage() {
             aria-hidden="true"
             className="landing-mesh pointer-events-none absolute inset-0 -z-20 opacity-[0.55] mix-blend-screen dark:opacity-40 dark:mix-blend-normal"
           />
-          <DriftingCraft />
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[var(--color-background)]/45 via-[var(--color-background)]/10 to-[var(--color-background)]"
@@ -91,7 +89,7 @@ export default async function LandingPage() {
 
           <section
             aria-labelledby="hero-heading"
-            className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-10 px-6 pb-16 pt-14 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-14 lg:pb-24 lg:pt-20"
+            className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14 lg:py-20"
           >
             <div className="flex flex-col gap-6">
               <p

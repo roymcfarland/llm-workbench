@@ -56,6 +56,9 @@ export function SiteHeader() {
           aria-label="Primary"
           className="hidden min-w-0 flex-nowrap items-center justify-end gap-1 [&_svg]:shrink-0 md:gap-2 sm:flex"
         >
+          <div className="mr-1 shrink-0 [&_button]:size-8 [&_button]:sm:size-9 md:mr-2">
+            <ThemeToggle />
+          </div>
           <Button asChild variant="ghost" size="sm" className={navBtn}>
             <Link href="/blog">Blog</Link>
           </Button>
@@ -74,9 +77,6 @@ export function SiteHeader() {
           <Button asChild variant="ghost" size="sm" className={navBtn}>
             <Link href="/faq">FAQ</Link>
           </Button>
-          <div className="shrink-0 [&_button]:size-8 [&_button]:sm:size-9">
-            <ThemeToggle />
-          </div>
           <SignedIn>
             <div className="flex shrink-0">
               <UserButton afterSignOutUrl="/" />

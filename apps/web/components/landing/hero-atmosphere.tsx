@@ -1,6 +1,6 @@
 "use client";
 
-import { Float, Sparkles } from "@react-three/drei";
+import { Sparkles } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -96,34 +96,6 @@ function GalaxyPoints({
   );
 }
 
-function WireHaloRings() {
-  const a = useRef<THREE.Mesh>(null);
-  const b = useRef<THREE.Mesh>(null);
-  useFrame((_, dt) => {
-    if (document.visibilityState === "hidden") return;
-    if (a.current) {
-      a.current.rotation.x += dt * 0.095;
-      a.current.rotation.y += dt * 0.055;
-    }
-    if (b.current) {
-      b.current.rotation.x -= dt * 0.075;
-      b.current.rotation.z += dt * 0.042;
-    }
-  });
-  return (
-    <group>
-      <mesh ref={a}>
-        <torusGeometry args={[1.18, 0.016, 14, 100]} />
-        <meshBasicMaterial color="#c4b5fd" transparent opacity={0.32} wireframe />
-      </mesh>
-      <mesh ref={b} rotation={[0.45, 0.25, 0.35]}>
-        <torusGeometry args={[1.62, 0.012, 12, 88]} />
-        <meshBasicMaterial color="#67e8f9" transparent opacity={0.2} wireframe />
-      </mesh>
-    </group>
-  );
-}
-
 function PostGlow({ enabled }: { enabled: boolean }) {
   if (!enabled) return null;
   return (
@@ -167,14 +139,6 @@ function UniverseScene({
         size={isMobile ? 0.015 : 0.01}
         speed={-0.016}
       />
-      <Float
-        speed={1.85}
-        rotationIntensity={0.45}
-        floatIntensity={0.62}
-        position={[1.7, -0.15, 0]}
-      >
-        <WireHaloRings />
-      </Float>
       <Sparkles
         count={sparkleCount}
         scale={isMobile ? 8.5 : 12.5}

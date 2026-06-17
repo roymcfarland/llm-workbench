@@ -8,6 +8,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Landing and site chrome polished.** Rebalanced the hero to co-equal,
+  centered columns; removed the drifting-craft and wire-halo-rings hero
+  decorations; and moved the desktop header theme toggle to the far left of the
+  nav.
 - **Tidied internal process artifacts out of the repo root.** Moved the one-off
   verifier audits (`VERIFIER-AUDIT-PR8.md`, `VERIFIER-AUDIT-PR10.md`) to
   `docs/process/`, and retired the transient root `CLOSEOUT.md` — per-slice
@@ -104,6 +108,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Footer GitHub and npm icon links.** Added compact external icon links for
+  the source repository and npm organization under the footer protocol/license
+  line.
 - **Maintainer demo-run seeding script.** Added
   `apps/web/scripts/seed-demo-runs.mts`, a dev/ops script that builds genuine
   demo run bundles with `WorkbenchRuntime` from the public landing scenarios and
