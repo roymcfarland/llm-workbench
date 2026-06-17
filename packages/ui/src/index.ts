@@ -3,7 +3,7 @@ export type { WorkbenchShellProps } from "./WorkbenchShell.js";
 export {
   computeReorderedRuleIds,
   buildRuleReorderHandler,
-} from "./WorkbenchShell.js";
+} from "./WorkbenchRules.js";
 export { default as WorkflowGraph } from "./WorkflowGraph.js";
 export type { WorkflowGraphProps } from "./WorkflowGraph.js";
 export { layoutWorkflow } from "./WorkflowGraph.js";

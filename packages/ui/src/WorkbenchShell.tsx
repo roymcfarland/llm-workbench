@@ -1,20 +1,16 @@
 import {
   closestCenter,
   DndContext,
-  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { useWorkbenchRunRevision } from "@llm-workbench/adapters-react";
 import {
   formatAjvErrors,
@@ -22,22 +18,12 @@ import {
   type RuleSet,
   type RunRepository,
   type SchemaRegistry,
-  type TraceEvent,
   WorkbenchError,
   type WorkbenchRuntime,
-  type WorkbenchSession,
 } from "@llm-workbench/runtime";
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { buildRuleReorderHandler, SortableRuleRow, type RuleModalMode } from "./WorkbenchRules.js";
+import { TraceList } from "./WorkbenchTrace.js";
 
 const LazyMonacoArtifactEditor = lazy(() => import("./MonacoArtifactEditor.js"));
 
@@ -60,242 +46,6 @@ export type WorkbenchShellProps = {
    */
   useMonacoEditor?: boolean;
 };
-
-const VIRTUALIZE_TRACE_THRESHOLD = 100;
-
-function summarizeEvent(e: TraceEvent): string {
-  switch (e.type) {
-    case "step_started":
-      return `step_started: ${e.stepId}`;
-    case "step_completed":
-      return `step_completed: ${e.stepId} ok=${String(e.ok)}`;
-    case "artifact_written":
-      return `artifact_written: ${e.artifact.artifactKey}`;
-    case "artifact_patch":
-      return `artifact_patch: ${e.artifactKey}`;
-    case "model_io":
-      return `model_io: ${e.direction} ${e.model ?? ""}`.trim();
-    case "human_gate_requested":
-      return `gate_requested: ${e.stepId} ${e.gate}`;
-    case "human_gate_resolved":
-      return `gate_resolved: ${e.stepId} ${e.decision}`;
-    case "rule_changed":
-      return `rule_changed: ${e.ruleSetId}`;
-    case "run_status_changed":
-      return `run_status_changed: ${e.status}`;
-    default:
-      return e.type;
-  }
-}
-
-type RuleModalMode = { type: "create" } | { type: "edit"; rule: RuleRecord };
-
-/**
- * Pure helper used by the rule reorder handler. Exported so unit tests can
- * verify the new ordering produced from a drag interaction without driving
- * @dnd-kit's keyboard sensor end-to-end (which is flaky in jsdom).
- */
-export function computeReorderedRuleIds(
-  currentIds: readonly string[],
-  activeId: string,
-  overId: string,
-): string[] | null {
-  if (activeId === overId) return null;
-  const fromIdx = currentIds.indexOf(activeId);
-  const toIdx = currentIds.indexOf(overId);
-  if (fromIdx < 0 || toIdx < 0) return null;
-  return arrayMove([...currentIds], fromIdx, toIdx);
-}
-
-/**
- * Build the callback wired into `<DndContext onDragEnd>` for the rule list.
- * Exposed so tests can pass a mock session and confirm `reorderRules` is
- * called with the expected `orderedRuleIds`.
- */
-export function buildRuleReorderHandler(opts: {
-  ruleSet: Pick<RuleSet, "id" | "rules"> | undefined;
-  session: Pick<WorkbenchSession, "reorderRules"> | null;
-}): (event: DragEndEvent) => void {
-  return (event) => {
-    const { active, over } = event;
-    if (!over || !opts.ruleSet || !opts.session) return;
-    const activeId = String(active.id);
-    const overId = String(over.id);
-    const currentIds = [...opts.ruleSet.rules]
-      .sort((a, b) => a.priority - b.priority)
-      .map((r) => r.id);
-    const next = computeReorderedRuleIds(currentIds, activeId, overId);
-    if (!next) return;
-    opts.session.reorderRules({
-      ruleSetId: opts.ruleSet.id,
-      orderedRuleIds: next,
-    });
-  };
-}
-
-type SortableRuleRowProps = {
-  rule: RuleRecord;
-  onToggle: (rule: RuleRecord) => void;
-  onEdit: (rule: RuleRecord) => void;
-  onDelete: (ruleId: string) => void;
-};
-
-function SortableRuleRow(props: SortableRuleRowProps) {
-  const { rule, onToggle, onEdit, onDelete } = props;
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: rule.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const label = rule.label ?? rule.id;
-  const summary = JSON.stringify(rule.payload);
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`lwb-rule-row${isDragging ? " lwb-rule-row--dragging" : ""}`}
-      aria-label={`Rule ${label}`}
-      data-rule-id={rule.id}
-    >
-      <button
-        type="button"
-        className="lwb-rule-row__grip"
-        aria-label={`Drag to reorder rule ${label}. Press space or enter to lift, arrow keys to move, space or enter to drop, escape to cancel.`}
-        title="Drag to reorder"
-        {...attributes}
-        {...listeners}
-      >
-        ⋮⋮
-      </button>
-      <div className="lwb-rule-row__main">
-        <div className="lwb-rule-row__title">{label}</div>
-        <div className="lwb-rule-row__sub">{summary}</div>
-      </div>
-      <div className="lwb-rule-row__actions">
-        <button
-          type="button"
-          className="lwb-icon-btn"
-          onClick={() => onToggle(rule)}
-          title={rule.enabled ? "Disable rule" : "Enable rule"}
-          aria-pressed={rule.enabled}
-        >
-          {rule.enabled ? "✓" : "○"}
-        </button>
-        <button
-          type="button"
-          className="lwb-icon-btn"
-          onClick={() => onEdit(rule)}
-          title="Edit rule"
-          aria-label={`Edit rule ${label}`}
-        >
-          ✎
-        </button>
-        <button
-          type="button"
-          className="lwb-icon-btn"
-          onClick={() => onDelete(rule.id)}
-          title="Delete rule"
-          aria-label={`Delete rule ${label}`}
-        >
-          ×
-        </button>
-      </div>
-    </div>
-  );
-}
-
-type TraceListProps = {
-  trace: TraceEvent[];
-  workflowTitle: string;
-};
-
-function TraceList({ trace, workflowTitle }: TraceListProps) {
-  const [autoScroll, setAutoScroll] = useState(true);
-  const virtuosoRef = useRef<VirtuosoHandle | null>(null);
-  const simpleRef = useRef<HTMLDivElement | null>(null);
-
-  const useVirtuoso = trace.length > VIRTUALIZE_TRACE_THRESHOLD;
-
-  // Keep the latest event pinned when auto-scroll is on and new events arrive.
-  useLayoutEffect(() => {
-    if (!autoScroll || trace.length === 0) return;
-    if (useVirtuoso) {
-      virtuosoRef.current?.scrollToIndex({
-        index: trace.length - 1,
-        align: "end",
-      });
-    } else if (simpleRef.current) {
-      simpleRef.current.scrollTop = simpleRef.current.scrollHeight;
-    }
-  }, [autoScroll, trace.length, useVirtuoso]);
-
-  return (
-    <>
-      <div className="lwb-timeline__toolbar">
-        <span aria-hidden="true">{workflowTitle}</span>
-        <label
-          style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-          title="When enabled, the trace stays pinned to the most recent event."
-        >
-          <input
-            type="checkbox"
-            checked={autoScroll}
-            onChange={(e) => setAutoScroll(e.target.checked)}
-            aria-label="Auto-scroll to latest trace event"
-          />
-          Auto-scroll to latest
-        </label>
-      </div>
-      {useVirtuoso ? (
-        <Virtuoso
-          ref={virtuosoRef}
-          className="lwb-timeline__virtual"
-          totalCount={trace.length}
-          followOutput={autoScroll ? "smooth" : false}
-          atBottomStateChange={(atBottom) => {
-            if (!atBottom && autoScroll) setAutoScroll(false);
-          }}
-          itemContent={(index) => {
-            const event = trace[index];
-            if (!event) return null;
-            return <TraceRow event={event} />;
-          }}
-        />
-      ) : (
-        <div
-          ref={simpleRef}
-          className="lwb-timeline"
-          onScroll={(e) => {
-            const el = e.currentTarget;
-            const atBottom =
-              el.scrollHeight - el.scrollTop - el.clientHeight < 16;
-            if (!atBottom && autoScroll) setAutoScroll(false);
-          }}
-        >
-          {trace.map((e) => (
-            <TraceRow key={e.id} event={e} />
-          ))}
-        </div>
-      )}
-    </>
-  );
-}
-
-function TraceRow({ event }: { event: TraceEvent }) {
-  return (
-    <div className="lwb-trace-row" data-event-id={event.id}>
-      <div className="lwb-trace-row__top">
-        <span>{event.ts}</span>
-        <span className="lwb-pill">{event.type}</span>
-      </div>
-      <div className="lwb-trace-row__body">{summarizeEvent(event)}</div>
-    </div>
-  );
-}
 
 export function WorkbenchShell(props: WorkbenchShellProps) {
   const {
