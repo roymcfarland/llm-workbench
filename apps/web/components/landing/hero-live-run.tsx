@@ -79,25 +79,45 @@ function useReducedMotion(): boolean {
 
 type TraceRow = { id: string; label: string; meta?: string };
 
-const TRACE_VISIBLE_ROWS = 6;
+const TRACE_VISIBLE_ROWS = 14;
+const COMPACT_TRACE_VISIBLE_ROWS = 6;
 
 type TraceAsideSlot =
   | { kind: "empty"; key: string }
   | { kind: "waiting" }
   | { kind: "row"; row: TraceRow };
 
-function buildTraceAsideSlots(trace: TraceRow[]): TraceAsideSlot[] {
+function useTraceVisibleRows(): number {
+  const [visibleRows, setVisibleRows] = useState(COMPACT_TRACE_VISIBLE_ROWS);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () =>
+      setVisibleRows(mq.matches ? TRACE_VISIBLE_ROWS : COMPACT_TRACE_VISIBLE_ROWS);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, []);
+
+  return visibleRows;
+}
+
+function buildTraceAsideSlots(
+  trace: TraceRow[],
+  visibleRows: number,
+): TraceAsideSlot[] {
   if (trace.length === 0) {
     return [
-      ...Array.from({ length: TRACE_VISIBLE_ROWS - 1 }, (_, i) => ({
+      ...Array.from({ length: visibleRows - 1 }, (_, i) => ({
         kind: "empty" as const,
         key: `pad-${i}`,
       })),
       { kind: "waiting" },
     ];
   }
-  const trimmed = trace.slice(-TRACE_VISIBLE_ROWS);
-  const pad = TRACE_VISIBLE_ROWS - trimmed.length;
+  const trimmed = trace.slice(-visibleRows);
+  const pad = visibleRows - trimmed.length;
   return [
     ...Array.from({ length: pad }, (_, i) => ({
       kind: "empty" as const,
@@ -168,6 +188,7 @@ export function HeroLiveRun({ className }: HeroLiveRunProps) {
   const [runId, setRunId] = useState<string>("");
   const [tick, setTick] = useState(0);
   const [trace, setTrace] = useState<TraceRow[]>([]);
+  const traceVisibleRows = useTraceVisibleRows();
 
   useEffect(() => {
     // Hide the static fallback once the live hero mounts.
@@ -198,7 +219,7 @@ export function HeroLiveRun({ className }: HeroLiveRunProps) {
       if (cancelled) return;
       setTrace((prev) => {
         const next = [...prev, summarize(event)];
-        return next.slice(-6);
+        return next.slice(-TRACE_VISIBLE_ROWS);
       });
     });
 
@@ -345,12 +366,15 @@ export function HeroLiveRun({ className }: HeroLiveRunProps) {
     : undefined;
   const graphKey = state ? `${runId}-${state.revision}` : runId;
 
-  const traceSlots = useMemo(() => buildTraceAsideSlots(trace), [trace]);
+  const traceSlots = useMemo(
+    () => buildTraceAsideSlots(trace, traceVisibleRows),
+    [trace, traceVisibleRows],
+  );
 
   return (
     <div
       className={cn(
-        "relative isolate grid w-full grid-cols-1 gap-3 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-3 shadow-[0_30px_80px_-40px_oklch(0.65_0.18_260/0.6)] backdrop-blur [contain:layout] [overflow-anchor:none] md:grid-cols-[1fr_220px]",
+        "relative isolate grid w-full grid-cols-1 gap-3 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/40 p-3 shadow-[0_30px_80px_-40px_oklch(0.65_0.18_260/0.6)] backdrop-blur [contain:layout] [overflow-anchor:none] md:grid-cols-[1fr_220px] lg:h-full lg:min-h-0 lg:self-stretch",
         className,
       )}
     >

@@ -20,6 +20,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Landing hero console alignment tightened.** Aligned the live console to span
+  the headline-to-CTA block by lifting the protocol badge and runs-count line
+  out of the desktop grid row, stretching the console with `items-stretch` /
+  `h-full`, and raising `TRACE_VISIBLE_ROWS` so the trace card fills
+  top-to-bottom.
 - **Landing hero rings and trace console restored.** Restored the wireframe
   halo rings to the hero atmosphere while keeping the x-wing removed, and
   enlarged the live trace console to span the headline-to-CTA block.
