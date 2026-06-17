@@ -175,7 +175,7 @@ export default async function ProtocolDocsPage() {
 
           <div className="mt-10 grid gap-10 md:grid-cols-[minmax(0,1fr)_15rem]">
             <article
-              className="prose prose-invert max-w-none"
+              className="min-w-0 max-w-3xl"
               // server-rendered — input is a constant string, no untrusted HTML
               dangerouslySetInnerHTML={{ __html: html }}
             />

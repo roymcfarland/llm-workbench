@@ -169,7 +169,7 @@ export default async function RootLayout({
         suppressHydrationWarning
         className={`${outfit.variable} ${jetbrainsMono.variable} ${newsreader.variable}`}
       >
-        <body className="min-h-screen antialiased">
+        <body className="min-h-screen overflow-x-clip antialiased">
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}

@@ -17,7 +17,7 @@ export function LandingFinalCta({ runsCount }: LandingFinalCtaProps) {
       aria-labelledby="cta-heading"
       className="relative mx-auto max-w-6xl px-6 pb-28 pt-10 md:pt-4"
     >
-      <div className="pointer-events-none absolute -inset-x-12 top-1/3 bottom-0 rounded-[40%] bg-[radial-gradient(ellipse_at_center,_oklch(0.5_0.2_290/0.12),_transparent_65%)] blur-2xl" />
+      <div className="pointer-events-none absolute inset-x-0 top-1/3 bottom-0 rounded-[40%] bg-[radial-gradient(ellipse_at_center,_oklch(0.5_0.2_290/0.12),_transparent_65%)] blur-2xl" />
 
       <div className="relative overflow-hidden rounded-3xl p-[1px] shadow-[0_0_100px_-36px_oklch(0.55_0.22_260/0.65)] dark:shadow-[0_0_120px_-40px_oklch(0.58_0.22_270/0.7)]">
         <div
