@@ -48,7 +48,7 @@ export function OrbitFeatures() {
       aria-labelledby="orbit-heading"
       className="relative mx-auto max-w-6xl px-6 py-24"
     >
-      <div className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[120%] max-w-[1400px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,_oklch(0.55_0.2_260/0.14),_transparent_70%)]" />
+      <div className="pointer-events-none absolute -top-24 inset-x-0 h-64 rounded-full bg-[radial-gradient(ellipse_at_center,_oklch(0.55_0.2_260/0.14),_transparent_70%)]" />
 
       <div className="relative mb-12 max-w-2xl">
         <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-muted-foreground)]">

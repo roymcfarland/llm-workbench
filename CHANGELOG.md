@@ -6,6 +6,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Site-wide responsive pass — added a root `overflow-x-clip` guard, constrained
+  over-wide decorative elements, gave the protocol prose a readable measure; and
+  verified no horizontal overflow across the public pages at 375/768/1024.
+
 ### Security
 
 - **Bumped `@sentry/nextjs` from 10.50 to 10.58.** Clears the
