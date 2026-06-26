@@ -8,6 +8,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Documented the production Clerk setup for GitHub and Vercel social sign-in and
+  email verification-code login in `apps/web/DEPLOY.md` (no code or env changes —
+  the prebuilt Clerk components render whatever is enabled in the dashboard).
 - Page-specific OG/Twitter cards for `/faq` and `/docs/protocol` reuse the
   branded index markup, so those pages no longer fall back to the root card.
 
