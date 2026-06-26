@@ -76,6 +76,48 @@ AI Gateway enabled (it's part of the standard Vercel offering as of 2026
    accounts. The reference app falls back to `user:<userId>` as the
    tenant when no organization is active.
 
+### Sign-in methods: GitHub, Vercel, and email code
+
+The hosted sign-in/up pages render Clerk's prebuilt `<SignIn />` / `<SignUp />`
+components, which automatically show **every** authentication method you enable
+in the Clerk Dashboard — no application code or extra environment variables are
+required. On a **production** Clerk instance, social connections require your own
+OAuth credentials (Clerk's shared development credentials are dev-only).
+
+**GitHub (social sign-in).**
+
+1. Clerk Dashboard → **SSO Connections** → **Add connection** → **For all users** → **GitHub**.
+2. Toggle **Use custom credentials** on, then copy the **Authorized redirect URI**
+   Clerk displays (e.g. `https://clerk.<your-domain>/v1/oauth_callback`).
+3. In GitHub → **Settings → Developer settings → OAuth Apps → New OAuth App**, set
+   the **Authorization callback URL** to that redirect URI and the Homepage URL to
+   your site.
+4. Copy GitHub's **Client ID** and a generated **Client Secret** back into Clerk's
+   GitHub connection. Ensure **Enable for sign-up and sign-in** is on, then save.
+
+**Vercel (social sign-in).** "Sign in with Vercel" is a first-class Clerk social
+connection.
+
+1. Clerk Dashboard → **SSO Connections** → **Add connection** → **For all users** → **Vercel**.
+2. Toggle **Use custom credentials** on and copy the **Authorized redirect URI**.
+3. Create a Vercel App following
+   <https://vercel.com/docs/sign-in-with-vercel/manage-from-dashboard>: set its
+   authorization callback URL to Clerk's redirect URI, request the
+   `openid email profile` scopes, and generate a client secret.
+4. Copy Vercel's **Client ID** and **Client Secret** into Clerk's Vercel connection.
+   Ensure **Enable for sign-up and sign-in** is on, then save.
+
+**Email verification code.**
+
+1. Clerk Dashboard → **User & Authentication → Email, Phone, Username**.
+2. Enable **Email address** as an identifier and set its verification method to
+   **Email verification code** (not the email link).
+3. For a passwordless flow, you may also disable **Password** in the same section.
+
+No `apps/web` code changes and no new environment variables are needed — the
+prebuilt Clerk components surface these methods as soon as they are enabled in the
+dashboard.
+
 ---
 
 ## 3. Vercel AI Gateway
