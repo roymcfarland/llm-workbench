@@ -16,6 +16,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Blog-autopublish passes the generated post title and file path into the
+  publish step's shell via `env:` instead of inline `${{ }}` interpolation.
+  GitHub Actions expands expressions before bash parses the script, so the
+  2026-07-06 post title containing `$149.25` was parsed as the unbound
+  positional `$1` under `set -u`, crashing the run after the branch push but
+  before PR creation. Env vars are not re-parsed by the shell, which also
+  closes the script-injection vector for generated titles.
 - Sitemap hygiene now submits only indexable HTML pages, lists blog tag pages
   only when at least two posts share the tag, and omits `lastmod` when no
   content-derived date exists, reducing GSC "Crawled - currently not indexed"

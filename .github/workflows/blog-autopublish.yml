@@ -73,6 +73,12 @@ jobs:
         if: ${{ steps.mode.outputs.mode == 'publish' && steps.gen.outputs.created != '' }}
         env:
           GH_TOKEN: ${{ secrets.BLOG_AUTOPUBLISH_PAT }}
+          # Generated values enter the script as env vars, never inline `${{ }}`:
+          # Actions expands expressions before bash parses the script, so a title
+          # containing `$`, quotes, or backticks becomes shell syntax (a `$149.25`
+          # title crashed the 2026-07-06 run as unbound `$1` under `set -u`).
+          POST_TITLE: ${{ steps.gen.outputs.title }}
+          CREATED_FILE: ${{ steps.gen.outputs.created }}
         run: |
           set -euo pipefail
           DATE="$(date -u +%Y-%m-%d)"
@@ -80,11 +86,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
-          git add "${{ steps.gen.outputs.created }}"
+          git add "$CREATED_FILE"
           git commit -m "docs(blog): weekly auto-published post (${DATE})"
           git push -u origin "$BRANCH"
           PR_URL="$(gh pr create --base main --head "$BRANCH" \
             --title "docs(blog): weekly auto-published post (${DATE})" \
-            --body "Automated weekly post, grounded in fetched AI-news sources and validated by the blog schema + CI. Title: ${{ steps.gen.outputs.title }}")"
+            --body "Automated weekly post, grounded in fetched AI-news sources and validated by the blog schema + CI. Title: ${POST_TITLE}")"
           echo "PR: $PR_URL"
           gh pr merge --auto --squash "$BRANCH"
