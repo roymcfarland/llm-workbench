@@ -16,6 +16,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Sitemap hygiene now submits only indexable HTML pages, lists blog tag pages
+  only when at least two posts share the tag, and omits `lastmod` when no
+  content-derived date exists, reducing GSC "Crawled - currently not indexed"
+  noise.
 - Blog-autopublish publish mode now authenticates its branch push and PR with
   `BLOG_AUTOPUBLISH_PAT`, a repo-scoped PAT, instead of `GITHUB_TOKEN`, so the
   bot's PR triggers CI and auto-merge completes. `GITHUB_TOKEN`-authored events
