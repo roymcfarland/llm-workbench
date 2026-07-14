@@ -22,5 +22,9 @@ export default defineConfig({
     include: ["**/*.test.ts", "**/*.test.tsx"],
     environment: "node",
     globals: false,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+    },
   },
 });

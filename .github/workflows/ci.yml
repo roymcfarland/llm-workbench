@@ -48,6 +48,18 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Test coverage
+        if: matrix.node == '24'
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        if: matrix.node == '24'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./packages/runtime/coverage/lcov.info,./packages/adapters-react/coverage/lcov.info,./packages/ai-sdk/coverage/lcov.info,./packages/ui/coverage/lcov.info,./packages/mcp/coverage/lcov.info,./coverage/scripts/lcov.info,./apps/web/coverage/lcov.info
+          fail_ci_if_error: false
+
       - name: Web typecheck
         run: npm run typecheck -w @llm-workbench/web
 
