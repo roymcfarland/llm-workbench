@@ -52,12 +52,67 @@ jobs:
         if: matrix.node == '24'
         run: npm run test:coverage
 
-      - name: Upload coverage to Codecov
+      - name: Upload runtime coverage to Codecov
         if: matrix.node == '24'
         uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./packages/runtime/coverage/lcov.info,./packages/adapters-react/coverage/lcov.info,./packages/ai-sdk/coverage/lcov.info,./packages/ui/coverage/lcov.info,./packages/mcp/coverage/lcov.info,./coverage/scripts/lcov.info,./apps/web/coverage/lcov.info
+          files: ./packages/runtime/coverage/lcov.info
+          flags: runtime
+          fail_ci_if_error: false
+
+      - name: Upload ui coverage to Codecov
+        if: matrix.node == '24'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./packages/ui/coverage/lcov.info
+          flags: ui
+          fail_ci_if_error: false
+
+      - name: Upload adapters-react coverage to Codecov
+        if: matrix.node == '24'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./packages/adapters-react/coverage/lcov.info
+          flags: adapters-react
+          fail_ci_if_error: false
+
+      - name: Upload ai-sdk coverage to Codecov
+        if: matrix.node == '24'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./packages/ai-sdk/coverage/lcov.info
+          flags: ai-sdk
+          fail_ci_if_error: false
+
+      - name: Upload mcp coverage to Codecov
+        if: matrix.node == '24'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./packages/mcp/coverage/lcov.info
+          flags: mcp
+          fail_ci_if_error: false
+
+      - name: Upload scripts coverage to Codecov
+        if: matrix.node == '24'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/scripts/lcov.info
+          flags: scripts
+          fail_ci_if_error: false
+
+      - name: Upload web coverage to Codecov
+        if: matrix.node == '24'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./apps/web/coverage/lcov.info
+          flags: web
           fail_ci_if_error: false
 
       - name: Web typecheck
