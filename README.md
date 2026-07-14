@@ -118,6 +118,68 @@ LLM apps fail in boring, expensive ways:
 
 LLM Workbench turns that chaos into an inspectable run graph.
 
+## How LLM Workbench Compares
+
+LLM Workbench gets compared to LLM observability/tracing tools a lot, since
+it also records model calls, cost, and traces. The honest answer is: it's
+adjacent to that category, not really competing head-on in it. Three tools
+people usually have in mind, and where the real differences are:
+
+**[Helicone](https://helicone.ai)** is a proxy — you point your existing
+OpenAI/Anthropic client at Helicone's base URL, and it logs every request on
+the way through. Simplest possible integration (change one URL), but it's
+fundamentally passive: it observes traffic, it doesn't model your workflow.
+LLM Workbench is the opposite shape — no proxy, no network hop, no changed
+base URL. You call explicit runtime methods (`writeArtifact`, `logModelIO`,
+`resolveGate`) from inside your own code. More integration work up front, but
+nothing about your model traffic ever routes through a third party, and the
+runtime knows about *steps* and *gates*, not just requests and responses.
+
+**[Langfuse](https://langfuse.com)** is the closest in spirit — open source
+(MIT), self-hostable, and it does have "human-in-the-loop" review. But its
+human-in-the-loop is for *building eval datasets*: a person annotates past
+traces after the fact to create golden examples for scoring future runs.
+LLM Workbench's gates (`PAUSE_BEFORE`, `PAUSE_AFTER`, `CHECKPOINT`) are a
+runtime primitive, not a post-hoc annotation workflow — a workflow step
+*actually stops executing* until `session.resolveGate()` is called. If what
+you need is "don't let this step run until a human signs off," that's a
+different thing than "let a human grade what already happened," and Langfuse
+is built for the latter. Langfuse is also flatly more capable than LLM
+Workbench at evaluation — LLM-as-judge scoring, experiment comparison,
+prompt management, datasets. LLM Workbench doesn't do any of that and isn't
+trying to (see [PROJECT.md's non-goals](PROJECT.md#non-goals) — it's
+explicitly not an eval/routing harness).
+
+**[LangSmith](https://smith.langchain.com)** is LangChain's own observability
+layer — closed source, tightest integration if you're already deep in
+LangGraph, with trajectory replay and a prompt playground that come from
+owning the whole stack. If your app is built on LangChain/LangGraph, that
+native integration is a real advantage LLM Workbench doesn't try to match.
+LLM Workbench is framework-agnostic on purpose — it doesn't know or care
+whether you're using LangChain, the Vercel AI SDK, raw provider SDKs, or
+something else, at the cost of not getting that same depth of integration
+with any one of them.
+
+**What LLM Workbench actually is, then:** not an observability platform, not
+an eval harness, not a proxy. It's a headless runtime library for one
+specific job: making human review gates, tamper-evident audit trails, and
+workflow state a first-class part of how your app runs — not a dashboard
+bolted on afterward. `WorkbenchRuntime` and `WorkbenchSession` are things you
+embed and call directly; `RunRepository` is pluggable (memory, IndexedDB,
+HTTP, or your own backend), so nothing leaves your infrastructure unless you
+choose a repository that sends it somewhere. Run bundles are SHA-256 hashed
+over canonical JSON specifically so "did a human actually approve this, and
+is this export exactly what happened" has a verifiable answer — that's an
+audit-trail property, not something the tracing tools above are built
+around.
+
+If you need eval scoring, dataset curation, or prompt experimentation,
+Langfuse or LangSmith will get you there faster — that's genuinely their job,
+not ours. If you need a proxy you can point traffic at with zero code
+changes, that's Helicone. If you need a step in your own workflow to
+literally not proceed until a human approves it, and a tamper-evident record
+of that approval — that's what LLM Workbench is for.
+
 ## What You Get
 
 - **Model-agnostic runtime.** The host decides which provider, model, prompt
