@@ -119,6 +119,8 @@ timeline, artifacts, and gates — the exact surface the
 
 - [Protocol reference](/docs/protocol) — the full RunBundle/RunStoreState
   wire format, integrity hashing, and MCP/REST surfaces.
+- [Architecture](/docs/architecture) — how the five packages and the hosted
+  reference app fit together.
 - [Live demo](/runs/demo) — a real run, rendered read-only, no signup.
 - \`@llm-workbench/ai-sdk\` — automatic trace events for Vercel AI SDK v5 calls.
 - \`@llm-workbench/mcp\` — expose runs over the Model Context Protocol.
