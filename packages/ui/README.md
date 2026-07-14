@@ -28,4 +28,7 @@ Pair with [`@llm-workbench/adapters-react`](../adapters-react) so the shell re-r
 
 ## Docs
 
-Overview and architecture: repository root [`README.md`](../../README.md).
+- Overview and architecture: repository root [`README.md`](../../README.md).
+- Getting started: https://www.llmworkbench.io/docs/getting-started
+- Architecture deep-dive: https://www.llmworkbench.io/docs/architecture
+- Generated API reference: https://www.llmworkbench.io/docs/api

@@ -23,4 +23,7 @@ A complete, runnable example lives in the repository root [`README.md`](../../RE
 
 ## Docs
 
-Overview, architecture, scope, and non-goals: repository root [`README.md`](../../README.md) and [`PROJECT.md`](../../PROJECT.md).
+- Overview, architecture, scope, and non-goals: repository root [`README.md`](../../README.md) and [`PROJECT.md`](../../PROJECT.md).
+- Getting started: https://www.llmworkbench.io/docs/getting-started
+- Architecture deep-dive: https://www.llmworkbench.io/docs/architecture
+- Generated API reference: https://www.llmworkbench.io/docs/api
