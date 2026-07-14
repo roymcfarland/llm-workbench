@@ -20,9 +20,13 @@ import dagre from "dagre";
 import { useCallback, useMemo } from "react";
 
 export type WorkflowGraphProps = {
+  /** Runtime used to read the selected run's workflow and step statuses. */
   runtime: WorkbenchRuntime;
+  /** Run to visualize; `null` renders the empty no-run state. */
   runId: string | null;
+  /** Called with a workflow step id when its React Flow node is selected. */
   onSelectStep?: (stepId: string) => void;
+  /** Additional CSS class applied to the graph root element. */
   className?: string;
   /**
    * Compact in-page preview (e.g. marketing hero): omit minimap and controls so
@@ -116,6 +120,10 @@ function WorkflowStepNode({ data }: NodeProps<WorkflowNode>) {
 
 const nodeTypes = { workflowStep: WorkflowStepNode };
 
+/**
+ * Render a React Flow visualization of a run's workflow, auto-laid out by
+ * {@link layoutWorkflow} with dagre and refreshed as the run revision changes.
+ */
 export function WorkflowGraph(props: WorkflowGraphProps) {
   const { runtime, runId, onSelectStep, className, embed = false } = props;
   // Re-render whenever the run's revision counter advances.
