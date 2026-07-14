@@ -40,6 +40,9 @@ export type TracedStreamObjectOptions = StreamObjectFirstArg &
  * @param session The active `WorkbenchSession` recording trace events.
  * @param opts AI SDK `streamObject` options plus optional tracing/artifact
  *   metadata.
+ * @returns The original AI SDK `streamObject` result, unchanged — iterate
+ *   `partialObjectStream` or await `object`/`usage` exactly as you would from
+ *   a direct `streamObject` call.
  */
 export function tracedStreamObject(
   session: WorkbenchSession,

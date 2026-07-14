@@ -43,6 +43,9 @@ export type TracedGenerateTextOptions = GenerateTextFirstArg &
  * @param opts AI SDK `generateText` options plus optional tracing/artifact
  *   metadata. `stepId`, `correlationId`, `detail`, and `writeArtifact` are
  *   stripped from the options forwarded to the AI SDK.
+ * @returns The original AI SDK `generateText` result, unchanged.
+ * @throws Rethrows any error from the underlying `generateText` call, after
+ *   recording it as an `error`-summary `model_io` response event.
  */
 export async function tracedGenerateText(
   session: WorkbenchSession,

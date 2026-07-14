@@ -24,6 +24,11 @@ export interface TraceToolsOptions {
  * tool property — descriptions, schemas, etc. — so the AI SDK still receives
  * the original tool definition.
  *
+ * @param session The active `WorkbenchSession` recording `tool_call` events.
+ * @param tools The AI SDK tool map to wrap.
+ * @param options Optional `stepId`/`correlationId` applied to every emitted trace.
+ * @returns A new tool map with the same shape, each `execute` wrapped to trace.
+ *
  * @example
  * ```ts
  * const tools = traceTools(session, {
