@@ -51,6 +51,8 @@ enforce on every PR.
 
 ## See It Live
 
+![A completed LLM Workbench run — status, workflow, trace-event count, and cost tiles above a live trace timeline of model_io, tool_call, and gate_resolved events](.github/assets/workbench-trace-demo.png)
+
 - **Interactive demo (no signup):** https://www.llmworkbench.io/runs/demo — a
   read-only LLM Workbench run rendered exactly as an authenticated run is.
 - **Overview & docs:** https://www.llmworkbench.io · https://www.llmworkbench.io/docs/protocol
