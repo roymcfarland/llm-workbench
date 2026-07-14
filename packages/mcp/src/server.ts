@@ -80,6 +80,10 @@ function safeBundleJson(bundle: unknown):
  * The server is purely a request-response surface; it does not own a
  * transport. Wire it to a transport via {@link McpServer.connect}, or use
  * {@link createWorkbenchMcpHttpHandler} for an HTTP adapter.
+ *
+ * @param options Repository and optional metadata for the server.
+ * @returns A transport-agnostic `McpServer` exposing the fixed tool/resource
+ * surface described above.
  */
 export function createWorkbenchMcpServer(
   options: CreateWorkbenchMcpServerOptions,
