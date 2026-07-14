@@ -28,8 +28,11 @@ import { TraceList } from "./WorkbenchTrace.js";
 const LazyMonacoArtifactEditor = lazy(() => import("./MonacoArtifactEditor.js"));
 
 export type WorkbenchShellProps = {
+  /** Runtime used to read the selected run's state and session. */
   runtime: WorkbenchRuntime;
+  /** Run to display; a falsy id leaves state undefined and session null. */
   runId: string;
+  /** Schemas used to validate edited artifact and rule payload JSON. */
   registry: SchemaRegistry;
   /** Optional persistence hook for "Save run" */
   repo?: RunRepository;
@@ -47,6 +50,11 @@ export type WorkbenchShellProps = {
   useMonacoEditor?: boolean;
 };
 
+/**
+ * Render the full run control surface: artifact editing, rule management, and
+ * the live trace timeline. Set {@link WorkbenchShellProps.useMonacoEditor} to
+ * opt into the Monaco-based artifact editor.
+ */
 export function WorkbenchShell(props: WorkbenchShellProps) {
   const {
     runtime,

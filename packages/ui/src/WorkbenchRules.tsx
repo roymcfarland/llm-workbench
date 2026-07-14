@@ -7,12 +7,17 @@ import type {
   WorkbenchSession,
 } from "@llm-workbench/runtime";
 
+/** Modal state for creating a rule or editing an existing {@link RuleRecord}. */
 export type RuleModalMode = { type: "create" } | { type: "edit"; rule: RuleRecord };
 
 export type SortableRuleRowProps = {
+  /** Rule displayed and reordered by this row. */
   rule: RuleRecord;
+  /** Called to enable or disable the displayed rule. */
   onToggle: (rule: RuleRecord) => void;
+  /** Called to open editing for the displayed rule. */
   onEdit: (rule: RuleRecord) => void;
+  /** Called with the displayed rule's id to remove it. */
   onDelete: (ruleId: string) => void;
 };
 
@@ -59,6 +64,10 @@ export function buildRuleReorderHandler(opts: {
   };
 }
 
+/**
+ * Render one draggable rule row with a grip handle, a label from
+ * `rule.label ?? rule.id`, and toggle, edit, and delete actions.
+ */
 export function SortableRuleRow(props: SortableRuleRowProps) {
   const { rule, onToggle, onEdit, onDelete } = props;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
