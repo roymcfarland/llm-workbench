@@ -57,7 +57,7 @@ jobs:
 
       - name: Upload preview (dry-run)
         if: ${{ steps.mode.outputs.mode == 'dry-run' && steps.gen.outputs.preview != '' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: blog-preview
           path: ${{ steps.gen.outputs.preview }}
