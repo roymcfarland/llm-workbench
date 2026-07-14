@@ -27,6 +27,22 @@ happened and gives humans a clean control surface over it.
 
 ## Status
 
+**July 2026 — docs and quality pass:** every package now ships consistent
+JSDoc (`@packageDocumentation` blocks, `@param`/`@returns`/`@throws` on
+public APIs), backing a generated
+[API reference](https://www.llmworkbench.io/docs/api) that's rebuilt from
+source on every deploy rather than hand-maintained. New
+[Getting Started](https://www.llmworkbench.io/docs/getting-started) and
+[Architecture](https://www.llmworkbench.io/docs/architecture) guides join
+the existing [protocol reference](https://www.llmworkbench.io/docs/protocol).
+CI now reports test coverage via Codecov, and the README gained an honest
+comparison against adjacent tools (see
+["How LLM Workbench Compares"](#how-llm-workbench-compares) below). Packages
+version independently via [changesets](https://github.com/changesets/changesets)
+— a release can bump some packages and not others, so don't assume all five
+always move in lockstep; check each package's own `CHANGELOG.md` for its
+real current version.
+
 `v0.3.x` (June 2026): **LLM Workbench is now open source under the MIT License**
 and published to npm under the [`@llm-workbench`](https://www.npmjs.com/org/llm-workbench)
 scope (five packages: `runtime`, `ui`, `adapters-react`, `ai-sdk`, `mcp`). This
