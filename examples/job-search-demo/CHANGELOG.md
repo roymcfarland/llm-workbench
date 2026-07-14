@@ -1,5 +1,14 @@
 # job-search-demo
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [43cd903]
+- Updated dependencies [8b447e4]
+  - @llm-workbench/adapters-react@0.3.3
+  - @llm-workbench/ui@0.3.3
+
 ## 0.0.3
 
 ### Patch Changes

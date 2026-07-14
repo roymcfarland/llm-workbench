@@ -1,5 +1,11 @@
 # @llm-workbench/ai-sdk
 
+## 0.3.3
+
+### Patch Changes
+
+- 602de56: Add missing @param/@returns/@throws tags to tracedGenerateText, tracedGenerateObject, tracedStreamText, tracedStreamObject, traceTools, and costFromGatewayMetadata, matching the structured tag convention used elsewhere in the codebase. No prose changed.
+
 ## 0.3.2
 
 ### Patch Changes

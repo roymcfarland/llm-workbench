@@ -1,6 +1,6 @@
 {
   "name": "@llm-workbench/mcp",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Model Context Protocol (MCP) server factory and HTTP handler that exposes an LLM Workbench runtime over MCP.",
   "keywords": [
     "llm",

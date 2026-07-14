@@ -1,5 +1,11 @@
 # @llm-workbench/adapters-react
 
+## 0.3.3
+
+### Patch Changes
+
+- 43cd903: Add a package-level doc comment to index.ts and @param/@returns tags to useWorkbenchRunRevision, matching the documentation convention used elsewhere in the codebase.
+
 ## 0.3.2
 
 ### Patch Changes
