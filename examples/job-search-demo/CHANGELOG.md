@@ -1,5 +1,14 @@
 # job-search-demo
 
+## 0.0.3
+
+### Patch Changes
+
+- Updated dependencies [c78db73]
+  - @llm-workbench/runtime@0.3.2
+  - @llm-workbench/adapters-react@0.3.2
+  - @llm-workbench/ui@0.3.2
+
 ## 0.0.2
 
 ### Patch Changes

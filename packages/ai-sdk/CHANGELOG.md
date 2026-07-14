@@ -1,5 +1,12 @@
 # @llm-workbench/ai-sdk
 
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies [c78db73]
+  - @llm-workbench/runtime@0.3.2
+
 ## 0.3.1
 
 ### Patch Changes
