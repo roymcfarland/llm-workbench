@@ -27,7 +27,7 @@
     "ci": "npm run build && npm run smoke:esm && npm test && npm run typecheck -w @llm-workbench/web && npm run lint -w @llm-workbench/web && npm run lint:packages && npm run build:web",
     "changeset": "changeset",
     "changeset:version": "changeset version && npm install --package-lock-only",
-    "release": "npm run build && changeset publish"
+    "release": "npm run build && node scripts/release-publish.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
