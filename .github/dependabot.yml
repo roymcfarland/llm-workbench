@@ -1,0 +1,24 @@
+version: 2
+
+updates:
+  # npm workspaces (root + packages/* + apps/web + examples/*) — Dependabot
+  # reads the root package.json's `workspaces` field and package-lock.json
+  # automatically; a single root entry covers the whole monorepo.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      npm-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    # Major version bumps are left ungrouped (one PR each) since they can
+    # carry breaking changes that need individual review.
+
+  # Keep pinned Action versions (actions/checkout, setup-node, etc.) current.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
