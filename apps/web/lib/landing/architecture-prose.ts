@@ -70,6 +70,7 @@ thing standing between one tenant's runs and another's.
   60-second example.
 - [Protocol reference](/docs/protocol) — the full RunBundle/RunStoreState wire
   format, integrity hashing, and MCP/REST surfaces.
+- [API reference](/docs/api) — generated API details for every public package export.
 - [PROJECT.md on GitHub](https://github.com/roymcfarland/llm-workbench/blob/main/PROJECT.md) —
   the authoritative spec: purpose, non-goals, and conventions.
 `;
