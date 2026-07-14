@@ -138,7 +138,7 @@ jobs:
 
       - name: Cache Playwright browsers
         if: matrix.node == '24'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
