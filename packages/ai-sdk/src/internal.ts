@@ -139,6 +139,10 @@ export function extractMessageText(message: unknown): string | undefined {
  * Extract a `ModelCost` from `result.providerMetadata`. Recognises the Vercel
  * AI Gateway shape (`providerMetadata.gateway.cost`) where `cost` may be either
  * `{ amount, currency }`, a number, or a numeric string.
+ *
+ * @param providerMetadata The AI SDK result's `providerMetadata` field.
+ * @returns The extracted cost, or `undefined` if the shape isn't recognized
+ *   or the amount isn't a valid non-negative number.
  */
 export function costFromGatewayMetadata(
   providerMetadata: unknown,

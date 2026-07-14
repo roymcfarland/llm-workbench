@@ -36,6 +36,9 @@ export type TracedGenerateObjectOptions = GenerateObjectFirstArg &
  * @param session The active `WorkbenchSession` recording trace events.
  * @param opts AI SDK `generateObject` options plus optional tracing/artifact
  *   metadata.
+ * @returns The original AI SDK `generateObject` result, unchanged.
+ * @throws Rethrows any error from the underlying `generateObject` call, after
+ *   recording it as an `error`-summary `model_io` response event.
  */
 export async function tracedGenerateObject(
   session: WorkbenchSession,

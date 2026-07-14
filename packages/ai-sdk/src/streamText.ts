@@ -44,6 +44,9 @@ export type TracedStreamTextOptions = StreamTextFirstArg &
  * @param opts AI SDK `streamText` options plus optional tracing/artifact
  *   metadata. `stepId`, `correlationId`, `detail`, and `writeArtifact` are
  *   stripped from the options forwarded to the AI SDK.
+ * @returns The original AI SDK `streamText` result, unchanged — iterate
+ *   `textStream`/`fullStream` or read `usage` exactly as you would from a
+ *   direct `streamText` call.
  */
 export function tracedStreamText(
   session: WorkbenchSession,
