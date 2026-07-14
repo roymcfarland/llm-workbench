@@ -1,5 +1,13 @@
 # @llm-workbench/ui
 
+## 0.3.3
+
+### Patch Changes
+
+- 8b447e4: Add JSDoc documentation to WorkbenchShell's required props, WorkbenchRules' undocumented types/component, WorkflowGraph's remaining props/component, and a package-level doc comment on the package entry point.
+- Updated dependencies [43cd903]
+  - @llm-workbench/adapters-react@0.3.3
+
 ## 0.3.2
 
 ### Patch Changes

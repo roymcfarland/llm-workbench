@@ -1,5 +1,18 @@
 # @llm-workbench/web
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [43cd903]
+- Updated dependencies [602de56]
+- Updated dependencies [e5f2d72]
+- Updated dependencies [8b447e4]
+  - @llm-workbench/adapters-react@0.3.3
+  - @llm-workbench/ai-sdk@0.3.3
+  - @llm-workbench/mcp@0.3.3
+  - @llm-workbench/ui@0.3.3
+
 ## 0.1.3
 
 ### Patch Changes

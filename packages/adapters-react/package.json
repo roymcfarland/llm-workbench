@@ -1,6 +1,6 @@
 {
   "name": "@llm-workbench/adapters-react",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "React hooks for subscribing components to live LLM Workbench runtime state.",
   "keywords": [
     "llm",

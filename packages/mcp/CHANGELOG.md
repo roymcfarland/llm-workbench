@@ -1,5 +1,11 @@
 # @llm-workbench/mcp
 
+## 0.3.3
+
+### Patch Changes
+
+- e5f2d72: Add missing @param/@returns tags to createWorkbenchMcpServer and createWorkbenchMcpHttpHandler, matching the structured tag convention used elsewhere in the codebase. No prose changed.
+
 ## 0.3.2
 
 ### Patch Changes
