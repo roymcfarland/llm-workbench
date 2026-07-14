@@ -24,6 +24,8 @@ export const FAQ_OG_ALT =
 /** Alt text for the protocol docs OG/Twitter image routes. */
 export const PROTOCOL_OG_ALT =
   "LLM Workbench — the run-bundle protocol" as const;
+export const ARCHITECTURE_OG_ALT =
+  "LLM Workbench — architecture" as const;
 export const GETTING_STARTED_OG_ALT =
   "LLM Workbench — getting started" as const;
 

@@ -1,38 +1,36 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
-
 import { renderMarkdownWithHeadings } from "@/lib/landing/markdown";
-import { PROTOCOL_OVERVIEW } from "@/lib/landing/protocol-prose";
+import { ARCHITECTURE_OVERVIEW } from "@/lib/landing/architecture-prose";
 import { GITHUB_URL, SITE_NAME, siteOrigin } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Protocol",
+  title: "Architecture",
   description:
-    "Deep dive: RunBundle vs RunStoreState, canonical SHA-256, trace correlation, gates, forks, MCP tools (export_bundle), REST wire format.",
-  alternates: { canonical: "/docs/protocol" },
+    "How LLM Workbench's headless runtime, optional React layer, integration adapters, and hosted reference app fit together.",
+  alternates: { canonical: "/docs/architecture" },
   openGraph: {
-    title: "LLM Workbench protocol",
+    title: "LLM Workbench architecture",
     description:
-      "Run bundles, live persistence wire format, integrity hashing, gates, telemetry, OTel bridge, integrations.",
-    url: "/docs/protocol",
+      "How the headless runtime, optional React layer, integration adapters, and hosted reference app fit together.",
+    url: "/docs/architecture",
     type: "article",
     siteName: "LLM Workbench",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LLM Workbench protocol",
+    title: "LLM Workbench architecture",
     description:
-      "Run bundles, persistence vs export, correlation IDs, gates, MCP + REST surfaces.",
+      "The five packages, runtime internals, and hosted reference application.",
   },
 };
 
-export default async function ProtocolDocsPage() {
-  const { html, headings } = renderMarkdownWithHeadings(PROTOCOL_OVERVIEW);
+export default async function ArchitectureDocsPage() {
+  const { html, headings } = renderMarkdownWithHeadings(ARCHITECTURE_OVERVIEW);
   const origin = await siteOrigin();
-  const url = `${origin}/docs/protocol`;
+  const url = `${origin}/docs/architecture`;
 
   // Use H2 headings for the sidebar TOC (deeper levels overcrowd the rail).
   const tocItems = headings.filter((h) => h.level === 2);
@@ -40,12 +38,12 @@ export default async function ProtocolDocsPage() {
   const techArticleJsonLd = {
     "@context": "https://schema.org",
     "@type": "TechArticle",
-    headline: "LLM Workbench protocol overview",
+    headline: "LLM Workbench architecture overview",
     description:
-      "Deep dive: bundles vs wire state, canonical hashing, gates, correlation IDs, MCP export_bundle.",
+      "How the headless runtime, optional React layer, integration adapters, and hosted reference app fit together.",
     url,
     inLanguage: "en-US",
-    proficiencyLevel: "Expert",
+    proficiencyLevel: "Intermediate",
     publisher: {
       "@type": "Organization",
       name: SITE_NAME,
@@ -54,12 +52,11 @@ export default async function ProtocolDocsPage() {
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     keywords: [
       "LLM Workbench",
-      "run bundle",
-      "trace events",
-      "gates",
+      "architecture",
+      "runtime",
+      "React",
+      "Vercel AI SDK",
       "MCP",
-      "model-agnostic",
-      `protocol v${WORKBENCH_PROTOCOL_VERSION}`,
     ],
   };
 
@@ -72,12 +69,12 @@ export default async function ProtocolDocsPage() {
         "@type": "ListItem",
         position: 2,
         name: "Docs",
-        item: `${origin}/docs/protocol`,
+        item: `${origin}/docs/architecture`,
       },
       {
         "@type": "ListItem",
         position: 3,
-        name: "Protocol",
+        name: "Architecture",
         item: url,
       },
     ],
@@ -113,55 +110,41 @@ export default async function ProtocolDocsPage() {
               <li aria-hidden className="select-none opacity-60">
                 /
               </li>
-              <li className="text-[var(--color-foreground)]">protocol</li>
+              <li className="text-[var(--color-foreground)]">architecture</li>
             </ol>
           </nav>
 
           <header className="mt-6 border-b border-[var(--color-border)] pb-8">
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-muted-foreground)]">
-              Reference · Protocol v{WORKBENCH_PROTOCOL_VERSION}
+              Reference · Architecture
             </p>
             <h1 className="mt-2 font-serif text-balance text-3xl font-semibold tracking-tight md:text-4xl">
-              The{" "}
+              How the{" "}
               <span className="aurora-shift bg-gradient-to-br from-cyan-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
                 Workbench
               </span>{" "}
-              protocol
+              fits together
             </h1>
             <span
               aria-hidden="true"
               className="mt-5 block h-px w-24 bg-gradient-to-r from-cyan-400/70 via-violet-400/40 to-transparent"
             />
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-[var(--color-muted-foreground)]">
-              Runtime-and-wire-format pair for recording, gating, and replaying
-              LLM-powered work. Boring on the surface — JSON in, JSON out,
-              structured trace events — so it survives upgrades, model swaps,
-              framework migrations, and audits.
+              A headless runtime, optional React layer, and integration adapters,
+              connected by a hosted reference application for real users.
             </p>
             <div className="mt-6 flex flex-wrap gap-3 font-mono text-xs">
               <a
                 href="/docs/getting-started"
                 className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
               >
-                New here? Start here →
+                Getting started
               </a>
               <a
-                href="/docs/architecture"
+                href="/docs/protocol"
                 className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
               >
-                How it fits together
-              </a>
-              <a
-                href="/api/openapi.json"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
-              >
-                /api/openapi.json
-              </a>
-              <a
-                href="/.well-known/mcp.json"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
-              >
-                /.well-known/mcp.json
+                Protocol reference
               </a>
               <a
                 href={GITHUB_URL}
