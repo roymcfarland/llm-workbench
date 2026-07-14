@@ -27,6 +27,9 @@ export type CreateWorkbenchMcpHttpHandlerOptions = {
  * persist between invocations. The caller's `McpServer` is reused across
  * requests (it is stateless) — close it manually if your runtime supports
  * shutdown hooks.
+ *
+ * @param options The `McpServer` to expose, plus optional transport settings.
+ * @returns A Web-standard `(req: Request) => Promise<Response>` handler.
  */
 export function createWorkbenchMcpHttpHandler(
   options: CreateWorkbenchMcpHttpHandlerOptions,
