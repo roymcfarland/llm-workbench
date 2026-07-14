@@ -1,0 +1,25 @@
+flag_management:
+  default_rules:
+    carryforward: true
+  individual_flags:
+    - name: runtime
+      paths:
+        - packages/runtime
+    - name: ui
+      paths:
+        - packages/ui
+    - name: adapters-react
+      paths:
+        - packages/adapters-react
+    - name: ai-sdk
+      paths:
+        - packages/ai-sdk
+    - name: mcp
+      paths:
+        - packages/mcp
+    - name: scripts
+      paths:
+        - scripts
+    - name: web
+      paths:
+        - apps/web
