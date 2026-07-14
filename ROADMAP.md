@@ -1,8 +1,13 @@
 # `llm-workbench` Roadmap
 
-The strategic roadmap is currently being re-evaluated under the proprietary
-posture established in [`PROJECT.md`](PROJECT.md). The previous public
-roadmap (which assumed dual-licensed OSS distribution) has been retired.
+This is an open-source project (MIT-licensed, public since 2026-06-16) — for
+current scope, non-goals, and the authoritative spec, see
+[`PROJECT.md`](PROJECT.md#non-goals).
 
-For current scope, non-goals, and authoritative spec, see
-[`PROJECT.md`](PROJECT.md). Detailed milestone planning is private.
+There isn't a separate long-range roadmap document to keep in sync. Shipped
+work is tracked in [`CHANGELOG.md`](CHANGELOG.md) and
+[GitHub Releases](https://github.com/roymcfarland/llm-workbench/releases);
+upcoming work is tracked as
+[GitHub Issues](https://github.com/roymcfarland/llm-workbench/issues).
+Feature requests and bug reports are welcome — see
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
