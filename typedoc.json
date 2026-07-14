@@ -1,0 +1,21 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "packages/runtime/src/index.ts",
+    "packages/ui/src/index.ts",
+    "packages/adapters-react/src/index.ts",
+    "packages/ai-sdk/src/index.ts",
+    "packages/mcp/src/index.ts"
+  ],
+  "out": "apps/web/.typedoc-cache",
+  "plugin": ["typedoc-plugin-markdown"],
+  "outputFileStrategy": "modules",
+  "flattenOutputFiles": true,
+  "membersWithOwnFile": [],
+  "hidePageHeader": true,
+  "hideBreadcrumbs": true,
+  "readme": "none",
+  "skipErrorChecking": true,
+  "excludeInternal": true,
+  "excludePrivate": true
+}

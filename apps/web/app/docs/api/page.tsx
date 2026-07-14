@@ -1,51 +1,58 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
-
+import {
+  API_REFERENCE_PACKAGES,
+  getApiReferenceMarkdown,
+} from "@/lib/landing/api-reference-loader";
 import { renderMarkdownWithHeadings } from "@/lib/landing/markdown";
-import { PROTOCOL_OVERVIEW } from "@/lib/landing/protocol-prose";
 import { GITHUB_URL, SITE_NAME, siteOrigin } from "@/lib/site";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
-  title: "Protocol",
+  title: "API reference",
   description:
-    "Deep dive: RunBundle vs RunStoreState, canonical SHA-256, trace correlation, gates, forks, MCP tools (export_bundle), REST wire format.",
-  alternates: { canonical: "/docs/protocol" },
+    "Generated API reference for LLM Workbench's runtime, UI, React, AI SDK, and MCP packages.",
+  alternates: { canonical: "/docs/api" },
   openGraph: {
-    title: "LLM Workbench protocol",
+    title: "LLM Workbench API reference",
     description:
-      "Run bundles, live persistence wire format, integrity hashing, gates, telemetry, OTel bridge, integrations.",
-    url: "/docs/protocol",
+      "Generated from the JSDoc comments on every public LLM Workbench package export.",
+    url: "/docs/api",
     type: "article",
     siteName: "LLM Workbench",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LLM Workbench protocol",
+    title: "LLM Workbench API reference",
     description:
-      "Run bundles, persistence vs export, correlation IDs, gates, MCP + REST surfaces.",
+      "Generated API documentation for the runtime, UI, React, AI SDK, and MCP packages.",
   },
 };
 
-export default async function ProtocolDocsPage() {
-  const { html, headings } = renderMarkdownWithHeadings(PROTOCOL_OVERVIEW);
+export default async function ApiReferenceDocsPage() {
+  const references = await Promise.all(
+    API_REFERENCE_PACKAGES.map(async (packageReference) => ({
+      ...packageReference,
+      html: renderMarkdownWithHeadings(
+        await getApiReferenceMarkdown(packageReference.name),
+      ).html,
+    })),
+  );
   const origin = await siteOrigin();
-  const url = `${origin}/docs/protocol`;
-
-  // Use H2 headings for the sidebar TOC (deeper levels overcrowd the rail).
-  const tocItems = headings.filter((h) => h.level === 2);
+  const url = `${origin}/docs/api`;
 
   const techArticleJsonLd = {
     "@context": "https://schema.org",
     "@type": "TechArticle",
-    headline: "LLM Workbench protocol overview",
+    headline: "LLM Workbench API reference",
     description:
-      "Deep dive: bundles vs wire state, canonical hashing, gates, correlation IDs, MCP export_bundle.",
+      "Generated API documentation for the runtime, UI, React, AI SDK, and MCP packages.",
     url,
     inLanguage: "en-US",
-    proficiencyLevel: "Expert",
+    proficiencyLevel: "Advanced",
     publisher: {
       "@type": "Organization",
       name: SITE_NAME,
@@ -54,12 +61,12 @@ export default async function ProtocolDocsPage() {
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     keywords: [
       "LLM Workbench",
-      "run bundle",
-      "trace events",
-      "gates",
+      "API reference",
+      "TypeDoc",
+      "runtime",
+      "React",
+      "Vercel AI SDK",
       "MCP",
-      "model-agnostic",
-      `protocol v${WORKBENCH_PROTOCOL_VERSION}`,
     ],
   };
 
@@ -72,14 +79,9 @@ export default async function ProtocolDocsPage() {
         "@type": "ListItem",
         position: 2,
         name: "Docs",
-        item: `${origin}/docs/protocol`,
+        item: `${origin}/docs/api`,
       },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: "Protocol",
-        item: url,
-      },
+      { "@type": "ListItem", position: 3, name: "API reference", item: url },
     ],
   };
 
@@ -113,56 +115,46 @@ export default async function ProtocolDocsPage() {
               <li aria-hidden className="select-none opacity-60">
                 /
               </li>
-              <li className="text-[var(--color-foreground)]">protocol</li>
+              <li className="text-[var(--color-foreground)]">api</li>
             </ol>
           </nav>
 
           <header className="mt-6 border-b border-[var(--color-border)] pb-8">
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-muted-foreground)]">
-              Reference · Protocol v{WORKBENCH_PROTOCOL_VERSION}
+              Reference · API
             </p>
             <h1 className="mt-2 font-serif text-balance text-3xl font-semibold tracking-tight md:text-4xl">
-              The{" "}
+              API reference, generated from{" "}
               <span className="aurora-shift bg-gradient-to-br from-cyan-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
-                Workbench
-              </span>{" "}
-              protocol
+                source
+              </span>
             </h1>
             <span
               aria-hidden="true"
               className="mt-5 block h-px w-24 bg-gradient-to-r from-cyan-400/70 via-violet-400/40 to-transparent"
             />
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-[var(--color-muted-foreground)]">
-              Runtime-and-wire-format pair for recording, gating, and replaying
-              LLM-powered work. Boring on the surface — JSON in, JSON out,
-              structured trace events — so it survives upgrades, model swaps,
-              framework migrations, and audits.
+              Public exports from all five packages, regenerated from their JSDoc
+              comments every time the web app builds.
             </p>
             <div className="mt-6 flex flex-wrap gap-3 font-mono text-xs">
               <a
                 href="/docs/getting-started"
                 className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
               >
-                New here? Start here →
+                Getting started
               </a>
               <a
                 href="/docs/architecture"
                 className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
               >
-                How it fits together
-              </a>
-              <a href="/docs/api" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300">API reference</a>
-              <a
-                href="/api/openapi.json"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
-              >
-                /api/openapi.json
+                Architecture
               </a>
               <a
-                href="/.well-known/mcp.json"
+                href="/docs/protocol"
                 className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card)]/60 px-3 py-1 text-[var(--color-muted-foreground)] transition hover:border-cyan-400/40 hover:text-cyan-300"
               >
-                /.well-known/mcp.json
+                Protocol reference
               </a>
               <a
                 href={GITHUB_URL}
@@ -176,36 +168,39 @@ export default async function ProtocolDocsPage() {
           </header>
 
           <div className="mt-10 grid gap-10 md:grid-cols-[minmax(0,1fr)_15rem]">
-            <article
-              className="min-w-0 max-w-3xl"
-              // server-rendered — input is a constant string, no untrusted HTML
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
+            <article className="min-w-0 max-w-3xl">
+              {references.map((reference) => (
+                <section key={reference.name} className="scroll-mt-20" id={reference.name}>
+                  <h2 className="mt-10 mb-4 font-serif text-2xl font-semibold tracking-tight first:mt-0">
+                    {reference.title}
+                  </h2>
+                  <div
+                    // Generated from this repository's public JSDoc at build time.
+                    dangerouslySetInnerHTML={{ __html: reference.html }}
+                  />
+                </section>
+              ))}
+            </article>
 
-            {tocItems.length > 0 ? (
-              <aside
-                className="hidden md:block"
-                aria-label="On this page"
-              >
-                <div className="sticky top-20">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-muted-foreground)]">
-                    On this page
-                  </p>
-                  <ol className="mt-3 flex list-none flex-col gap-1 border-l border-[var(--color-border)] pl-4 font-mono text-[11px]">
-                    {tocItems.map((h) => (
-                      <li key={h.id}>
-                        <a
-                          href={`#${h.id}`}
-                          className="block py-1 text-[var(--color-muted-foreground)] transition hover:text-cyan-300"
-                        >
-                          {h.text}
-                        </a>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              </aside>
-            ) : null}
+            <aside className="hidden md:block" aria-label="On this page">
+              <div className="sticky top-20">
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-muted-foreground)]">
+                  On this page
+                </p>
+                <ol className="mt-3 flex list-none flex-col gap-1 border-l border-[var(--color-border)] pl-4 font-mono text-[11px]">
+                  {references.map((reference) => (
+                    <li key={reference.name}>
+                      <a
+                        href={`#${reference.name}`}
+                        className="block py-1 text-[var(--color-muted-foreground)] transition hover:text-cyan-300"
+                      >
+                        {reference.title}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </aside>
           </div>
         </div>
       </div>

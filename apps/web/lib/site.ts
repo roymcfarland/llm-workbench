@@ -28,6 +28,8 @@ export const ARCHITECTURE_OG_ALT =
   "LLM Workbench — architecture" as const;
 export const GETTING_STARTED_OG_ALT =
   "LLM Workbench — getting started" as const;
+export const API_REFERENCE_OG_ALT =
+  "LLM Workbench — API reference" as const;
 
 export function blogPostOgImageAlt(postTitle: string): string {
   return `${postTitle} — ${SITE_NAME} blog`;
