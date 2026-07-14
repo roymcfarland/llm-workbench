@@ -1,9 +1,9 @@
 /**
- * Beginner-friendly LLM Workbench quickstart. Reused by `/docs/getting-started`
- * (HTML) and `/llms-full.txt` (plain markdown). The Markdown conventions are
- * intentionally narrow so the same string serializes cleanly in both contexts:
- * H1 / H2 headings, paragraphs separated by blank lines, fenced code blocks,
- * and standard markdown links.
+ * Beginner-friendly LLM Workbench quickstart, rendered by
+ * `/docs/getting-started`. Written as plain Markdown (H1 / H2 headings,
+ * paragraphs separated by blank lines, fenced code blocks, standard markdown
+ * links) so it stays easy to keep in sync with README.md's own quickstart
+ * section by eye.
  */
 export const GETTING_STARTED_OVERVIEW = `# Getting started
 
