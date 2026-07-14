@@ -21,3 +21,6 @@ Authentication and tenancy are **host-defined**: supply a repository already sco
 
 - Product overview and architecture: repository root [`README.md`](../../README.md).
 - Deployed MCP endpoint + discovery: [`DEPLOY.md`](../../apps/web/DEPLOY.md) smoke-test table and `/.well-known/mcp.json`.
+- Getting started: https://www.llmworkbench.io/docs/getting-started
+- Architecture deep-dive: https://www.llmworkbench.io/docs/architecture
+- Generated API reference: https://www.llmworkbench.io/docs/api
