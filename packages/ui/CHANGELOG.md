@@ -1,5 +1,13 @@
 # @llm-workbench/ui
 
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies [c78db73]
+  - @llm-workbench/runtime@0.3.2
+  - @llm-workbench/adapters-react@0.3.2
+
 ## 0.3.1
 
 ### Patch Changes
