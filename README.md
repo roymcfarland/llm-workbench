@@ -4,6 +4,7 @@
 [![CI](https://github.com/roymcfarland/llm-workbench/actions/workflows/ci.yml/badge.svg)](https://github.com/roymcfarland/llm-workbench/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/node/v/@llm-workbench/runtime.svg)](https://nodejs.org)
+[![codecov](https://codecov.io/gh/roymcfarland/llm-workbench/branch/main/graph/badge.svg)](https://codecov.io/gh/roymcfarland/llm-workbench)
 
 **An open-source control plane for LLM-powered products.**
 

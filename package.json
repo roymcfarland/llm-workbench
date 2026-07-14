@@ -17,6 +17,7 @@
     "gen:validators": "npm run build -w @llm-workbench/runtime && tsx scripts/gen-validators.mts",
     "test": "npm test -w @llm-workbench/runtime && npm test -w @llm-workbench/adapters-react && npm test -w @llm-workbench/ai-sdk && npm test -w @llm-workbench/ui && npm test -w @llm-workbench/mcp && npm run test:scripts && npm test -w @llm-workbench/web",
     "test:scripts": "vitest run --config scripts/vitest.config.mjs",
+    "test:coverage": "npm test -w @llm-workbench/runtime -- --coverage && npm test -w @llm-workbench/adapters-react -- --coverage && npm test -w @llm-workbench/ai-sdk -- --coverage && npm test -w @llm-workbench/ui -- --coverage && npm test -w @llm-workbench/mcp -- --coverage && npm run test:scripts -- --coverage && npm test -w @llm-workbench/web -- --coverage",
     "demo": "npm run dev -w job-search-demo",
     "demo:http-server": "npm run start -w run-repo-server",
     "dev:web": "npm run dev -w apps/web",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "audit-ci": "^7.1.0",
     "eslint": "^9.39.4",
     "rss-parser": "^3.13.0",

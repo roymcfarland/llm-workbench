@@ -6,5 +6,10 @@ export default defineConfig({
   test: {
     include: ["**/*.test.mjs"],
     environment: "node",
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      reportsDirectory: "coverage/scripts",
+    },
   },
 });
