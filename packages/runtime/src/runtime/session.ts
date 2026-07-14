@@ -67,6 +67,7 @@ export class WorkbenchSession {
    * Returns an isolated copy of the complete mutable run store state.
    *
    * @returns A deep clone suitable for inspection without changing the session.
+   * @throws {WorkbenchError} `INVALID_RUN_STATE` if the underlying state cannot be deep-cloned.
    */
   snapshot(): RunStoreState {
     return cloneRunStoreState(this.ctx.state);
@@ -168,6 +169,7 @@ export class WorkbenchSession {
    *
    * @param stepId - Identifier of the step to validate.
    * @throws {WorkbenchError} `INVALID_STATE_TRANSITION` if dependencies, gates, or step state block the start.
+   * @throws {WorkbenchError} `UNKNOWN_STEP` if the workflow does not contain the step.
    */
   assertCanStartStep(stepId: string): void {
     this.steps.assertCanStartStep(stepId);
@@ -179,6 +181,7 @@ export class WorkbenchSession {
    * @param stepId - Identifier of the step to start.
    * @returns A successful result after starting, or the blocking reason when the step cannot start yet.
    * @throws {WorkbenchError} `INVALID_STATE_TRANSITION` if the run is not active.
+   * @throws {WorkbenchError} `UNKNOWN_STEP` if the workflow does not contain the step.
    */
   beginStep(stepId: string): { ok: false; reason: import("./types.js").BlockReason } | { ok: true } {
     return this.steps.beginStep(stepId);
