@@ -19,6 +19,15 @@ function inline(s: string): string {
     const idx = codeMarker.push(escape(inner)) - 1;
     return `\u0000CODE${idx}\u0000`;
   });
+  // backslash-escaped punctuation (TypeDoc escapes `<>{}[]|_` in generated
+  // signatures so they survive markdown parsing untouched) -- unescape to the
+  // literal character before the markup regexes below get a chance to
+  // misinterpret it (e.g. `\_` as italics, `\[x\]` as a link fragment).
+  const escapedMarker: string[] = [];
+  withCode = withCode.replace(/\\([<>{}[\]|_])/g, (_m, ch) => {
+    const idx = escapedMarker.push(ch) - 1;
+    return `\u0000ESC${idx}\u0000`;
+  });
   withCode = escape(withCode);
   // bold **text**
   withCode = withCode.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
@@ -44,6 +53,10 @@ function inline(s: string): string {
   // restore inline code
   withCode = withCode.replace(/\u0000CODE(\d+)\u0000/g, (_m, idx) => {
     return `<code class="rounded bg-[var(--color-muted)]/40 px-1 py-0.5 font-mono text-[0.85em]">${codeMarker[Number(idx)]}</code>`;
+  });
+  // restore unescaped punctuation, HTML-escaping it same as any other text
+  withCode = withCode.replace(/\u0000ESC(\d+)\u0000/g, (_m, idx) => {
+    return escape(escapedMarker[Number(idx)]!);
   });
   return withCode;
 }
@@ -115,11 +128,20 @@ export type RenderedHeading = {
 /**
  * Render markdown to HTML and (optionally) collect the headings that were
  * emitted so callers can build a sidebar TOC without re-parsing.
+ *
+ * `idPrefix` namespaces every heading id (e.g. `parameters` becomes
+ * `runtime-parameters`) — needed when multiple independently-generated
+ * markdown documents are concatenated onto one page and would otherwise
+ * produce duplicate ids.
  */
-export function renderMarkdownWithHeadings(src: string): {
+export function renderMarkdownWithHeadings(
+  src: string,
+  options?: { idPrefix?: string },
+): {
   html: string;
   headings: RenderedHeading[];
 } {
+  const idPrefix = options?.idPrefix;
   const lines = src.split("\n");
   const out: string[] = [];
   const headings: RenderedHeading[] = [];
@@ -150,7 +172,8 @@ export function renderMarkdownWithHeadings(src: string): {
       const rawText = h[2]!;
       const text = inline(rawText);
       const plain = rawText.replace(/[`*_~]/g, "").trim();
-      const id = uniquifyId(slugifyHeading(plain), usedIds);
+      const slug = slugifyHeading(plain);
+      const id = uniquifyId(idPrefix ? `${idPrefix}-${slug}` : slug, usedIds);
       headings.push({ level, text: plain, id });
       const sizes = [
         "text-3xl",

@@ -38,6 +38,7 @@ export default async function ApiReferenceDocsPage() {
       ...packageReference,
       html: renderMarkdownWithHeadings(
         await getApiReferenceMarkdown(packageReference.name),
+        { idPrefix: packageReference.name },
       ).html,
     })),
   );

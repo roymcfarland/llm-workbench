@@ -104,4 +104,69 @@ describe("renderMarkdown", () => {
       "multiple-spaces-here",
     );
   });
+
+  it("unescapes TypeDoc-style backslash-escaped punctuation to the literal character", () => {
+    const html = renderMarkdown(
+      "Returns \\{ amount: number; currency: string \\} | undefined.",
+    );
+    expect(html).toContain("{ amount: number; currency: string }");
+    expect(html).not.toContain("\\{");
+    expect(html).not.toContain("\\}");
+  });
+
+  it("re-escapes unescaped angle brackets for HTML instead of leaking them raw", () => {
+    const html = renderMarkdown("Type: \\<T\\>.");
+    expect(html).toContain("&lt;T&gt;");
+    expect(html).not.toContain("<T>");
+  });
+
+  it("does not let an unescaped underscore trigger italics", () => {
+    const html = renderMarkdown("snake\\_case\\_example");
+    expect(html).not.toContain("<em>");
+    expect(html).toContain("snake_case_example");
+  });
+
+  it("does not let unescaped brackets form a link", () => {
+    const html = renderMarkdown("See \\[note\\] here.");
+    expect(html).not.toContain("<a ");
+    expect(html).toContain("See [note] here.");
+  });
+
+  it("unescapes a backslash-escaped pipe to a literal character", () => {
+    const html = renderMarkdown("A \\| B");
+    expect(html).toContain("A | B");
+  });
+
+  it("still escapes HTML-unsafe characters even when they arrive via an escape sequence", () => {
+    // Guards the restore step: it must re-run escape() on the unescaped
+    // character, not splice it back in raw.
+    const html = renderMarkdown("\\<script\\>");
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;");
+  });
+
+  it("namespaces heading ids with idPrefix so concatenated documents don't collide", () => {
+    const runtime = renderMarkdownWithHeadings("## Parameters", {
+      idPrefix: "runtime",
+    });
+    const ui = renderMarkdownWithHeadings("## Parameters", { idPrefix: "ui" });
+    expect(runtime.headings[0]!.id).toBe("runtime-parameters");
+    expect(ui.headings[0]!.id).toBe("ui-parameters");
+    expect(runtime.html).toContain('id="runtime-parameters"');
+    expect(ui.html).toContain('id="ui-parameters"');
+  });
+
+  it("still uniquifies same-prefixed duplicate headings within one render", () => {
+    const { headings } = renderMarkdownWithHeadings(
+      ["## Parameters", "", "## Parameters"].join("\n"),
+      { idPrefix: "runtime" },
+    );
+    expect(headings[0]!.id).toBe("runtime-parameters");
+    expect(headings[1]!.id).toBe("runtime-parameters-2");
+  });
+
+  it("omitting idPrefix behaves exactly as before (unprefixed slug)", () => {
+    const { headings } = renderMarkdownWithHeadings("## Parameters");
+    expect(headings[0]!.id).toBe("parameters");
+  });
 });
