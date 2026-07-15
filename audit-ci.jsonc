@@ -25,9 +25,6 @@
   //   - @opentelemetry/core (via @sentry/node, lighthouse): GHSA-8988-4f7v-96qf,
   //     no fix without a breaking parent bump. REVISIT on the next @sentry/nextjs upgrade.
   //   - postcss (via next): GHSA-qx2v-qp2m-jg93, no fix. REVISIT on the next Next.js upgrade.
-  //   - js-yaml (via gray-matter): GHSA-h67p-54hq-rp68; parses ONLY our own
-  //     build-time markdown front-matter, never runtime/untrusted input, so the
-  //     DoS vector is unreachable. REVISIT on a gray-matter@2 migration.
   //   - @ai-sdk/provider-utils (via ai): GHSA-866g-f22w-33x8 (low). REVISIT on the ai@6 migration.
   //
   // If a HIGH/critical advisory ever lands that is itself phantom/unfixable,
