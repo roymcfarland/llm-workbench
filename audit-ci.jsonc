@@ -22,8 +22,19 @@
   // KNOWN ACCEPTED moderate/low advisories (informational; below the gate, so not
   // listed as allowlist entries -- re-triage on major dependency upgrades):
   //   - dompurify (via monaco-editor): PHANTOM, see above. No fix possible/needed.
-  //   - @opentelemetry/core (via @sentry/node, lighthouse): GHSA-8988-4f7v-96qf,
-  //     no fix without a breaking parent bump. REVISIT on the next @sentry/nextjs upgrade.
+  //   - @opentelemetry/core and ~13 sibling @opentelemetry/instrumentation-*
+  //     advisories (via @sentry/node, lighthouse): dev-only -- lighthouse is used
+  //     solely by the `lighthouse:smoke` script, never shipped to production.
+  //     lighthouse vendors its OWN pinned `@sentry/node@9.x` internally, separate
+  //     from this repo's real `@sentry/nextjs`/`@sentry/node@10.65.0` integration
+  //     (already upgraded, already clean). Confirmed (2026-07) that bumping
+  //     lighthouse to its current latest (13.4.0) does NOT clear this -- the
+  //     vulnerable @sentry/node stays pinned inside lighthouse's own dependency
+  //     tree regardless of lighthouse's own version. No fix exists until
+  //     lighthouse's maintainers update that internal pin themselves.
+  //     REVISIT next time lighthouse is bumped -- re-check `npm ls @sentry/node
+  //     --all` for whether `node_modules/lighthouse/node_modules/@sentry/node`
+  //     has moved past 10.53.1.
   //   - postcss (via next): GHSA-qx2v-qp2m-jg93, no fix. REVISIT on the next Next.js upgrade.
   //   - @ai-sdk/provider-utils (via ai): GHSA-866g-f22w-33x8 (low). REVISIT on the ai@6 migration.
   //
