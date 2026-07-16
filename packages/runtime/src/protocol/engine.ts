@@ -8,7 +8,7 @@ export const StepGateStateSerializedSchema = z
   .object({
     before: GateStatusSchema,
     after: GateStatusSchema,
-    checkpoints: z.record(GateStatusSchema).optional(),
+    checkpoints: z.record(z.string(), GateStatusSchema).optional(),
   })
   .transform((v) => ({ ...v, checkpoints: v.checkpoints ?? {} }));
 

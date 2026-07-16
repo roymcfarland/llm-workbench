@@ -15,7 +15,7 @@ export const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
     z.number(),
     z.string(),
     z.array(JsonValueSchema),
-    z.record(JsonValueSchema),
+    z.record(z.string(), JsonValueSchema),
   ]),
 );
 
@@ -113,7 +113,7 @@ export const RunInstanceSchema = z.object({
   /** Host-provided subject/account attribution for telemetry, quotas, and billing. */
   subject: RunSubjectRefSchema.optional(),
   /** JSON-only host metadata kept with the run snapshot. Avoid secrets. */
-  metadata: z.record(JsonValueSchema).optional(),
+  metadata: z.record(z.string(), JsonValueSchema).optional(),
   /** Tags for organizing learning iterations */
   tags: z.array(z.string()).optional(),
   annotations: z

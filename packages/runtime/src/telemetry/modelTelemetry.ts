@@ -17,7 +17,7 @@ export const ModelTelemetryTotalsSchema = z
     cachedInputTokens: z.number().int().nonnegative(),
     reasoningTokens: z.number().int().nonnegative(),
     durationMs: z.number().nonnegative(),
-    costByCurrency: z.record(z.number().nonnegative()),
+    costByCurrency: z.record(z.string(), z.number().nonnegative()),
   })
   .strict();
 
