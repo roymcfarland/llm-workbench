@@ -44,12 +44,12 @@
   },
   "peerDependencies": {
     "ai": "^5.0.0",
-    "zod": "^3.23.8"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "ai": "^5.0.179",
     "typescript": "^5.6.3",
     "vitest": "^4.1.5",
-    "zod": "^3.23.8"
+    "zod": "^4.4.3"
   }
 }
