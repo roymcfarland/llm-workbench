@@ -5,6 +5,8 @@ import {
   type TraceEvent,
   type WorkbenchSession,
 } from "@llm-workbench/runtime";
+import { MockLanguageModelV4 } from "ai/test";
+import { z } from "zod";
 
 const { generateTextMock } = vi.hoisted(() => ({
   generateTextMock: vi.fn(),
@@ -194,5 +196,126 @@ describe("tracedGenerateText", () => {
     const last = traces[1] as { direction?: string; summary?: string };
     expect(last.direction).toBe("response");
     expect(last.summary).toContain("error: boom");
+  });
+
+  it("uses AI SDK 7's real generateText implementation with a mock model", async () => {
+    vi.doUnmock("ai");
+    vi.resetModules();
+    const { tracedGenerateText: tracedGenerateTextWithRealAi } =
+      await import("./generateText.js");
+    const model = new MockLanguageModelV4({
+      provider: "mock-provider",
+      modelId: "mock-model",
+      doGenerate: {
+        content: [{ type: "text", text: "real SDK output" }],
+        finishReason: { unified: "stop", raw: undefined },
+        usage: {
+          inputTokens: {
+            total: 8,
+            noCache: 8,
+            cacheRead: undefined,
+            cacheWrite: undefined,
+          },
+          outputTokens: { total: 5, text: 5, reasoning: undefined },
+        },
+        response: { modelId: "mock-model" },
+        warnings: [],
+      },
+    });
+    const { session } = startSession();
+
+    const result = await tracedGenerateTextWithRealAi(session, {
+      model,
+      prompt: "exercise the actual SDK",
+    });
+
+    expect(model.doGenerateCalls).toHaveLength(1);
+    expect(result.text).toBe("real SDK output");
+    const response = modelTraces(session).find(
+      (event) => (event as { direction?: string }).direction === "response",
+    ) as { usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number } };
+    expect(response.usage).toEqual({
+      inputTokens: 8,
+      outputTokens: 5,
+      totalTokens: 13,
+    });
+  });
+
+  it("records SDK 7's aggregate usage for a multi-step tool call", async () => {
+    vi.doUnmock("ai");
+    vi.resetModules();
+    const [{ stepCountIs, tool }, { tracedGenerateText: tracedGenerateTextWithRealAi }] =
+      await Promise.all([import("ai"), import("./generateText.js")]);
+    const model = new MockLanguageModelV4({
+      provider: "mock-provider",
+      modelId: "mock-model",
+      doGenerate: [
+        {
+          content: [
+            {
+              type: "tool-call",
+              toolCallId: "call-1",
+              toolName: "lookup",
+              input: '{"topic":"usage"}',
+            },
+          ],
+          finishReason: { unified: "tool-calls", raw: undefined },
+          usage: {
+            inputTokens: {
+              total: 5,
+              noCache: 5,
+              cacheRead: undefined,
+              cacheWrite: undefined,
+            },
+            outputTokens: { total: 2, text: 0, reasoning: 2 },
+          },
+          warnings: [],
+        },
+        {
+          content: [{ type: "text", text: "tool result incorporated" }],
+          finishReason: { unified: "stop", raw: undefined },
+          usage: {
+            inputTokens: {
+              total: 4,
+              noCache: 4,
+              cacheRead: undefined,
+              cacheWrite: undefined,
+            },
+            outputTokens: { total: 3, text: 3, reasoning: undefined },
+          },
+          warnings: [],
+        },
+      ],
+    });
+    const { session } = startSession();
+
+    const result = await tracedGenerateTextWithRealAi(session, {
+      model,
+      prompt: "use the lookup tool",
+      stopWhen: stepCountIs(2),
+      tools: {
+        lookup: tool({
+          description: "Look up a topic.",
+          inputSchema: z.object({ topic: z.string() }),
+          execute: ({ topic }) => ({ topic, answer: "found" }),
+        }),
+      },
+    });
+
+    expect(model.doGenerateCalls).toHaveLength(2);
+    expect(result.usage).toMatchObject({
+      inputTokens: 9,
+      outputTokens: 5,
+      totalTokens: 14,
+      outputTokenDetails: { reasoningTokens: 2, textTokens: 3 },
+    });
+    const response = modelTraces(session).find(
+      (event) => (event as { direction?: string }).direction === "response",
+    ) as { usage?: { totalTokens?: number } };
+    expect(response.usage).toEqual({
+      inputTokens: 9,
+      outputTokens: 5,
+      totalTokens: 14,
+    });
   });
 });
