@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Newsreader, Outfit } from "next/font/google";
 import { headers } from "next/headers";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/next";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -199,6 +200,12 @@ export default async function RootLayout({
               <SiteFooter />
             </TooltipProvider>
           </ThemeProvider>
+          {/* @vercel/analytics injects a script tag served by Vercel's edge
+              rewrite for /_vercel/insights/script.js; that path 404s under a
+              plain `next start` not running on Vercel (e2e/CI, self-hosting),
+              so only render it in dev (debug mode, no network) or on Vercel. */}
+          {(process.env.NODE_ENV !== "production" ||
+            process.env.VERCEL === "1") && <Analytics />}
         </body>
       </html>
     </ClerkProvider>
