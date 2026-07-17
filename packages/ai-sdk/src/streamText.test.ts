@@ -4,6 +4,7 @@ import {
   type TraceEvent,
   type WorkbenchSession,
 } from "@llm-workbench/runtime";
+import { MockLanguageModelV4, simulateReadableStream } from "ai/test";
 
 const { streamTextMock } = vi.hoisted(() => ({
   streamTextMock: vi.fn(),
@@ -148,5 +149,67 @@ describe("tracedStreamText", () => {
     expect(traces[1].direction).toBe("response");
     expect(traces[1].summary).toContain("error: network down");
     expect(userOnError).toHaveBeenCalledOnce();
+  });
+
+  it("uses AI SDK 7 streaming chunks to emit text stream traces", async () => {
+    vi.doUnmock("ai");
+    vi.resetModules();
+    const { tracedStreamText: tracedStreamTextWithRealAi } =
+      await import("./streamText.js");
+    const model = new MockLanguageModelV4({
+      provider: "mock-provider",
+      modelId: "mock-model",
+      doStream: {
+        stream: simulateReadableStream({
+          chunks: [
+            { type: "stream-start", warnings: [] },
+            { type: "text-start", id: "text-1" },
+            { type: "text-delta", id: "text-1", delta: "real " },
+            { type: "reasoning-start", id: "reasoning-1" },
+            {
+              type: "reasoning-delta",
+              id: "reasoning-1",
+              delta: "ignored by trace text handling",
+            },
+            { type: "reasoning-end", id: "reasoning-1" },
+            { type: "text-delta", id: "text-1", delta: "stream" },
+            { type: "text-end", id: "text-1" },
+            {
+              type: "finish",
+              finishReason: { unified: "stop", raw: undefined },
+              usage: {
+                inputTokens: {
+                  total: 3,
+                  noCache: 3,
+                  cacheRead: undefined,
+                  cacheWrite: undefined,
+                },
+                outputTokens: { total: 2, text: 2, reasoning: undefined },
+              },
+            },
+          ],
+        }),
+      },
+    });
+    let now = 1_000;
+    const dateNow = vi.spyOn(Date, "now").mockImplementation(() => {
+      now += 300;
+      return now;
+    });
+    const { session } = startSession();
+
+    const result = tracedStreamTextWithRealAi(session, {
+      model,
+      prompt: "exercise real stream handling",
+    });
+    await expect(result.text).resolves.toBe("real stream");
+    dateNow.mockRestore();
+
+    expect(model.doStreamCalls).toHaveLength(1);
+    const traces = session.snapshot().trace.filter(
+      (event) => event.type === "model_io",
+    ) as Array<{ direction?: string; summary?: string; usage?: { totalTokens?: number } }>;
+    expect(traces.some((event) => event.direction === "stream_chunk" && event.summary === "real stream")).toBe(true);
+    expect(traces.at(-1)?.usage?.totalTokens).toBe(5);
   });
 });

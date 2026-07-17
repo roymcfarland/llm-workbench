@@ -36,17 +36,17 @@ export type TracedStreamTextOptions = StreamTextFirstArg &
  * for the request, debounced `stream_chunk` events (at most one every ~250 ms),
  * the final response with usage/cost/duration, tool calls, and any error.
  *
- * Returns the original `streamText` result so callers iterate `textStream`,
- * `fullStream`, or read `usage` exactly as if they had called `streamText`
- * directly.
+ * Returns the original `streamText` result so callers iterate `textStream` or
+ * `stream` (`fullStream` is a deprecated alias), or read `usage` exactly as
+ * if they had called `streamText` directly.
  *
  * @param session The active `WorkbenchSession` recording trace events.
  * @param opts AI SDK `streamText` options plus optional tracing/artifact
  *   metadata. `stepId`, `correlationId`, `detail`, and `writeArtifact` are
  *   stripped from the options forwarded to the AI SDK.
  * @returns The original AI SDK `streamText` result, unchanged — iterate
- *   `textStream`/`fullStream` or read `usage` exactly as you would from a
- *   direct `streamText` call.
+ *   `textStream`/`stream` (`fullStream` is a deprecated alias) or read
+ *   `usage` exactly as you would from a direct `streamText` call.
  */
 export function tracedStreamText(
   session: WorkbenchSession,
