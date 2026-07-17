@@ -4,6 +4,8 @@ import {
   WorkbenchRuntime,
   type WorkbenchSession,
 } from "@llm-workbench/runtime";
+import { MockLanguageModelV4 } from "ai/test";
+import { z } from "zod";
 
 const { generateObjectMock } = vi.hoisted(() => ({
   generateObjectMock: vi.fn(),
@@ -139,5 +141,45 @@ describe("tracedGenerateObject", () => {
     expect(modelEvents[0].direction).toBe("request");
     expect(modelEvents[1].direction).toBe("response");
     expect(modelEvents[0].correlationId).toBe(modelEvents[1].correlationId);
+  });
+
+  it("uses AI SDK 7's real generateObject implementation with a mock model", async () => {
+    vi.doUnmock("ai");
+    vi.resetModules();
+    const { tracedGenerateObject: tracedGenerateObjectWithRealAi } =
+      await import("./generateObject.js");
+    const model = new MockLanguageModelV4({
+      provider: "mock-provider",
+      modelId: "mock-model",
+      doGenerate: {
+        content: [{ type: "text", text: '{"headline":"real object"}' }],
+        finishReason: { unified: "stop", raw: undefined },
+        usage: {
+          inputTokens: {
+            total: 6,
+            noCache: 6,
+            cacheRead: undefined,
+            cacheWrite: undefined,
+          },
+          outputTokens: { total: 4, text: 4, reasoning: undefined },
+        },
+        response: { modelId: "mock-model" },
+        warnings: [],
+      },
+    });
+    const { session } = startSession();
+
+    const result = await tracedGenerateObjectWithRealAi(session, {
+      model,
+      prompt: "create an object",
+      schema: z.object({ headline: z.string() }),
+    });
+
+    expect(model.doGenerateCalls).toHaveLength(1);
+    expect(result.object).toEqual({ headline: "real object" });
+    const response = session.snapshot().trace.find(
+      (event) => event.type === "model_io" && (event as { direction?: string }).direction === "response",
+    ) as { usage?: { totalTokens?: number } } | undefined;
+    expect(response?.usage?.totalTokens).toBe(10);
   });
 });

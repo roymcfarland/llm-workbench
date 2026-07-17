@@ -3,6 +3,8 @@ import {
   WorkbenchRuntime,
   type WorkbenchSession,
 } from "@llm-workbench/runtime";
+import { MockLanguageModelV4, simulateReadableStream } from "ai/test";
+import { z } from "zod";
 
 const { streamObjectMock } = vi.hoisted(() => ({
   streamObjectMock: vi.fn(),
@@ -100,5 +102,61 @@ describe("tracedStreamObject", () => {
       | undefined;
     expect(final?.direction).toBe("response");
     expect(final?.summary).toContain("error: oops");
+  });
+
+  it("uses AI SDK 7's real streamObject implementation with a mock model", async () => {
+    vi.doUnmock("ai");
+    vi.resetModules();
+    const { tracedStreamObject: tracedStreamObjectWithRealAi } =
+      await import("./streamObject.js");
+    const model = new MockLanguageModelV4({
+      provider: "mock-provider",
+      modelId: "mock-model",
+      doStream: {
+        stream: simulateReadableStream({
+          chunks: [
+            { type: "stream-start", warnings: [] },
+            { type: "text-start", id: "text-1" },
+            {
+              type: "text-delta",
+              id: "text-1",
+              delta: '{"headline":"streamed object"}',
+            },
+            { type: "text-end", id: "text-1" },
+            {
+              type: "finish",
+              finishReason: { unified: "stop", raw: undefined },
+              usage: {
+                inputTokens: {
+                  total: 4,
+                  noCache: 4,
+                  cacheRead: undefined,
+                  cacheWrite: undefined,
+                },
+                outputTokens: { total: 3, text: 3, reasoning: undefined },
+              },
+            },
+          ],
+        }),
+      },
+    });
+    const { session } = startSession();
+
+    const result = tracedStreamObjectWithRealAi(session, {
+      model,
+      prompt: "stream an object",
+      schema: z.object({ headline: z.string() }),
+    });
+
+    const object = result.object;
+    for await (const _ of result.fullStream) {
+      // Consume the real SDK stream so its final-object promise and onFinish run.
+    }
+    await expect(object).resolves.toEqual({ headline: "streamed object" });
+    expect(model.doStreamCalls).toHaveLength(1);
+    const response = session.snapshot().trace.find(
+      (event) => event.type === "model_io" && (event as { direction?: string }).direction === "response",
+    ) as { usage?: { totalTokens?: number } } | undefined;
+    expect(response?.usage?.totalTokens).toBe(7);
   });
 });
