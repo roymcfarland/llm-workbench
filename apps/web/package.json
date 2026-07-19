@@ -18,7 +18,7 @@
     "lighthouse:smoke": "node ./scripts/run-lighthouse.mjs"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.5.1",
+    "@clerk/nextjs": "^7.5.20",
     "@llm-workbench/adapters-react": "0.3.3",
     "@llm-workbench/ai-sdk": "0.3.3",
     "@llm-workbench/mcp": "0.3.3",

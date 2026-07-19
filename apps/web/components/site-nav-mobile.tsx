@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { SignedIn } from "@clerk/nextjs";
+import { Show } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -80,7 +80,7 @@ export function SiteNavMobile() {
               {link.label}
             </Link>
           ))}
-          <SignedIn>
+          <Show when="signed-in">
             <div
               className="my-2 h-px bg-[var(--color-border)]"
               aria-hidden="true"
@@ -96,7 +96,7 @@ export function SiteNavMobile() {
                 {link.label}
               </Link>
             ))}
-          </SignedIn>
+          </Show>
         </nav>
       ) : null}
     </div>

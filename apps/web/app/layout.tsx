@@ -164,7 +164,7 @@ export default async function RootLayout({
   const publishableKey =
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || BUILD_FALLBACK_CLERK_PK;
   return (
-    <ClerkProvider publishableKey={publishableKey} dynamic>
+    <ClerkProvider publishableKey={publishableKey} dynamic afterSignOutUrl="/">
       <html
         lang="en"
         suppressHydrationWarning
