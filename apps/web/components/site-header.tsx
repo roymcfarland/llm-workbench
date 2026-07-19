@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -32,12 +32,12 @@ export function SiteHeader() {
           <div className="shrink-0 [&_button]:size-8">
             <ThemeToggle />
           </div>
-          <SignedIn>
+          <Show when="signed-in">
             <div className="flex shrink-0">
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </div>
-          </SignedIn>
-          <SignedOut>
+          </Show>
+          <Show when="signed-out">
             <Button
               asChild
               variant="ghost"
@@ -48,7 +48,7 @@ export function SiteHeader() {
                 Sign in
               </Link>
             </Button>
-          </SignedOut>
+          </Show>
           <SiteNavMobile />
         </div>
 
@@ -62,7 +62,7 @@ export function SiteHeader() {
           <Button asChild variant="ghost" size="sm" className={navBtn}>
             <Link href="/blog">Blog</Link>
           </Button>
-          <SignedIn>
+          <Show when="signed-in">
             <Button asChild variant="ghost" size="sm" className={navBtn}>
               <Link href="/playground" prefetch={false}>
                 Playground
@@ -73,16 +73,16 @@ export function SiteHeader() {
                 Runs
               </Link>
             </Button>
-          </SignedIn>
+          </Show>
           <Button asChild variant="ghost" size="sm" className={navBtn}>
             <Link href="/faq">FAQ</Link>
           </Button>
-          <SignedIn>
+          <Show when="signed-in">
             <div className="flex shrink-0">
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </div>
-          </SignedIn>
-          <SignedOut>
+          </Show>
+          <Show when="signed-out">
             <Button asChild variant="ghost" size="sm" className={navBtn}>
               <Link href="/docs/protocol">Protocol</Link>
             </Button>
@@ -94,7 +94,7 @@ export function SiteHeader() {
                 Sign in
               </Link>
             </Button>
-          </SignedOut>
+          </Show>
         </nav>
       </div>
     </header>
