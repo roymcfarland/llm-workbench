@@ -6,10 +6,15 @@
 // rather than the network-driven provisioners — those are integration
 // concerns and would need recorded fixtures to test responsibly.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { parseArgs } from "./lib/args.mjs";
+import { readFile, writeFile } from "node:fs/promises";
+
+import { collectEnvVars, main } from "./bootstrap.mjs";
+import { helpText, parseArgs } from "./lib/args.mjs";
+import { provisionClerk } from "./lib/clerk.mjs";
 import { buildPlan, serializePlan } from "./lib/plan.mjs";
+import { provisionSupabase } from "./lib/supabase.mjs";
 import {
   extractTokens,
   listMissingTokens,
@@ -17,7 +22,12 @@ import {
   requiredTokenError,
   TOKEN_ENV_VARS,
 } from "./lib/tokens.mjs";
-import { collectEnvVars } from "./bootstrap.mjs";
+import { provisionVercel } from "./lib/vercel.mjs";
+
+vi.mock("node:fs/promises", () => ({ readFile: vi.fn(), writeFile: vi.fn() }));
+vi.mock("./lib/supabase.mjs", () => ({ provisionSupabase: vi.fn() }));
+vi.mock("./lib/clerk.mjs", () => ({ provisionClerk: vi.fn() }));
+vi.mock("./lib/vercel.mjs", () => ({ provisionVercel: vi.fn() }));
 
 const DETERMINISTIC_OPTS = {
   region: "us-east-1",
@@ -233,5 +243,195 @@ describe("parseArgs", () => {
 
   it("defaults to .bootstrap-plan.json", () => {
     expect(parseArgs([]).out).toBe(".bootstrap-plan.json");
+  });
+});
+
+describe("main", () => {
+  const VERCEL_RESULT = {
+    projectId: "prj_1",
+    projectName: "llm-workbench-web",
+    deploymentId: "dpl_1",
+    deploymentUrl: "https://dpl1.vercel.app",
+    productionUrl: "https://llmworkbench.io",
+  };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.resetAllMocks();
+  });
+
+  function captureWrites(stream) {
+    return vi.spyOn(stream, "write").mockImplementation(() => true);
+  }
+
+  function outputOf(spy) {
+    return spy.mock.calls.map(([chunk]) => String(chunk)).join("");
+  }
+
+  function expectNoBoundaryCalls() {
+    expect(readFile).not.toHaveBeenCalled();
+    expect(writeFile).not.toHaveBeenCalled();
+    expectNoProvisionerCalls();
+  }
+
+  function expectNoProvisionerCalls() {
+    expect(provisionSupabase).not.toHaveBeenCalled();
+    expect(provisionClerk).not.toHaveBeenCalled();
+    expect(provisionVercel).not.toHaveBeenCalled();
+  }
+
+  it("prints help without invoking external boundaries", async () => {
+    const stdout = captureWrites(process.stdout);
+
+    await expect(main(["--help"], {})).resolves.toBe(0);
+
+    expect(outputOf(stdout)).toBe(`${helpText()}\n`);
+    expectNoBoundaryCalls();
+  });
+
+  it("routes MCP=1 through the plan path", async () => {
+    const stdout = captureWrites(process.stdout);
+
+    await expect(main([], { MCP: "1" })).resolves.toBe(0);
+
+    const expectedOpts = { ...parseArgs([]), mcp: true };
+    expect(writeFile).toHaveBeenCalledOnce();
+    expect(writeFile).toHaveBeenCalledWith(
+      expect.stringMatching(/\.bootstrap-plan\.json$/),
+      serializePlan(buildPlan(expectedOpts)),
+    );
+    expect(outputOf(stdout)).toContain("--- agent prompt ---");
+    expect(outputOf(stdout)).toContain("--- end prompt ---");
+    expect(readFile).not.toHaveBeenCalled();
+    expectNoProvisionerCalls();
+  });
+
+  it("routes --mcp through the plan path", async () => {
+    const stdout = captureWrites(process.stdout);
+
+    await expect(main(["--mcp"], {})).resolves.toBe(0);
+
+    expect(writeFile).toHaveBeenCalledOnce();
+    expect(writeFile).toHaveBeenCalledWith(
+      expect.stringMatching(/\.bootstrap-plan\.json$/),
+      serializePlan(buildPlan(parseArgs(["--mcp"]))),
+    );
+    expect(outputOf(stdout)).toContain("--- agent prompt ---");
+    expect(outputOf(stdout)).toContain("--- end prompt ---");
+    expect(readFile).not.toHaveBeenCalled();
+    expectNoProvisionerCalls();
+  });
+
+  it("lets --force-token override MCP=1", async () => {
+    captureWrites(process.stdout);
+    captureWrites(process.stderr);
+    vi.mocked(provisionVercel).mockResolvedValue(VERCEL_RESULT);
+
+    await expect(
+      main(["--force-token"], { MCP: "1", VERCEL_TOKEN: "v_x" }),
+    ).resolves.toBe(0);
+
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(provisionVercel).toHaveBeenCalledOnce();
+  });
+
+  it("reports a fatal error when no tokens are present", async () => {
+    const stderr = captureWrites(process.stderr);
+    const exit = vi.spyOn(process, "exit").mockImplementation(() => undefined);
+
+    await expect(main([], {})).resolves.toBeUndefined();
+
+    expect(exit).toHaveBeenCalledWith(1);
+    expect(outputOf(stderr)).toContain("VERCEL_TOKEN");
+    expect(outputOf(stderr)).toContain("SUPABASE_ACCESS_TOKEN");
+    expect(outputOf(stderr)).toContain("CLERK_API_KEY");
+    expectNoProvisionerCalls();
+  });
+
+  it("provisions Vercel alone and prints skipped providers", async () => {
+    const stdout = captureWrites(process.stdout);
+    captureWrites(process.stderr);
+    vi.mocked(provisionVercel).mockResolvedValue(VERCEL_RESULT);
+
+    await expect(main([], { VERCEL_TOKEN: "v_x" })).resolves.toBe(0);
+
+    const opts = parseArgs([]);
+    expect(provisionSupabase).not.toHaveBeenCalled();
+    expect(provisionClerk).not.toHaveBeenCalled();
+    expect(provisionVercel).toHaveBeenCalledOnce();
+    expect(provisionVercel).toHaveBeenCalledWith({
+      token: "v_x",
+      options: opts,
+      envVars: collectEnvVars(opts, null, null),
+      log: expect.objectContaining({
+        info: expect.any(Function),
+        ok: expect.any(Function),
+        warn: expect.any(Function),
+      }),
+    });
+    expect(outputOf(stdout)).toContain("(skipped)");
+    expect(outputOf(stdout)).toContain("https://llmworkbench.io");
+  });
+
+  it("threads successful Supabase and Clerk results into Vercel", async () => {
+    const stdout = captureWrites(process.stdout);
+    const migrationSql = "create table runs (...);";
+    const supabaseResult = {
+      projectRef: "abc123",
+      projectUrl: "https://abc123.supabase.co",
+      serviceRoleKeyHint: "https://supabase.com/dashboard/project/abc123/settings/api",
+      advisors: null,
+    };
+    const clerkResult = {
+      applicationId: "app_1",
+      publishableKey: "pk_live_x",
+      secretKey: "sk_live_x",
+      manualFollowUp: null,
+    };
+    vi.mocked(readFile).mockResolvedValue(migrationSql);
+    vi.mocked(provisionSupabase).mockResolvedValue(supabaseResult);
+    vi.mocked(provisionClerk).mockResolvedValue(clerkResult);
+    vi.mocked(provisionVercel).mockResolvedValue(VERCEL_RESULT);
+
+    await expect(
+      main([], {
+        VERCEL_TOKEN: "v_x",
+        SUPABASE_ACCESS_TOKEN: "s_x",
+        CLERK_API_KEY: "c_x",
+      }),
+    ).resolves.toBe(0);
+
+    const opts = parseArgs([]);
+    expect(provisionSupabase).toHaveBeenCalledOnce();
+    expect(provisionSupabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: "s_x",
+        options: opts,
+        migrationSql,
+        log: expect.objectContaining({
+          info: expect.any(Function),
+          ok: expect.any(Function),
+        }),
+      }),
+    );
+    expect(provisionClerk).toHaveBeenCalledOnce();
+    expect(provisionVercel).toHaveBeenCalledOnce();
+    expect(provisionVercel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: "v_x",
+        options: opts,
+        envVars: collectEnvVars(opts, supabaseResult, clerkResult),
+      }),
+    );
+    expect(outputOf(stdout)).not.toContain("(skipped)");
+    expect(outputOf(stdout)).toContain("all three planes provisioned");
+    expect(outputOf(stdout)).not.toContain("One or more steps were skipped");
+  });
+
+  it("propagates provisioner rejections", async () => {
+    captureWrites(process.stderr);
+    vi.mocked(provisionVercel).mockRejectedValue(new Error("boom"));
+
+    await expect(main([], { VERCEL_TOKEN: "v_x" })).rejects.toThrow("boom");
   });
 });
