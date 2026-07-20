@@ -36,7 +36,9 @@ import {
   serializedToState,
 } from "@/lib/supabase/runs-store";
 import { initialRuleSet, jobSearchWorkflow } from "@/lib/workflow/job-search";
-import { POST } from "./route";
+import { DELETE, GET, POST } from "./route";
+
+const MAX_MCP_BODY_BYTES = 2 * 1024 * 1024;
 
 const mockRequireTenant = vi.mocked(requireTenant);
 const mockLoadRunForTenant = vi.mocked(loadRunForTenant);
@@ -58,6 +60,28 @@ function postBody(body: unknown): Request {
       accept: "application/json, text/event-stream",
     },
     body: JSON.stringify(body),
+  });
+}
+
+function rawPostBody(
+  body: string,
+  extraHeaders: Record<string, string> = {},
+): Request {
+  return new Request("http://localhost/api/mcp", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json, text/event-stream",
+      ...extraHeaders,
+    },
+    body,
+  });
+}
+
+function nonPostRequest(method: "GET" | "DELETE"): Request {
+  return new Request("http://localhost/api/mcp", {
+    method,
+    headers: { accept: "application/json, text/event-stream" },
   });
 }
 
@@ -386,5 +410,130 @@ describe("POST /api/mcp — tool handlers", () => {
       expect(body.result.isError).toBe(true);
       expect(body.result.content[0]?.text).toContain("bundle load failed");
     });
+  });
+});
+
+describe("/api/mcp — transport verbs and error paths", () => {
+  beforeEach(() => {
+    mockRequireTenant.mockReset();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("routes authenticated GET requests through the stateless transport", async () => {
+    mockRequireTenant.mockResolvedValueOnce({
+      userId: "user_test",
+      tenantId: "user:user_test",
+    });
+
+    const res = await GET(nonPostRequest("GET"));
+
+    expect(res).toBeInstanceOf(Response);
+    expect(res.status).toBe(200);
+  });
+
+  it("routes unauthenticated GET requests through the stateless transport", async () => {
+    mockRequireTenant.mockRejectedValueOnce(new TenantAuthError());
+
+    const res = await GET(nonPostRequest("GET"));
+
+    expect(res).toBeInstanceOf(Response);
+    expect(res.status).toBe(200);
+  });
+
+  it("routes authenticated DELETE requests through the stateless transport", async () => {
+    mockRequireTenant.mockResolvedValueOnce({
+      userId: "user_test",
+      tenantId: "user:user_test",
+    });
+
+    const res = await DELETE(nonPostRequest("DELETE"));
+
+    expect(res).toBeInstanceOf(Response);
+    expect(res.status).toBe(200);
+  });
+
+  it("routes unauthenticated DELETE requests through the stateless transport", async () => {
+    mockRequireTenant.mockRejectedValueOnce(new TenantAuthError());
+
+    const res = await DELETE(nonPostRequest("DELETE"));
+
+    expect(res).toBeInstanceOf(Response);
+    expect(res.status).toBe(200);
+  });
+
+  it("returns 500 when GET encounters an unexpected auth error", async () => {
+    mockRequireTenant.mockRejectedValueOnce(
+      new Error("auth backend unreachable"),
+    );
+
+    const res = await GET(nonPostRequest("GET"));
+
+    expect(res.status).toBe(500);
+    await expect(res.json()).resolves.toEqual({
+      error: expect.stringContaining("auth backend unreachable"),
+    });
+  });
+
+  it("returns 500 when POST encounters an unexpected auth error", async () => {
+    mockRequireTenant.mockRejectedValueOnce(
+      new Error("auth backend unreachable"),
+    );
+
+    const res = await POST(toolCallBody("list_runs", {}));
+
+    expect(res.status).toBe(500);
+    await expect(res.json()).resolves.toEqual({
+      error: expect.stringContaining("auth backend unreachable"),
+    });
+  });
+
+  it("returns 500 when DELETE encounters an unexpected auth error", async () => {
+    mockRequireTenant.mockRejectedValueOnce(
+      new Error("auth backend unreachable"),
+    );
+
+    const res = await DELETE(nonPostRequest("DELETE"));
+
+    expect(res.status).toBe(500);
+    await expect(res.json()).resolves.toEqual({
+      error: expect.stringContaining("auth backend unreachable"),
+    });
+  });
+
+  it("rejects an oversized content-length before auth resolution", async () => {
+    const res = await POST(
+      rawPostBody("{}", {
+        "content-length": String(MAX_MCP_BODY_BYTES + 1),
+      }),
+    );
+
+    expect(res.status).toBe(413);
+    await expect(res.json()).resolves.toEqual({ error: "Payload too large" });
+    expect(mockRequireTenant).not.toHaveBeenCalled();
+  });
+
+  it("rejects an oversized body when content-length is absent", async () => {
+    const req = rawPostBody("x".repeat(MAX_MCP_BODY_BYTES + 1));
+    expect(req.headers.get("content-length")).toBeNull();
+
+    const res = await POST(req);
+
+    expect(res.status).toBe(413);
+    await expect(res.json()).resolves.toEqual({ error: "Payload too large" });
+  });
+
+  it("resolves auth for a non-array, non-object JSON-RPC body", async () => {
+    mockRequireTenant.mockResolvedValueOnce({
+      userId: "user_test",
+      tenantId: "user:user_test",
+    });
+
+    const res = await POST(postBody(42));
+
+    expect(res).toBeInstanceOf(Response);
+    expect(mockRequireTenant).toHaveBeenCalledOnce();
   });
 });
