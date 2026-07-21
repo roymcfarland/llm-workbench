@@ -66,7 +66,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^5.2.0",
     "@vitest/coverage-v8": "^4.1.5",
-    "eslint": "^9.39.4",
+    "eslint": "^10.7.0",
     "eslint-config-next": "^16.2.10",
     "lighthouse": "^13.4.0",
     "postcss": "^8.5.19",
