@@ -8,35 +8,61 @@
   //      copy (`esm/vs/base/browser/dompurify/dompurify.js`) and imports THAT,
   //      not the npm package. The npm `dompurify` is never executed; there is no
   //      reachable vulnerability and nothing to fix. The advisory DB mints new
-  //      DOMPurify bypass advisories continuously (8 -> 16 in days), so a per-GHSA
-  //      allowlist is an unwinnable treadmill.
-  //   2. NO CLEAN FIX — transitive advisories whose only remedy is a breaking
-  //      upgrade of a parent we don't control (see the accepted list below).
+  //      DOMPurify bypass advisories continuously (8 -> 16 in days, 17 as of
+  //      2026-07-27), so a per-GHSA allowlist is an unwinnable treadmill.
+  //   2. NOT WORTH THE FIX — transitive advisories that a root `overrides` entry
+  //      COULD reach, but only by forcing a major version into a parent that
+  //      pins an exact older one. Root overrides DO reach nested transitives of
+  //      workspace dependencies (proven 2026-07-27, PR #150 -- an earlier note
+  //      here claiming otherwise was wrong), so "no fix exists" is almost never
+  //      the real reason. State the actual cost/benefit instead.
+  //   3. UNREACHABLE — the vulnerable code path is not imported by anything this
+  //      repo actually uses (see @hono/node-server below).
   //
   // Gating on all severities produced constant red CI that blocked unrelated PRs
   // and trains force-merging -- a worse security posture than green CI that fails
   // only on what is actually severe and actionable. High/critical advisories are
   // rare, warrant breaking the build, and are usually fixable. Current tree:
-  // 0 high package findings, 0 critical, and no allowlist entries. Run
-  // `npm audit` to review the full moderate/low set.
+  // 0 high package findings, 0 critical, and no allowlist entries. Every
+  // remaining moderate traces to one of the three entries enumerated below
+  // (dompurify, @opentelemetry/core, @hono/node-server); run `npm audit` to
+  // review them.
   //
   // KNOWN ACCEPTED moderate/low advisories (informational; below the gate, so not
   // listed as allowlist entries -- re-triage on major dependency upgrades):
-  //   - dompurify (via monaco-editor): PHANTOM, see above. No fix possible/needed.
-  //   - @opentelemetry/core and ~13 sibling @opentelemetry/instrumentation-*
-  //     advisories (via @sentry/node, lighthouse): dev-only -- lighthouse is used
-  //     solely by the `lighthouse:smoke` script, never shipped to production.
-  //     lighthouse vendors its OWN pinned `@sentry/node@9.x` internally, separate
-  //     from this repo's real `@sentry/nextjs`/`@sentry/node@10.65.0` integration
-  //     (already upgraded, already clean). Confirmed (2026-07) that bumping
-  //     lighthouse to its current latest (13.4.0) does NOT clear this -- the
-  //     vulnerable @sentry/node stays pinned inside lighthouse's own dependency
-  //     tree regardless of lighthouse's own version. No fix exists until
-  //     lighthouse's maintainers update that internal pin themselves.
-  //     REVISIT next time lighthouse is bumped -- re-check `npm ls @sentry/node
-  //     --all` for whether `node_modules/lighthouse/node_modules/@sentry/node`
-  //     has moved past 10.53.1.
-  //   - @ai-sdk/provider-utils (via ai): GHSA-866g-f22w-33x8 (low). REVISIT on the ai@6 migration.
+  //   - dompurify (via monaco-editor): PHANTOM, see above. 17 distinct GHSAs as
+  //     of 2026-07-27. No fix possible/needed.
+  //   - @opentelemetry/core: GHSA-8988-4f7v-96qf (`<2.8.0`). ONE advisory, not the
+  //     ~13 an earlier version of this note claimed -- it surfaces as ~14 package
+  //     findings only because npm lists every affected parent. NOT WORTH THE FIX,
+  //     class 2 above, re-verified 2026-07-27:
+  //       * Dev-only. All 12 vulnerable copies resolve to `@opentelemetry/core@1.30.1`
+  //         under lighthouse@13.4.0 -> @sentry/node@9.47.1 -> @opentelemetry/
+  //         instrumentation-*@0.57.2. lighthouse is an apps/web devDependency used
+  //         solely by `lighthouse:smoke`, never shipped. This repo's REAL Sentry
+  //         integration (@sentry/nextjs@10.65.0 -> @sentry/node@10.65.0) already
+  //         resolves @opentelemetry/core@2.9.0 and is clean.
+  //       * A root override WOULD reach these copies. It is deliberately not taken:
+  //         the instrumentation packages depend on `"@opentelemetry/core": "1.30.1"`
+  //         as an EXACT pin, so clearing the advisory means forcing otel core v1 -> v2
+  //         across all of them. That is a far bigger jump than the postcss/sharp
+  //         overrides in PR #150, buys one dev-only moderate, and `lighthouse:smoke`
+  //         is in NO workflow -- so a break would not fail CI, it would surface
+  //         whenever someone next ran the script by hand.
+  //       * REVISIT when lighthouse ships a @sentry/node past 9.47.1 whose
+  //         instrumentation packages want otel core >=2.8.0. Check with:
+  //         `npm ls @opentelemetry/core --all` -- the fix has landed when no copy
+  //         below 2.8.0 remains. (Bumping lighthouse alone did NOT help as of 13.4.0.)
+  //   - @hono/node-server: GHSA-frvp-7c67-39w9 (`<2.0.5`, path traversal in
+  //     `serve-static`). UNREACHABLE, class 3 above, verified 2026-07-27. Reached via
+  //     packages/mcp -> @modelcontextprotocol/sdk@1.29.0 -> @hono/node-server@1.19.14.
+  //     Only the SDK's Node-specific `server/streamableHttp.js` transport imports
+  //     @hono/node-server; `packages/mcp/src/http.ts` imports
+  //     `server/webStandardStreamableHttp.js`, which contains ZERO hono references.
+  //     The vulnerable serve-static path is never loaded. Fixing would force a major
+  //     (>=2.0.5) against the SDK's declared `^1.19.9`. REVISIT if packages/mcp ever
+  //     switches to the Node `streamableHttp` transport, or when the SDK widens its
+  //     range -- re-check with `grep -rl "@hono/node-server"` against the installed SDK.
   //
   // If a HIGH/critical advisory ever lands that is itself phantom/unfixable,
   // allowlist that ONE advisory here by GHSA id with a dated reason -- a rare,

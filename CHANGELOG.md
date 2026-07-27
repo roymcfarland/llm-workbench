@@ -16,6 +16,35 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`audit-ci.jsonc`'s accepted-advisory rationale corrected against the live
+  tree.** Documentation only — no dependency, config, or gate change. Four
+  inaccuracies: the `@opentelemetry/core` entry claimed "~13 sibling advisories"
+  when it is one advisory (`GHSA-8988-4f7v-96qf`) surfacing as ~14 package
+  findings, and claimed "no fix exists until lighthouse's maintainers update
+  that internal pin" — PR #150 disproved that reasoning, so it now records the
+  real cost/benefit (a root override reaches the copies, but the instrumentation
+  packages pin `@opentelemetry/core` at an exact `1.30.1`, so clearing it forces
+  otel core v1→v2 for one dev-only moderate, and `lighthouse:smoke` is in no
+  workflow so a break would not fail CI). `@ai-sdk/provider-utils`
+  (`GHSA-866g-f22w-33x8`) was listed as accepted but no longer appears in the
+  audit at all. `@hono/node-server` (`GHSA-frvp-7c67-39w9`) was undocumented and
+  is now recorded as unreachable: only the MCP SDK's Node-specific
+  `server/streamableHttp.js` imports it, while `packages/mcp/src/http.ts` uses
+  `server/webStandardStreamableHttp.js`, which has zero hono references. The
+  "NO CLEAN FIX" class was renamed "NOT WORTH THE FIX" to stop the file
+  asserting impossibility where the truth is a deliberate trade-off.
+- **`scripts` coverage flag now measures only `scripts/`.** Its Vitest coverage
+  `include` was a bare `**/*.mjs`, and because `test:scripts` runs from the repo
+  root that glob resolved repo-wide — sweeping 12 unrelated files into the flag
+  (`apps/web/scripts/*.mjs`, `examples/run-repo-server/server.mjs`,
+  `packages/ui/scripts/copy-theme.mjs`, and root/`apps/web` config files) and
+  attributing them to `scripts` at 0%. Scoping the glob to `scripts/**/*.mjs`
+  drops those 213 foreign lines, so the flag reports 303/551 (54.99%) instead of
+  305/764 (39.92%). No test changed and no coverage was lost — the same suite is
+  now measured against the sources it actually exercises. This also removes the
+  spurious `codecov/patch` failures seen on PRs that touch a config file the
+  glob had been silently instrumenting (e.g. #152's `apps/web/eslint.config.mjs`
+  at 0/1 lines).
 - Blog-autopublish passes the generated post title and file path into the
   publish step's shell via `env:` instead of inline `${{ }}` interpolation.
   GitHub Actions expands expressions before bash parses the script, so the
