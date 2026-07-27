@@ -17,7 +17,9 @@
   // and trains force-merging -- a worse security posture than green CI that fails
   // only on what is actually severe and actionable. High/critical advisories are
   // rare, warrant breaking the build, and are usually fixable. Current tree:
-  // 0 high, 0 critical. Run `npm audit` to review the full moderate/low set.
+  // 13 high package findings, 0 critical, arising from four GHSA advisories; all
+  // four high advisories are documented exceptions below. Run `npm audit` to
+  // review the full moderate/low set.
   //
   // KNOWN ACCEPTED moderate/low advisories (informational; below the gate, so not
   // listed as allowlist entries -- re-triage on major dependency upgrades):
@@ -42,5 +44,27 @@
   // allowlist that ONE advisory here by GHSA id with a dated reason -- a rare,
   // deliberate exception, not a standing treadmill.
   "high": true,
-  "allowlist": []
+  "allowlist": [
+    // 2026-07-27 — brace-expansion via minimatch@3 in ESLint 9 tooling. The patched
+    // v5 export is an object, but minimatch@3 requires a directly callable function;
+    // forcing v5 into that chain makes every lint command fail with `expand is not a
+    // function`. npm reports ESLint 10 as the available fix, which is an explicitly
+    // deferred major upgrade. This path processes first-party lint globs only and is
+    // not runtime-reachable. REVISIT with the ESLint 10 / eslint-config-next upgrade.
+    "GHSA-mh99-v99m-4gvg",
+    // 2026-07-27 — postcss via next. next@16.2.12 hard-pins `postcss: "8.4.31"` as an
+    // EXACT dependency, and npm honors `overrides` only from the root project, which
+    // does not propagate into the apps/web workspace's transitives. Both advisories
+    // require attacker-controlled CSS or source-map input; postcss here runs at BUILD
+    // time over this repo's own first-party stylesheets. REVISIT on the next Next.js
+    // upgrade — check `npm view next@<new> dependencies` for the postcss pin.
+    "GHSA-6g55-p6wh-862q",
+    "GHSA-r28c-9q8g-f849",
+    // 2026-07-27 — sharp via next. Declared by next as an OPTIONAL dependency at
+    // `^0.34.5`, used only by Next's Image Optimization API. apps/web has zero
+    // `next/image` imports and no `images:`/`remotePatterns` config, so sharp is never
+    // loaded — the libvips CVEs are unreachable in this deployment. REVISIT if this app
+    // ever adopts next/image, which would make this immediately actionable.
+    "GHSA-f88m-g3jw-g9cj"
+  ]
 }

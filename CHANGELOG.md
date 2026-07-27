@@ -41,6 +41,19 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Cleared the fixable high-severity advisories blocking the CI audit gate.**
+  Bumped `next` from 16.2.10 to 16.2.12 (and aligned `eslint-config-next`),
+  clearing four high and five moderate advisories covering App Router
+  middleware/proxy bypass, Server Actions and rewrites SSRF, and Server Actions
+  DoS. Root overrides now resolve `brace-expansion` to 5.0.8 across compatible
+  modern dev-tooling chains and `fast-uri` to 3.1.4 through runtime's `ajv`;
+  ESLint 9's `minimatch@3` retains its compatible brace-expansion 1.x API.
+  Four high advisories remain explicitly allowlisted with dated revisit
+  conditions: that dev-only brace-expansion advisory pending the deferred
+  ESLint 10 upgrade, two in the `postcss@8.4.31` version pinned exactly by
+  Next.js, which processes only first-party CSS at build time, and one in
+  Next.js's optional `sharp@0.34.5`, which is unreachable because the app uses
+  neither `next/image` nor an images configuration.
 - **Bumped `@sentry/nextjs` from 10.50 to 10.58.** Clears the
   `@sentry/node` plus `@opentelemetry/*` moderate advisory cascade (about 17
   advisories) without a major upgrade. Deferred, documented moderate/low
