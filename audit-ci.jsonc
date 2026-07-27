@@ -17,9 +17,8 @@
   // and trains force-merging -- a worse security posture than green CI that fails
   // only on what is actually severe and actionable. High/critical advisories are
   // rare, warrant breaking the build, and are usually fixable. Current tree:
-  // 10 high package findings, 0 critical, arising from one GHSA advisory; that
-  // high advisory is a documented exception below. Run `npm audit` to
-  // review the full moderate/low set.
+  // 0 high package findings, 0 critical, and no allowlist entries. Run
+  // `npm audit` to review the full moderate/low set.
   //
   // KNOWN ACCEPTED moderate/low advisories (informational; below the gate, so not
   // listed as allowlist entries -- re-triage on major dependency upgrades):
@@ -43,13 +42,5 @@
   // allowlist that ONE advisory here by GHSA id with a dated reason -- a rare,
   // deliberate exception, not a standing treadmill.
   "high": true,
-  "allowlist": [
-    // 2026-07-27 — brace-expansion via minimatch@3 in ESLint 9 tooling. The patched
-    // v5 export is an object, but minimatch@3 requires a directly callable function;
-    // forcing v5 into that chain makes every lint command fail with `expand is not a
-    // function`. npm reports ESLint 10 as the available fix, which is an explicitly
-    // deferred major upgrade. This path processes first-party lint globs only and is
-    // not runtime-reachable. REVISIT with the ESLint 10 / eslint-config-next upgrade.
-    "GHSA-mh99-v99m-4gvg"
-  ]
+  "allowlist": []
 }

@@ -41,6 +41,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Retired the final high-severity audit allowlist entry.** A root
+  `minimatch@^10.2.5` override moves ESLint and all three current
+  `eslint-config-next` plugin chains off `minimatch@3`, clearing
+  `GHSA-mh99-v99m-4gvg`. The allowlist is now empty; the
+  `brace-expansion@^5.0.8` override remains as an explicit security floor.
 - **Verified root overrides against Next.js's pinned transitives and fixed four
   advisories.** A clean resolution moved Next.js's exact `postcss@8.4.31` pin
   to the deduplicated root `postcss@8.5.23` and its optional sharp dependency
@@ -77,6 +82,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Upgraded ESLint from 9 to 10 in the root and web workspaces.** The web flat
+  config now supplies the installed React version instead of using the legacy
+  plugin auto-detection API and uses the existing `typescript-eslint` parser
+  for JS/MJS/MTS-family files that Next's bundled parser cannot yet parse under
+  ESLint 10. No lint rules were disabled and no source changes were required.
 - **`WorkbenchShell.tsx` split under the 500-line soft cap.** Extracted the
   trace list into `WorkbenchTrace` and rule-row/reorder helpers into
   `WorkbenchRules`, keeping public UI exports and runtime behavior unchanged.
