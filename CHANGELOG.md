@@ -16,6 +16,18 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`@opentelemetry/core` advisory `GHSA-8988-4f7v-96qf` resolved upstream; its
+  accepted-advisory entry removed.** `lighthouse@13.4.1` (via the #153 group
+  bump) dropped its bundled `@sentry/node` entirely, which removed all 11
+  `@opentelemetry/instrumentation-*` packages and all 12 nested
+  `@opentelemetry/core@1.30.1` copies. A single hoisted `@opentelemetry/core@2.10.0`
+  remains, from this repo's own `@sentry/nextjs`. Moderate-affected packages drop
+  from 21 to 3 (`dompurify`, `monaco-editor`, `@hono/node-server`). The entry
+  added one PR earlier had predicted this needed a lighthouse release carrying a
+  newer `@sentry/node` and noted 13.4.0 did not help — the next patch did, and
+  the entry's runnable `REVISIT` check caught it. Also corrected an
+  inconsistency introduced with that entry: the header said "two unactionable
+  classes" while listing three.
 - **`audit-ci.jsonc`'s accepted-advisory rationale corrected against the live
   tree.** Documentation only — no dependency, config, or gate change. Four
   inaccuracies: the `@opentelemetry/core` entry claimed "~13 sibling advisories"
