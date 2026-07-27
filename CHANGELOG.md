@@ -123,6 +123,25 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Grouped minor/patch dependency bump across 22 packages.** All within their
+  current major, no API surface changes: `react`/`react-dom` 19.2.7 → 19.2.8,
+  `@sentry/nextjs` 10.65.0 → 10.68.0, `@clerk/nextjs` 7.5.20 → 7.6.1,
+  `@supabase/supabase-js` → 2.110.9, `ai` 7.0.31 → 7.0.37,
+  `@modelcontextprotocol/sdk` 1.29.0 → 1.30.0, `typescript-eslint` → 8.65.0,
+  `vite` → 8.1.5, `@playwright/test` → 1.62.0, `lighthouse` 13.4.0 → 13.4.1,
+  `@tailwindcss/postcss` → 4.3.3, six `@radix-ui/*` packages, plus
+  `lucide-react`, `resend`, `react-virtuoso`, and `@changesets/cli`. The
+  `lighthouse` bump incidentally resolved an accepted advisory — see the
+  `@opentelemetry/core` entry under Fixed.
+- **Upgraded `tailwind-merge` from 2 to 3 to match Tailwind CSS v4.** The pinned
+  2.6.1 documents support for "Tailwind v3.0 up to v3.4" only, while this app
+  runs Tailwind v4 — tailwind-merge 3.0.0 shipped as the v4 companion nine days
+  after `tailwindcss@4.0.0`. Preventive rather than corrective: the rendered
+  `class` attributes on `/`, `/faq`, and `/docs/protocol` were compared between
+  the preview deployment and production and are byte-identical (757 attributes,
+  zero differences), so `cn()` output is unchanged today. The alignment matters
+  as the app adopts more v4-specific utilities, which a v3-era class map would
+  eventually merge incorrectly. `packages/*` do not use tailwind-merge.
 - **Upgraded ESLint from 9 to 10 in the root and web workspaces.** The web flat
   config now supplies the installed React version instead of using the legacy
   plugin auto-detection API and uses the existing `typescript-eslint` parser
