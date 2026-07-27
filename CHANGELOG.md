@@ -41,6 +41,17 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Verified root overrides against Next.js's pinned transitives and fixed four
+  advisories.** A clean resolution moved Next.js's exact `postcss@8.4.31` pin
+  to the deduplicated root `postcss@8.5.23` and its optional sharp dependency
+  to `sharp@0.35.3`, fixing `GHSA-6g55-p6wh-862q`,
+  `GHSA-r28c-9q8g-f849`, `GHSA-qx2v-qp2m-jg93`, and
+  `GHSA-f88m-g3jw-g9cj`. The earlier claim that root overrides do not
+  propagate into workspace transitives was inaccurate: these dependencies
+  remained vulnerable because no postcss or sharp override had been attempted,
+  not because the root override mechanism could not reach them. One high
+  advisory remains allowlisted: `GHSA-mh99-v99m-4gvg` in the ESLint 9 tooling
+  chain, pending the deferred ESLint 10 upgrade.
 - **Cleared the fixable high-severity advisories blocking the CI audit gate.**
   Bumped `next` from 16.2.10 to 16.2.12 (and aligned `eslint-config-next`),
   clearing four high and five moderate advisories covering App Router
