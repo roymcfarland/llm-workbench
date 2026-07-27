@@ -16,6 +16,18 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`scripts` coverage flag now measures only `scripts/`.** Its Vitest coverage
+  `include` was a bare `**/*.mjs`, and because `test:scripts` runs from the repo
+  root that glob resolved repo-wide — sweeping 12 unrelated files into the flag
+  (`apps/web/scripts/*.mjs`, `examples/run-repo-server/server.mjs`,
+  `packages/ui/scripts/copy-theme.mjs`, and root/`apps/web` config files) and
+  attributing them to `scripts` at 0%. Scoping the glob to `scripts/**/*.mjs`
+  drops those 213 foreign lines, so the flag reports 303/551 (54.99%) instead of
+  305/764 (39.92%). No test changed and no coverage was lost — the same suite is
+  now measured against the sources it actually exercises. This also removes the
+  spurious `codecov/patch` failures seen on PRs that touch a config file the
+  glob had been silently instrumenting (e.g. #152's `apps/web/eslint.config.mjs`
+  at 0/1 lines).
 - Blog-autopublish passes the generated post title and file path into the
   publish step's shell via `env:` instead of inline `${{ }}` interpolation.
   GitHub Actions expands expressions before bash parses the script, so the
