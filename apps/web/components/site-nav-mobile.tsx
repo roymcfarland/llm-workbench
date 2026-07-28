@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Show } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,11 @@ const signedInLinks = [
 const linkClass =
   "block rounded-md px-3 py-2 text-sm font-medium transition hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-foreground)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-ring)]";
 
-export function SiteNavMobile() {
+type SiteNavMobileProps = {
+  isSignedIn: boolean;
+};
+
+export function SiteNavMobile({ isSignedIn }: SiteNavMobileProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -80,23 +83,25 @@ export function SiteNavMobile() {
               {link.label}
             </Link>
           ))}
-          <Show when="signed-in">
-            <div
-              className="my-2 h-px bg-[var(--color-border)]"
-              aria-hidden="true"
-            />
-            {signedInLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                prefetch={link.prefetch}
-                className={cn(linkClass, "font-mono text-xs")}
-                onClick={() => setOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </Show>
+          {isSignedIn && (
+            <>
+              <div
+                className="my-2 h-px bg-[var(--color-border)]"
+                aria-hidden="true"
+              />
+              {signedInLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  prefetch={link.prefetch}
+                  className={cn(linkClass, "font-mono text-xs")}
+                  onClick={() => setOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </>
+          )}
         </nav>
       ) : null}
     </div>

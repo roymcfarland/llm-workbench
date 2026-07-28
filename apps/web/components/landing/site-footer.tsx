@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 
 import { PlaygroundMarketingLink } from "@/components/playground-marketing-link";
 import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
@@ -17,7 +18,9 @@ import {
 const socialIconLink =
   "inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--color-muted-foreground)] transition hover:text-[var(--color-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]";
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const { userId } = await auth();
+
   return (
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-background)]/60">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-12 md:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)_minmax(0,1fr)]">
@@ -116,7 +119,10 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <PlaygroundMarketingLink className="hover:underline" />
+              <PlaygroundMarketingLink
+                isSignedIn={Boolean(userId)}
+                className="hover:underline"
+              />
             </li>
             <li>
               <a
