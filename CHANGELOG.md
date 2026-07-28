@@ -8,6 +8,19 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **CodeQL static analysis (`.github/workflows/codeql.yml`).** Closes the one gap
+  the existing security gates leave: `audit:check` covers dependency advisories
+  and `gitleaks` covers committed secrets, but nothing analyzed first-party code
+  for injection, path traversal, or unsafe data flow. Scans two languages —
+  `javascript-typescript` across the workspaces, and `actions` for the workflow
+  files themselves. The latter is deliberate: the 2026-07-06 blog-autopublish
+  failure was a GitHub Actions expression-injection bug (a generated title
+  containing `$149.25` expanded into the publish step's shell), which is
+  precisely what the `actions` queries flag. Runs on PRs, pushes to `main`, and
+  weekly so new queries reach existing code. Uses the default security-focused
+  suite rather than `security-and-quality`, and is deliberately not a required
+  check yet — both choices follow the same anti-noise principle recorded in
+  `audit-ci.jsonc`: establish a clean baseline first, then tighten.
 - Documented the production Clerk setup for GitHub and Vercel social sign-in and
   email verification-code login in `apps/web/DEPLOY.md` (no code or env changes —
   the prebuilt Clerk components render whatever is enabled in the dashboard).
