@@ -29,6 +29,16 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Reduced-motion visitors no longer download the three.js hero bundle.**
+  Production measured Performance ~45, LCP 6.3s (6.9 / 6.3 / 6.3), a 1,719ms
+  render delay on the text LCP element, and a 329KB transferred / 1,065KB raw
+  R3F chunk. The hero slot now decides after hydration and loads `CosmosField`
+  directly for `prefers-reduced-motion: reduce`; DevTools emulation recorded
+  zero three.js requests, with the existing `landing-mesh` covering the
+  decision. An idle-deferral experiment for other visitors was dropped: preview
+  LCP was 7.23 / 7.36 / 7.99s (7.36s median), 1.06s slower than the 6.3s
+  production median, so non-reduced visitors continue loading the animated hero
+  without idle deferral.
 - **Anonymous marketing pages no longer mount Clerk.** The production baseline
   was Performance 45, LCP 9.4s, TBT 1,630ms, and about 350KB of Clerk UI despite
   rendering no Clerk components for signed-out visitors. The root provider now
