@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Show, UserButton } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,10 @@ import { SiteNavMobile } from "@/components/site-nav-mobile";
 
 const navBtn = "h-9 shrink-0 whitespace-nowrap px-2 text-xs md:px-3";
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const { userId } = await auth();
+  const isSignedIn = Boolean(userId);
+
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-background)]/75 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--color-background)]/65">
       <div className="mx-auto grid h-14 w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 sm:gap-4 sm:px-6">
@@ -32,12 +36,12 @@ export function SiteHeader() {
           <div className="shrink-0 [&_button]:size-8">
             <ThemeToggle />
           </div>
-          <Show when="signed-in">
+          {isSignedIn && (
             <div className="flex shrink-0">
               <UserButton />
             </div>
-          </Show>
-          <Show when="signed-out">
+          )}
+          {!isSignedIn && (
             <Button
               asChild
               variant="ghost"
@@ -48,8 +52,8 @@ export function SiteHeader() {
                 Sign in
               </Link>
             </Button>
-          </Show>
-          <SiteNavMobile />
+          )}
+          <SiteNavMobile isSignedIn={isSignedIn} />
         </div>
 
         <nav
@@ -62,39 +66,43 @@ export function SiteHeader() {
           <Button asChild variant="ghost" size="sm" className={navBtn}>
             <Link href="/blog">Blog</Link>
           </Button>
-          <Show when="signed-in">
-            <Button asChild variant="ghost" size="sm" className={navBtn}>
-              <Link href="/playground" prefetch={false}>
-                Playground
-              </Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm" className={navBtn}>
-              <Link href="/runs" prefetch={false}>
-                Runs
-              </Link>
-            </Button>
-          </Show>
+          {isSignedIn && (
+            <>
+              <Button asChild variant="ghost" size="sm" className={navBtn}>
+                <Link href="/playground" prefetch={false}>
+                  Playground
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className={navBtn}>
+                <Link href="/runs" prefetch={false}>
+                  Runs
+                </Link>
+              </Button>
+            </>
+          )}
           <Button asChild variant="ghost" size="sm" className={navBtn}>
             <Link href="/faq">FAQ</Link>
           </Button>
-          <Show when="signed-in">
+          {isSignedIn && (
             <div className="flex shrink-0">
               <UserButton />
             </div>
-          </Show>
-          <Show when="signed-out">
-            <Button asChild variant="ghost" size="sm" className={navBtn}>
-              <Link href="/docs/protocol">Protocol</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm" className={navBtn}>
-              <Link href="/runs/demo">Demo</Link>
-            </Button>
-            <Button asChild size="sm" className={navBtn}>
-              <Link href="/sign-in" prefetch={false}>
-                Sign in
-              </Link>
-            </Button>
-          </Show>
+          )}
+          {!isSignedIn && (
+            <>
+              <Button asChild variant="ghost" size="sm" className={navBtn}>
+                <Link href="/docs/protocol">Protocol</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className={navBtn}>
+                <Link href="/runs/demo">Demo</Link>
+              </Button>
+              <Button asChild size="sm" className={navBtn}>
+                <Link href="/sign-in" prefetch={false}>
+                  Sign in
+                </Link>
+              </Button>
+            </>
+          )}
         </nav>
       </div>
     </header>

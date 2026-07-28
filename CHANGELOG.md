@@ -27,6 +27,17 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Page-specific OG/Twitter cards for `/faq` and `/docs/protocol` reuse the
   branded index markup, so those pages no longer fall back to the root card.
 
+### Changed
+
+- **Anonymous marketing pages no longer mount Clerk.** The production baseline
+  was Performance 45, LCP 9.4s, TBT 1,630ms, and about 350KB of Clerk UI despite
+  rendering no Clerk components for signed-out visitors. The root provider now
+  mounts only for authenticated sessions, while a separate auth route group
+  provides Clerk to signed-out sign-in and sign-up flows. The signed-in
+  experience, including the interactive `UserButton`, is unchanged. Making
+  marketing responses CDN-cacheable remains separately deferred because it
+  requires changes to Clerk middleware and the per-request CSP nonce.
+
 ### Fixed
 
 - **`@opentelemetry/core` advisory `GHSA-8988-4f7v-96qf` resolved upstream; its

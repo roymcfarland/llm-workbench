@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
@@ -11,7 +12,9 @@ type LandingFinalCtaProps = {
   runsCount: number | null;
 };
 
-export function LandingFinalCta({ runsCount }: LandingFinalCtaProps) {
+export async function LandingFinalCta({ runsCount }: LandingFinalCtaProps) {
+  const { userId } = await auth();
+
   return (
     <section
       aria-labelledby="cta-heading"
@@ -44,7 +47,7 @@ export function LandingFinalCta({ runsCount }: LandingFinalCtaProps) {
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="shadow-lg shadow-cyan-500/10">
-              <PlaygroundMarketingLink>
+              <PlaygroundMarketingLink isSignedIn={Boolean(userId)}>
                 Open the playground
                 <ArrowRight className="ml-1 h-4 w-4" aria-hidden />
               </PlaygroundMarketingLink>

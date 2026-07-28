@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { ArrowRight, BookOpen } from "lucide-react";
 
 import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
@@ -54,10 +55,12 @@ export const metadata: Metadata = {
 };
 
 export default async function LandingPage() {
-  const [runsCount, origin] = await Promise.all([
+  const [{ userId }, runsCount, origin] = await Promise.all([
+    auth(),
     getTotalRunsCount(),
     siteOrigin(),
   ]);
+  const isSignedIn = Boolean(userId);
 
   const jsonLd = buildJsonLd({ origin, runsCount });
 
@@ -128,7 +131,7 @@ export default async function LandingPage() {
                 style={{ animationDelay: "0.22s" }}
               >
                 <Button asChild size="lg" className="shadow-lg shadow-cyan-500/10">
-                  <PlaygroundMarketingLink>
+                  <PlaygroundMarketingLink isSignedIn={isSignedIn}>
                     Open the playground
                     <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
                   </PlaygroundMarketingLink>

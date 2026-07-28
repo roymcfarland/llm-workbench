@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Newsreader, Outfit } from "next/font/google";
 import { headers } from "next/headers";
 import { ClerkProvider } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { Analytics } from "@vercel/analytics/next";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -160,54 +161,64 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { userId } = await auth();
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   const publishableKey =
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || BUILD_FALLBACK_CLERK_PK;
-  return (
+  const shell = (
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${outfit.variable} ${jetbrainsMono.variable} ${newsreader.variable}`}
+    >
+      <body className="min-h-screen overflow-x-clip antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        <ScrollChrome />
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-[var(--color-primary)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--color-primary-foreground)]"
+        >
+          Skip to content
+        </a>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          nonce={nonce}
+        >
+          <TooltipProvider delayDuration={150}>
+            <SiteHeader />
+            <main id="main-content" className="min-h-[calc(100vh-3.5rem)]">
+              {children}
+            </main>
+            <SiteFooter />
+          </TooltipProvider>
+        </ThemeProvider>
+        {/* @vercel/analytics injects a script tag served by Vercel's edge
+            rewrite for /_vercel/insights/script.js; that path 404s under a
+            plain `next start` not running on Vercel (e2e/CI, self-hosting),
+            so only render it in dev (debug mode, no network) or on Vercel. */}
+        {(process.env.NODE_ENV !== "production" || process.env.VERCEL === "1") && (
+          <Analytics />
+        )}
+      </body>
+    </html>
+  );
+
+  // Provider invariant: signed-in renders get exactly one provider here;
+  // signed-out auth routes add theirs in the inversely gated (auth) layout.
+  return userId ? (
     <ClerkProvider publishableKey={publishableKey} dynamic afterSignOutUrl="/">
-      <html
-        lang="en"
-        suppressHydrationWarning
-        className={`${outfit.variable} ${jetbrainsMono.variable} ${newsreader.variable}`}
-      >
-        <body className="min-h-screen overflow-x-clip antialiased">
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-          />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
-          />
-          <ScrollChrome />
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-[var(--color-primary)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--color-primary-foreground)]"
-          >
-            Skip to content
-          </a>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            nonce={nonce}
-          >
-            <TooltipProvider delayDuration={150}>
-              <SiteHeader />
-              <main id="main-content" className="min-h-[calc(100vh-3.5rem)]">
-                {children}
-              </main>
-              <SiteFooter />
-            </TooltipProvider>
-          </ThemeProvider>
-          {/* @vercel/analytics injects a script tag served by Vercel's edge
-              rewrite for /_vercel/insights/script.js; that path 404s under a
-              plain `next start` not running on Vercel (e2e/CI, self-hosting),
-              so only render it in dev (debug mode, no network) or on Vercel. */}
-          {(process.env.NODE_ENV !== "production" ||
-            process.env.VERCEL === "1") && <Analytics />}
-        </body>
-      </html>
+      {shell}
     </ClerkProvider>
+  ) : (
+    shell
   );
 }
