@@ -1,0 +1,62 @@
+name: CodeQL
+
+# Static analysis of FIRST-PARTY code, which the other two security gates cannot see:
+# `audit:check` (audit-ci) covers dependency advisories, and `gitleaks` covers committed
+# secrets. Neither looks at the code in this repo for injection, path traversal, or unsafe
+# data flow. CodeQL closes that gap.
+#
+# Two languages are scanned:
+#   - javascript-typescript — packages/*, apps/web, scripts/, examples/
+#   - actions — the workflow files themselves. This is not incidental: the 2026-07-06
+#     blog-autopublish failure was a GitHub Actions expression-injection bug (a generated
+#     post title containing `$149.25` expanded into the publish step's shell). The
+#     `actions` queries flag exactly that class of `${{ }}`-into-`run:` interpolation.
+#
+# Query suite is the DEFAULT (security-focused) suite, deliberately not
+# `security-and-quality`. The quality queries add maintainability/style findings, and this
+# repo's whole audit posture -- see the header in `audit-ci.jsonc` -- is that a noisy gate
+# trains people to ignore it. Escalate to `security-and-quality` once a default-suite
+# baseline has stayed clean.
+#
+# NOT a required status check yet: let it establish a baseline first, then add it to branch
+# protection deliberately rather than discovering its false-positive rate on a blocked PR.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly re-scan so newly published CodeQL queries reach existing code without a push.
+    - cron: "27 4 * * 1"
+
+jobs:
+  analyze:
+    name: analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read # checkout
+      security-events: write # upload results to the Security tab
+      actions: read # read workflow run metadata for the `actions` language
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: javascript-typescript
+          - language: actions
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          # JS/TS and Actions are interpreted -- CodeQL reads source directly, so there is
+          # no compile step to observe and no need to run `npm ci` or build the workspaces.
+          build-mode: none
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
