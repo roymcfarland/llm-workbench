@@ -116,6 +116,21 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Refreshed `package-lock.json` to clear six high-severity advisories that had
+  deadlocked CI since 2026-08-03.** The audit gate went red on `brace-expansion`
+  (`GHSA-rgw5-rvv9-x895`), `fast-uri` (`GHSA-7p8r-x3mc-p8w7`), `ip-address`
+  (three advisories), `js-yaml` (`GHSA-5p4m-2wfm-xmqj`), `nanoid`
+  (`GHSA-2v37-7h3g-55p8`), and `undici` (five advisories), which blocked every
+  open PR — including three weekly blog posts and the Dependabot PRs that
+  carried these exact fixes. Lockfile-only: the existing `overrides` ranges
+  (`brace-expansion@^5.0.8`, `fast-uri@^3.1.4`, `gray-matter`/`read-yaml-file`
+  pinning `js-yaml@^3.15.0`) already permitted the patched releases, so no
+  manifest change was needed — only a stale lockfile. Resolves
+  `brace-expansion` 5.0.8 → 5.0.9, `fast-uri` 3.1.4 → 3.1.6, `js-yaml`
+  4.3.0 → 4.3.1 (and both nested 3.15.0 → 3.15.1), `ip-address` 10.2.0 → 10.5.0,
+  `nanoid` 3.3.16 → 3.3.18, and `undici` 7.28.0 → 7.29.0. All patch/minor, no
+  majors. `npm audit` drops from 6 high / 4 moderate to 0 high / 0 critical.
+
 - **Retired the final high-severity audit allowlist entry.** A root
   `minimatch@^10.2.5` override moves ESLint and all three current
   `eslint-config-next` plugin chains off `minimatch@3`, clearing
