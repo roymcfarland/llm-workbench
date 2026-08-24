@@ -1,0 +1,141 @@
+# Keeps the CI audit gate unblocked.
+#
+# WHY: `npm run audit:check` fails the whole matrix on any high/critical
+# advisory, so the first one to land blocks EVERY open PR. Dependabot only
+# opens per-package PRs, and each of those needs the same green gate to merge
+# — so the fixes get stuck behind the problem they fix. That deadlocked `main`
+# for 21 days (2026-08-03 → 2026-08-24, PR #181): three weekly blog posts and
+# eleven Dependabot PRs frozen behind six advisories that a single lockfile
+# refresh cleared, with no manifest change at all.
+#
+# WHAT: daily, check the gate. If it is green, stop — most runs cost ~90s and
+# do nothing. If it is red, try `npm audit fix`, verify the result against the
+# FULL pipeline, and only then open a PR. A PR is never opened unverified:
+# an unverified lockfile bump would just be one more red PR in the queue.
+#
+# Does NOT auto-merge. A verified, green, ready-to-merge PR is enough to break
+# the deadlock; merging a dependency change stays a human decision.
+name: Audit gate autofix
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # daily 06:00 UTC — ahead of the Monday 14:00 blog run
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: audit-autofix
+  cancel-in-progress: false
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      # `npm run ci` ends in `build:web`, which needs Clerk to boot. Same
+      # CI-only placeholders as ci.yml — not real credentials.
+      PLAYWRIGHT_WEB_PORT: "3399"
+      NEXT_PUBLIC_SITE_ORIGIN: http://localhost:3399
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk
+      CLERK_SECRET_KEY: sk_test_dGVzdCUyMF9zZWNyZXRfa2V5X2Zvcl9lMmU
+      BRANCH: chore/audit-autofix
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # A PAT, not GITHUB_TOKEN: events authored by GITHUB_TOKEN do not
+          # trigger workflows, so the PR would open with no CI and sit BLOCKED
+          # forever (this stranded PR #74).
+          token: ${{ secrets.BLOG_AUTOPUBLISH_PAT }}
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Check the audit gate
+        id: gate
+        run: |
+          set -uo pipefail
+          if npm run audit:check; then
+            echo "red=false" >> "$GITHUB_OUTPUT"
+            echo "Audit gate is green — nothing to do."
+          else
+            echo "red=true" >> "$GITHUB_OUTPUT"
+            echo "Audit gate is RED — attempting npm audit fix."
+          fi
+
+      - name: Attempt npm audit fix
+        id: fix
+        if: steps.gate.outputs.red == 'true'
+        run: |
+          set -uo pipefail
+          npm audit fix --package-lock-only || true
+          if git diff --quiet -- package-lock.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git --no-pager diff --stat -- package-lock.json
+          fi
+
+      - name: No automatic fix available
+        if: steps.gate.outputs.red == 'true' && steps.fix.outputs.changed != 'true'
+        run: |
+          echo "::error::Audit gate is red but 'npm audit fix' changed nothing."
+          echo "This needs human triage — likely an advisory whose only remedy"
+          echo "is a major upgrade, or one that should be documented in"
+          echo "audit-ci.jsonc. See its header for the accept/fix policy."
+          npm audit || true
+          exit 1
+
+      - name: Verify the fix against the full pipeline
+        if: steps.fix.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          # Re-install from the regenerated lockfile. `--package-lock-only`
+          # reuses the existing tree and has produced misleading resolution
+          # results here before, so the claim is only trusted after a real
+          # clean install.
+          rm -rf node_modules
+          npm ci
+          npm run audit:check
+          npm run ci
+
+      - name: Open or update the PR
+        if: steps.fix.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.BLOG_AUTOPUBLISH_PAT }}
+        run: |
+          set -euo pipefail
+          DATE="$(date -u +%Y-%m-%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add package-lock.json
+          git commit -m "fix(deps): refresh the lockfile to clear audit-gate advisories (${DATE})"
+          git push -u origin "$BRANCH" --force-with-lease
+
+          # Reuse one long-lived branch so a gate that stays red for several
+          # days updates a single PR instead of opening one per day.
+          if [ -n "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')" ]; then
+            echo "Existing PR updated by the push above."
+            gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url'
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "fix(deps): refresh the lockfile to clear audit-gate advisories" \
+              --body "$(printf '%s\n' \
+                'Opened automatically because the CI audit gate was failing.' \
+                '' \
+                '`npm audit fix` regenerated `package-lock.json`; the result was verified from a clean `npm ci` against `npm run audit:check` **and** the full `npm run ci` pipeline before this PR was opened.' \
+                '' \
+                'Review the version moves below before merging — this is automation proposing a change, not a change that has been reviewed.' \
+                '' \
+                'If this PR is open, the audit gate is red on `main` and every other PR is blocked behind it.')"
+          fi
