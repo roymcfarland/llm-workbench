@@ -8,6 +8,23 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`Audit gate autofix` workflow (`.github/workflows/audit-autofix.yml`).**
+  Closes the process gap that froze `main` for 21 days (2026-08-03 → 08-24, see
+  #181). `audit:check` fails the whole matrix on any high/critical advisory, so
+  the first one to land blocks *every* open PR — and because Dependabot only
+  opens per-package PRs that each need the same green gate, the fixes get stuck
+  behind the problem they fix. Three blog posts and eleven Dependabot PRs were
+  frozen behind six advisories that one lockfile refresh cleared. The workflow
+  runs daily: if the gate is green it stops in ~90s, and if it is red it runs
+  `npm audit fix`, verifies the result from a clean `npm ci` against both
+  `audit:check` and the full `npm run ci` pipeline, and only then opens a PR —
+  never an unverified one, which would just be another red PR in the queue. It
+  reuses a single long-lived branch so a persistently red gate updates one PR
+  instead of opening one per day, and it does **not** auto-merge: a verified
+  green PR is enough to break the deadlock, while merging a dependency change
+  stays a human decision. If `npm audit fix` cannot fix the gate, the run fails
+  loudly for human triage rather than opening a no-op PR.
+
 - **CodeQL static analysis (`.github/workflows/codeql.yml`).** Closes the one gap
   the existing security gates leave: `audit:check` covers dependency advisories
   and `gitleaks` covers committed secrets, but nothing analyzed first-party code
