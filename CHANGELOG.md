@@ -67,6 +67,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Transient blog-generation schema failures now retry and skip cleanly.** The
+  2026-08-31 scheduled run failed when one generated response missed the
+  structured-output schema even after the AI SDK repair pass; an otherwise
+  identical 2026-09-01 dry-run succeeded, confirming the stochastic failure.
+  Generation now retries up to three times, logs the Zod issue path and a
+  bounded raw-output excerpt, and reports an exhausted run as a visible warning
+  plus a Q5-compliant documented skip instead of a red workflow. The
+  `generatedPostSchema` constraints were not relaxed.
 - **`@opentelemetry/core` advisory `GHSA-8988-4f7v-96qf` resolved upstream; its
   accepted-advisory entry removed.** `lighthouse@13.4.1` (via the #153 group
   bump) dropped its bundled `@sentry/node` entirely, which removed all 11

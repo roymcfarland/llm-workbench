@@ -55,6 +55,12 @@ jobs:
           BLOG_MODE: ${{ steps.mode.outputs.mode }}
         run: npm run blog:autopublish
 
+      - name: Report skipped generation
+        if: ${{ steps.gen.outputs.created == '' && steps.gen.outputs.skip_reason != '' }}
+        env:
+          SKIP_REASON: ${{ steps.gen.outputs.skip_reason }}
+        run: printf '::warning title=Blog autopublish skipped::%s\n' "$SKIP_REASON"
+
       - name: Upload preview (dry-run)
         if: ${{ steps.mode.outputs.mode == 'dry-run' && steps.gen.outputs.preview != '' }}
         uses: actions/upload-artifact@v7

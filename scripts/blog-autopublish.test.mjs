@@ -1,13 +1,15 @@
 // Copyright 2026 Roy McFarland
 // SPDX-License-Identifier: MIT
 import matter from "gray-matter";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { blogFrontMatterSchema } from "../apps/web/lib/blog/schema.ts";
 import {
   buildPostMarkdown,
   buildSourcesSection,
   ensureUniqueSlug,
+  formatGenerationError,
+  generateWithRetry,
   selectSources,
   slugify,
   validateGeneratedPost,
@@ -90,6 +92,119 @@ const goodFixture = buildPostMarkdown({
 });
 
 describe("blog autopublish core", () => {
+  it("returns a generation that succeeds on the first attempt", async () => {
+    const draft = { title: "First attempt" };
+    const generate = vi.fn().mockResolvedValue({ object: draft });
+    const sleepImpl = vi.fn();
+
+    await expect(generateWithRetry({ generate, sleepImpl })).resolves.toEqual({
+      ok: true,
+      object: draft,
+    });
+    expect(generate).toHaveBeenCalledOnce();
+    expect(sleepImpl).not.toHaveBeenCalled();
+  });
+
+  it("retries a transient generation failure and returns the later result", async () => {
+    const draft = { title: "Second attempt" };
+    const generate = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("schema mismatch"))
+      .mockResolvedValueOnce({ object: draft });
+    const sleepImpl = vi.fn().mockResolvedValue(undefined);
+    const onAttemptError = vi.fn();
+
+    await expect(
+      generateWithRetry({ generate, sleepImpl, onAttemptError }),
+    ).resolves.toEqual({ ok: true, object: draft });
+    expect(generate).toHaveBeenCalledTimes(2);
+    expect(onAttemptError).toHaveBeenCalledWith(1, "Error: schema mismatch");
+    expect(sleepImpl).toHaveBeenCalledWith(1_000);
+  });
+
+  it("returns diagnostics after exhausting the configured attempts", async () => {
+    const schemaError = {
+      name: "AI_NoObjectGeneratedError",
+      message: "No object generated: response did not match schema.",
+      cause: {
+        issues: [
+          {
+            path: ["title"],
+            code: "too_big",
+            message: "String must contain at most 120 character(s)",
+          },
+        ],
+      },
+      text: '{"title":"A title that exceeded the configured limit"}',
+    };
+    const generate = vi.fn().mockRejectedValue(schemaError);
+    const sleepImpl = vi.fn().mockResolvedValue(undefined);
+    const onAttemptError = vi.fn();
+
+    const result = await generateWithRetry({
+      generate,
+      sleepImpl,
+      onAttemptError,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      errors: Array(3).fill(
+        "AI_NoObjectGeneratedError: No object generated: response did not match schema. | issues: title [too_big]: String must contain at most 120 character(s) | output: {\"title\":\"A title that exceeded the configured limit\"}",
+      ),
+    });
+    expect(generate).toHaveBeenCalledTimes(3);
+    expect(onAttemptError).toHaveBeenCalledTimes(3);
+    expect(sleepImpl).toHaveBeenCalledTimes(2);
+    expect(sleepImpl).toHaveBeenNthCalledWith(1, 1_000);
+    expect(sleepImpl).toHaveBeenNthCalledWith(2, 2_000);
+  });
+
+  it("resolves instead of throwing when every generation attempt fails", async () => {
+    const generate = vi.fn().mockRejectedValue("untyped failure");
+
+    await expect(
+      generateWithRetry({
+        generate,
+        attempts: 2,
+        sleepImpl: vi.fn().mockResolvedValue(undefined),
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      errors: ["untyped failure", "untyped failure"],
+    });
+  });
+
+  it("formats Zod issues and truncates a long raw generation response", () => {
+    const detail = formatGenerationError({
+      name: "AI_NoObjectGeneratedError",
+      message: "No object generated: response did not match schema.",
+      cause: {
+        issues: [
+          {
+            path: ["description"],
+            code: "too_small",
+            message: "String must contain at least 20 character(s)",
+          },
+        ],
+      },
+      text: "x".repeat(600),
+    });
+    const excerpt = detail.split(" | output: ")[1];
+
+    expect(detail).toContain(
+      "description [too_small]: String must contain at least 20 character(s)",
+    );
+    expect(excerpt).toHaveLength(320);
+    expect(excerpt).toBe(`${"x".repeat(317)}...`);
+  });
+
+  it("formats a bare Error without cause or raw text", () => {
+    expect(formatGenerationError(new Error("gateway unavailable"))).toBe(
+      "Error: gateway unavailable",
+    );
+  });
+
   it("slugifies titles with casing, punctuation, and repeated separators", () => {
     expect(slugify("AI Governance: Agents, Gates & Traces!!")).toBe(
       "ai-governance-agents-gates-traces",

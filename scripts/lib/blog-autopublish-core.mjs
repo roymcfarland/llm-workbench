@@ -10,6 +10,105 @@ function escapeLinkText(value) {
   return oneLine(value).replace(/([\[\]])/g, "\\$1");
 }
 
+const DEFAULT_GENERATION_ATTEMPTS = 3;
+const GENERATION_ERROR_TEXT_LIMIT = 320;
+const GENERATION_RETRY_DELAY_MS = 1_000;
+
+function safeProperty(value, key) {
+  try {
+    return value?.[key];
+  } catch {
+    return undefined;
+  }
+}
+
+function safeOneLine(value) {
+  try {
+    return oneLine(value);
+  } catch {
+    return "";
+  }
+}
+
+function formatIssue(issue) {
+  const rawPath = safeProperty(issue, "path");
+  const path = Array.isArray(rawPath)
+    ? rawPath.map(safeOneLine).filter(Boolean).join(".")
+    : safeOneLine(rawPath);
+  const code = safeOneLine(safeProperty(issue, "code"));
+  const message = safeOneLine(safeProperty(issue, "message"));
+
+  return `${path || "(root)"}${code ? ` [${code}]` : ""}${message ? `: ${message}` : ""}`;
+}
+
+export function formatGenerationError(error) {
+  try {
+    const name = safeOneLine(safeProperty(error, "name"));
+    const message = safeOneLine(safeProperty(error, "message"));
+    const summary =
+      [name, message].filter(Boolean).join(": ") ||
+      safeOneLine(error) ||
+      "Unknown generation error";
+    const cause = safeProperty(error, "cause");
+    const directIssues = safeProperty(cause, "issues");
+    const nestedIssues = safeProperty(safeProperty(cause, "cause"), "issues");
+    const issues = Array.isArray(directIssues)
+      ? directIssues
+      : Array.isArray(nestedIssues)
+        ? nestedIssues
+        : [];
+    const details = [summary];
+
+    if (issues.length > 0) {
+      details.push(`issues: ${issues.map(formatIssue).join("; ")}`);
+    }
+
+    const text = safeOneLine(safeProperty(error, "text"));
+    if (text) {
+      const excerpt =
+        text.length > GENERATION_ERROR_TEXT_LIMIT
+          ? `${text.slice(0, GENERATION_ERROR_TEXT_LIMIT - 3)}...`
+          : text;
+      details.push(`output: ${excerpt}`);
+    }
+
+    return details.join(" | ");
+  } catch {
+    return "Unknown generation error";
+  }
+}
+
+export async function generateWithRetry({
+  generate,
+  attempts = DEFAULT_GENERATION_ATTEMPTS,
+  onAttemptError,
+  sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+}) {
+  const attemptCount =
+    Number.isInteger(attempts) && attempts > 0
+      ? attempts
+      : DEFAULT_GENERATION_ATTEMPTS;
+  const errors = [];
+
+  for (let attempt = 1; attempt <= attemptCount; attempt += 1) {
+    try {
+      const result = await generate();
+      return { ok: true, object: result.object };
+    } catch (error) {
+      const detail = formatGenerationError(error);
+      errors.push(detail);
+      if (typeof onAttemptError === "function") {
+        onAttemptError(attempt, detail);
+      }
+      if (attempt < attemptCount) {
+        await sleepImpl(attempt * GENERATION_RETRY_DELAY_MS);
+      }
+    }
+  }
+
+  return { ok: false, errors };
+}
+
 export function slugify(title) {
   return String(title ?? "")
     .toLowerCase()
