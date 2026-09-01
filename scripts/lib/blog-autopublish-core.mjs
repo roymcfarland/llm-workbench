@@ -13,6 +13,7 @@ function escapeLinkText(value) {
 const DEFAULT_GENERATION_ATTEMPTS = 3;
 const GENERATION_ERROR_TEXT_LIMIT = 320;
 const GENERATION_RETRY_DELAY_MS = 1_000;
+const SCHEMA_GENERATION_ERROR_NAME = "AI_NoObjectGeneratedError";
 
 function safeProperty(value, key) {
   try {
@@ -28,6 +29,10 @@ function safeOneLine(value) {
   } catch {
     return "";
   }
+}
+
+function isSchemaGenerationError(error) {
+  return safeProperty(error, "name") === SCHEMA_GENERATION_ERROR_NAME;
 }
 
 function formatIssue(issue) {
@@ -81,6 +86,7 @@ export function formatGenerationError(error) {
 export async function generateWithRetry({
   generate,
   attempts = DEFAULT_GENERATION_ATTEMPTS,
+  isSchemaError = isSchemaGenerationError,
   onAttemptError,
   sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 }) {
@@ -89,6 +95,8 @@ export async function generateWithRetry({
       ? attempts
       : DEFAULT_GENERATION_ATTEMPTS;
   const errors = [];
+  const schemaFailures = [];
+  let infrastructureCause;
 
   for (let attempt = 1; attempt <= attemptCount; attempt += 1) {
     try {
@@ -96,7 +104,10 @@ export async function generateWithRetry({
       return { ok: true, object: result.object };
     } catch (error) {
       const detail = formatGenerationError(error);
+      const schemaFailure = isSchemaError(error);
       errors.push(detail);
+      schemaFailures.push(schemaFailure);
+      if (!schemaFailure) infrastructureCause = error;
       if (typeof onAttemptError === "function") {
         onAttemptError(attempt, detail);
       }
@@ -106,7 +117,15 @@ export async function generateWithRetry({
     }
   }
 
-  return { ok: false, errors };
+  if (schemaFailures.every(Boolean)) return { ok: false, errors };
+
+  const failure = new Error(
+    `generation failed after ${errors.length} attempts: ${errors.join(" || ")}`,
+    { cause: infrastructureCause },
+  );
+  failure.name = "GenerationRetryError";
+  failure.errors = errors;
+  throw failure;
 }
 
 export function slugify(title) {

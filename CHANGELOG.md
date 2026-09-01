@@ -71,9 +71,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   2026-08-31 scheduled run failed when one generated response missed the
   structured-output schema even after the AI SDK repair pass; an otherwise
   identical 2026-09-01 dry-run succeeded, confirming the stochastic failure.
-  Generation now retries up to three times, logs the Zod issue path and a
-  bounded raw-output excerpt, and reports an exhausted run as a visible warning
-  plus a Q5-compliant documented skip instead of a red workflow. The
+  Generation now retries up to three times and logs the Zod issue path plus a
+  bounded raw-output excerpt. Only exhaustion made entirely of schema-class
+  `AI_NoObjectGeneratedError` failures becomes a visible, Q5-compliant skip;
+  infrastructure, unknown, and mixed failures still fail loudly. The
   `generatedPostSchema` constraints were not relaxed.
 - **`@opentelemetry/core` advisory `GHSA-8988-4f7v-96qf` resolved upstream; its
   accepted-advisory entry removed.** `lighthouse@13.4.1` (via the #153 group

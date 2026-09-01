@@ -160,19 +160,74 @@ describe("blog autopublish core", () => {
     expect(sleepImpl).toHaveBeenNthCalledWith(2, 2_000);
   });
 
-  it("resolves instead of throwing when every generation attempt fails", async () => {
-    const generate = vi.fn().mockRejectedValue("untyped failure");
+  it("rejects after retrying every non-schema failure", async () => {
+    const unauthorized = new Error("401 unauthorized");
+    const generate = vi.fn().mockRejectedValue(unauthorized);
+    const sleepImpl = vi.fn().mockResolvedValue(undefined);
 
     await expect(
       generateWithRetry({
         generate,
         attempts: 2,
-        sleepImpl: vi.fn().mockResolvedValue(undefined),
+        sleepImpl,
+      }),
+    ).rejects.toMatchObject({
+      name: "GenerationRetryError",
+      message:
+        "generation failed after 2 attempts: Error: 401 unauthorized || Error: 401 unauthorized",
+      cause: unauthorized,
+      errors: ["Error: 401 unauthorized", "Error: 401 unauthorized"],
+    });
+    expect(generate).toHaveBeenCalledTimes(2);
+    expect(sleepImpl).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a mixed sequence after retrying every failure", async () => {
+    const infrastructureError = new Error("502 bad gateway");
+    const schemaError = {
+      name: "AI_NoObjectGeneratedError",
+      message: "No object generated: response did not match schema.",
+    };
+    const generate = vi
+      .fn()
+      .mockRejectedValueOnce(infrastructureError)
+      .mockRejectedValue(schemaError);
+    const sleepImpl = vi.fn().mockResolvedValue(undefined);
+
+    await expect(
+      generateWithRetry({ generate, sleepImpl }),
+    ).rejects.toMatchObject({
+      name: "GenerationRetryError",
+      cause: infrastructureError,
+      errors: [
+        "Error: 502 bad gateway",
+        "AI_NoObjectGeneratedError: No object generated: response did not match schema.",
+        "AI_NoObjectGeneratedError: No object generated: response did not match schema.",
+      ],
+    });
+    expect(generate).toHaveBeenCalledTimes(3);
+    expect(sleepImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("accepts an injected schema-error predicate", async () => {
+    const customSchemaError = { message: "custom schema failure" };
+    const generate = vi.fn().mockRejectedValue(customSchemaError);
+    const isSchemaError = vi.fn((error) => error === customSchemaError);
+    const sleepImpl = vi.fn();
+
+    await expect(
+      generateWithRetry({
+        generate,
+        attempts: 1,
+        isSchemaError,
+        sleepImpl,
       }),
     ).resolves.toEqual({
       ok: false,
-      errors: ["untyped failure", "untyped failure"],
+      errors: ["custom schema failure"],
     });
+    expect(isSchemaError).toHaveBeenCalledWith(customSchemaError);
+    expect(sleepImpl).not.toHaveBeenCalled();
   });
 
   it("formats Zod issues and truncates a long raw generation response", () => {
