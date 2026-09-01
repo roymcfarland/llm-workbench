@@ -49,6 +49,31 @@ Out of scope (reportable to the relevant project, not here):
 - Sensitive trace fields can be redacted via `profile: "user"` exports
   and per-artifact JSON Pointer paths registered on the schema registry.
 
+## Automated security gates
+
+These run in CI on every pull request and on `main`:
+
+- **Dependency advisories** — `npm run audit:check` (`audit-ci`, configured in
+  [`audit-ci.jsonc`](audit-ci.jsonc)) fails the build on any **high or critical**
+  advisory across the full dependency graph. The allowlist is currently empty;
+  each accepted exception, if any, must carry a dated reason and a runnable
+  REVISIT check. The file's header documents the accept/decline policy.
+- **Automatic advisory remediation** — `audit-autofix.yml` checks the gate daily.
+  If it is red, it runs `npm audit fix`, verifies the result from a clean install
+  against both the audit gate and the full CI pipeline, and only then opens a PR.
+  It never opens an unverified PR, and it does not auto-merge. This exists because
+  the gate blocks the very PRs that would fix it — a red gate once froze the
+  default branch for 21 days.
+- **Static analysis** — CodeQL scans first-party code (`javascript-typescript`)
+  and the GitHub Actions workflows themselves (`actions`). The workflow scanning
+  is deliberate: a past incident was an Actions expression-injection bug where a
+  generated string expanded into a shell step.
+- **Secret scanning** — `gitleaks` runs on every PR. Known-benign test
+  placeholders are allowlisted by fingerprint in `.gitleaks.toml`.
+- **Supply chain** — packages publish to npm via OIDC trusted publishing with
+  build provenance and no long-lived token. Dependabot proposes updates, which
+  are triaged deliberately rather than merged for currency alone.
+
 If you're integrating LLM Workbench in a product that handles regulated
 data and want to discuss hardening, reach out via the maintainer's GitHub
 profile (<https://github.com/roymcfarland>).

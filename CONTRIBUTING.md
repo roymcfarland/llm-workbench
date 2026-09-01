@@ -50,10 +50,16 @@ npm test
 
 ## Pull request checklist
 
-- [ ] `npm run build` and `npm test` pass.
-- [ ] `npm run smoke:esm` passes (the packages still import under plain Node ESM).
+- [ ] `npm run ci` passes. This is the same sequence CI runs: build → plain-Node
+      ESM smoke → tests → web typecheck → lint → production build.
+- [ ] `npm run audit:check` passes (no new high/critical dependency advisories).
 - [ ] New behavior is covered by tests.
-- [ ] `CHANGELOG.md` updated under `## [Unreleased]` if the change is user-facing.
+- [ ] `CHANGELOG.md` updated under `## [Unreleased]`. Dependency bumps get their
+      own entry too — see the existing entries for the expected shape.
+
+Your PR will additionally be checked by CodeQL (first-party code and workflow
+files) and gitleaks. See [SECURITY.md](SECURITY.md#automated-security-gates) for
+what each gate enforces.
 
 ## How changes are reviewed
 
