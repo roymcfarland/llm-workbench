@@ -14,6 +14,7 @@ import {
   buildPostMarkdown,
   buildSourcesSection,
   ensureUniqueSlug,
+  generateWithRetry,
   selectSources,
   slugify,
   validateGeneratedPost,
@@ -137,15 +138,27 @@ async function main() {
   const model = process.env.BLOG_MODEL || DEFAULT_MODEL;
   log.info(`generating post with ${model}`);
   const startedAt = Date.now();
-  const result = await generateObject({
-    model,
-    schema: generatedPostSchema,
-    system,
-    prompt,
+  const generation = await generateWithRetry({
+    generate: () =>
+      generateObject({
+        model,
+        schema: generatedPostSchema,
+        system,
+        prompt,
+      }),
+    onAttemptError: (attempt, detail) => {
+      log.warn(`generation attempt ${attempt} failed: ${detail}`);
+    },
   });
+  if (!generation.ok) {
+    const reason = generation.errors.at(-1) || "structured generation failed";
+    log.warn(`structured generation failed after ${generation.errors.length} attempts`);
+    await skip(reason);
+    process.exit(0);
+  }
   log.ok(`generated structured draft in ${Date.now() - startedAt}ms`);
 
-  const draft = result.object;
+  const draft = generation.object;
   const bodyMarkdown = draft.bodyMarkdown.trim();
   const body = hasSourcesSection(bodyMarkdown)
     ? bodyMarkdown
