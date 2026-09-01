@@ -67,6 +67,22 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Documentation refreshed against the live repository.** Four workflows shipped
+  without ever being described: `codeql.yml`, `audit-autofix.yml`, `gitleaks.yml`,
+  and `release.yml` appeared in no descriptive doc, and the terms `audit:check`,
+  `audit-ci`, `CodeQL`, `gitleaks`, and `Dependabot` appeared nowhere at all.
+  README now lists the full workflow surface; SECURITY.md documents what each
+  security gate actually enforces; CONTRIBUTING's PR checklist now points at
+  `npm run ci` and `npm run audit:check` — the commands CI really runs — instead
+  of a partial list. Also corrected a stale claim: the README described "a
+  production-scoped audit gate", which described the retired
+  `npm audit --omit=dev` step. The `audit-ci` gate that replaced it scans the
+  **full** dependency graph and is scoped by severity (high/critical).
+  ROADMAP.md, previously a pointer with no content, now records the standing
+  priorities, the dependency-major policy with the reasoning for each declined
+  upgrade, and the parked items — so decisions are not re-litigated whenever
+  Dependabot reopens them.
+
 - **Transient blog-generation schema failures now retry and skip cleanly.** The
   2026-08-31 scheduled run failed when one generated response missed the
   structured-output schema even after the AI SDK repair pass; an otherwise

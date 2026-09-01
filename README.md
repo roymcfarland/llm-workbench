@@ -50,7 +50,7 @@ release focused on making the packages genuinely installable and safe to depend 
 a CI smoke test that imports the built packages under plain Node ESM (not just a
 bundler), removal of the last `unsafe-eval` from the production CSP by precompiling
 JSON-Schema validators at build time, cleared dependency advisories, a
-production-scoped audit gate in CI, secret scanning, and packages published with
+severity-scoped audit gate in CI, secret scanning, and packages published with
 build provenance. See the launch post:
 [llm-workbench-is-now-open-source](https://www.llmworkbench.io/blog/llm-workbench-is-now-open-source).
 
@@ -120,6 +120,23 @@ is the contract both agents are held to; each slice's build record (closeout)
 lives in its PR description. [VERIFIER-AUDIT-PR8.md](docs/process/VERIFIER-AUDIT-PR8.md)
 and [VERIFIER-AUDIT-PR10.md](docs/process/VERIFIER-AUDIT-PR10.md) are independent
 verification transcripts from specific PRs.
+
+### Automated gates
+
+Alongside that human/agent review, every PR is held to a set of machine gates
+defined in [`.github/workflows/`](.github/workflows):
+
+| Workflow | What it enforces |
+| --- | --- |
+| `ci.yml` | Build, plain-Node ESM smoke, tests, typecheck, lint, the audit gate, production build, and Playwright smoke — on Node 22 and 24. |
+| `codeql.yml` | CodeQL static analysis of first-party code (`javascript-typescript`) and of the workflow files themselves (`actions`). |
+| `gitleaks.yml` | Secret scanning on every PR. |
+| `audit-autofix.yml` | Daily check of the dependency audit gate; opens a pre-verified lockfile PR when it goes red. |
+| `blog-autopublish.yml` | The weekly source-grounded blog publisher (see [docs/blog-autopublish.md](docs/blog-autopublish.md)). |
+| `release.yml` | Publishes the packages to npm via OIDC trusted publishing, with provenance. |
+
+Dependency updates arrive via Dependabot and are triaged deliberately — see
+[ROADMAP.md](ROADMAP.md) for the standing policy on major upgrades.
 
 ## Why It Exists
 
