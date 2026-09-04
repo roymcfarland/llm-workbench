@@ -68,6 +68,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Audit-gate modes are now strict at both entry points.** CLI flags and direct
+  `main()` calls reject unknown, missing, or incorrectly cased modes instead of
+  silently falling back to autofix behavior, preventing a typo such as
+  `--mode=GATE` from turning the merge gate into a passing no-op.
+
 - **CI now distinguishes dependency advisories from npm-registry outages.** The
   high/critical merge gate uses the audit classifier on both Node matrix legs:
   real advisory findings fail the gate, while an unavailable advisory registry

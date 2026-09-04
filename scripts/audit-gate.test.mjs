@@ -8,9 +8,11 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  VALID_MODES,
   main,
   parseMode,
   runAudit as runAuditProcess,
+  runCli,
 } from "./audit-gate.mjs";
 import {
   TRANSIENT_AUDIT_MARKERS,
@@ -378,7 +380,6 @@ describe("audit gate runner", () => {
     ["equals syntax", ["--mode=gate"], "gate", 1],
     ["spaced syntax", ["--mode", "gate"], "gate", 1],
     ["no mode", [], "autofix", 0],
-    ["unknown mode", ["--mode=other"], "autofix", 0],
     ["unknown flag", ["--other"], "autofix", 0],
     ["bare gate value", ["gate"], "autofix", 0],
   ])(
@@ -400,4 +401,69 @@ describe("audit gate runner", () => {
       ).resolves.toBe(exitCode);
     },
   );
+
+  it("defines the valid modes once as a frozen list", () => {
+    expect(VALID_MODES).toEqual(["autofix", "gate"]);
+    expect(Object.isFrozen(VALID_MODES)).toBe(true);
+  });
+
+  it.each([
+    [["--mode=GATE"], "GATE"],
+    [["--mode=Gate"], "Gate"],
+    [["--mode=other"], "other"],
+    [["--mode", "banana"], "banana"],
+    [["--mode", "--other"], "--other"],
+    [["--mode"], "<missing>"],
+  ])("rejects invalid CLI mode %j", (args, offendingValue) => {
+    expect(() => parseMode(args)).toThrowError(
+      expect.objectContaining({
+        message: expect.stringMatching(
+          new RegExp(`${offendingValue}.*autofix, gate`),
+        ),
+      }),
+    );
+  });
+
+  it.each([[["--mode=autofix"]], [["--mode", "autofix"]]])(
+    "accepts explicit autofix mode with %j",
+    (args) => {
+      expect(parseMode(args)).toBe("autofix");
+    },
+  );
+
+  it("rejects an invalid mode passed directly to main", async () => {
+    const runAuditImpl = vi.fn();
+
+    await expect(main({ mode: "GATE", runAuditImpl })).rejects.toThrowError(
+      /GATE.*autofix, gate/,
+    );
+    expect(runAuditImpl).not.toHaveBeenCalled();
+  });
+
+  it("returns 1 and emits a workflow error for an invalid CLI mode", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const mainImpl = vi.fn();
+
+    await expect(runCli(["--mode=GATE"], { mainImpl })).resolves.toBe(1);
+    expect(mainImpl).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /^::error title=Audit gate invalid mode::.*GATE.*autofix, gate/,
+      ),
+    );
+  });
+
+  it("returns the injected main result for a valid CLI mode", async () => {
+    const mainImpl = vi.fn().mockResolvedValue(7);
+
+    await expect(runCli(["--mode=gate"], { mainImpl })).resolves.toBe(7);
+    expect(mainImpl).toHaveBeenCalledWith({ mode: "gate" });
+  });
+
+  it("does not misreport unrelated CLI failures as invalid modes", async () => {
+    const failure = new Error("audit runner failed");
+    const mainImpl = vi.fn().mockRejectedValue(failure);
+
+    await expect(runCli([], { mainImpl })).rejects.toBe(failure);
+  });
 });
