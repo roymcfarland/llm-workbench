@@ -10,6 +10,25 @@ import process from "node:process";
 
 import { runGateWithRetry } from "./lib/audit-gate-core.mjs";
 
+export const VALID_MODES = Object.freeze(["autofix", "gate"]);
+
+class InvalidModeError extends Error {
+  constructor(mode) {
+    const offendingValue = mode === undefined ? "<missing>" : String(mode);
+    super(
+      `Invalid audit gate mode "${offendingValue}". Valid modes: ${VALID_MODES.join(
+        ", ",
+      )}.`,
+    );
+    this.name = "InvalidModeError";
+  }
+}
+
+function validateMode(mode) {
+  if (!VALID_MODES.includes(mode)) throw new InvalidModeError(mode);
+  return mode;
+}
+
 export function runAudit({
   spawnImpl = spawn,
   stdout = process.stdout,
@@ -52,6 +71,7 @@ export async function main({
   sleepImpl,
   mode = "autofix",
 } = {}) {
+  validateMode(mode);
   const result = await runGateWithRetry({
     runAudit: runAuditImpl,
     sleepImpl,
@@ -87,16 +107,30 @@ export async function main({
 }
 
 export function parseMode(args) {
-  const modeIndex = args.indexOf("--mode");
-  return args.includes("--mode=gate") ||
-    (modeIndex !== -1 && args[modeIndex + 1] === "gate")
-    ? "gate"
-    : "autofix";
+  const modeIndex = args.findIndex(
+    (argument) => argument === "--mode" || argument.startsWith("--mode="),
+  );
+  if (modeIndex === -1) return "autofix";
+
+  const argument = args[modeIndex];
+  const mode =
+    argument === "--mode"
+      ? args[modeIndex + 1]
+      : argument.slice("--mode=".length);
+  return validateMode(mode);
+}
+
+export async function runCli(argv, { mainImpl = main } = {}) {
+  try {
+    return await mainImpl({ mode: parseMode(argv) });
+  } catch (error) {
+    if (!(error instanceof InvalidModeError)) throw error;
+    console.error(`::error title=Audit gate invalid mode::${error.message}`);
+    return 1;
+  }
 }
 
 const isMain =
   process.argv[1] &&
   resolvePath(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) {
-  process.exitCode = await main({ mode: parseMode(process.argv.slice(2)) });
-}
+if (isMain) process.exitCode = await runCli(process.argv.slice(2));
