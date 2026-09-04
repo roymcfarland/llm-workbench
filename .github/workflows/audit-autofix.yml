@@ -8,10 +8,10 @@
 # eleven Dependabot PRs frozen behind six advisories that a single lockfile
 # refresh cleared, with no manifest change at all.
 #
-# WHAT: daily, check the gate. If it is green, stop — most runs cost ~90s and
-# do nothing. If it is red, try `npm audit fix`, verify the result against the
-# FULL pipeline, and only then open a PR. A PR is never opened unverified:
-# an unverified lockfile bump would just be one more red PR in the queue.
+# WHAT: daily, check the gate. Green stops. Non-zero results are classified
+# three ways: a real advisory report attempts `npm audit fix`; a known registry
+# infrastructure failure retries once and then warns; anything unrecognised
+# fails loudly. A fix is verified against the FULL pipeline before opening a PR.
 #
 # Does NOT auto-merge. A verified, green, ready-to-merge PR is enough to break
 # the deadlock; merging a dependency change stays a human decision.
@@ -62,15 +62,7 @@ jobs:
 
       - name: Check the audit gate
         id: gate
-        run: |
-          set -uo pipefail
-          if npm run audit:check; then
-            echo "red=false" >> "$GITHUB_OUTPUT"
-            echo "Audit gate is green — nothing to do."
-          else
-            echo "red=true" >> "$GITHUB_OUTPUT"
-            echo "Audit gate is RED — attempting npm audit fix."
-          fi
+        run: node scripts/audit-gate.mjs
 
       - name: Attempt npm audit fix
         id: fix
@@ -88,10 +80,10 @@ jobs:
       - name: No automatic fix available
         if: steps.gate.outputs.red == 'true' && steps.fix.outputs.changed != 'true'
         run: |
-          echo "::error::Audit gate is red but 'npm audit fix' changed nothing."
-          echo "This needs human triage — likely an advisory whose only remedy"
-          echo "is a major upgrade, or one that should be documented in"
-          echo "audit-ci.jsonc. See its header for the accept/fix policy."
+          echo "::error::The evaluated audit gate genuinely reports advisories, but 'npm audit fix' changed nothing."
+          echo "This needs human triage — likely an advisory whose only remedy is"
+          echo "a major upgrade, or one that should be documented in audit-ci.jsonc."
+          echo "See its header for the accept/fix policy."
           npm audit || true
           exit 1
 

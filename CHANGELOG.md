@@ -22,8 +22,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reuses a single long-lived branch so a persistently red gate updates one PR
   instead of opening one per day, and it does **not** auto-merge: a verified
   green PR is enough to break the deadlock, while merging a dependency change
-  stays a human decision. If `npm audit fix` cannot fix the gate, the run fails
-  loudly for human triage rather than opening a no-op PR.
+  stays a human decision. A genuine advisory result that `npm audit fix` cannot
+  clear fails loudly for human triage rather than opening a no-op PR; a known
+  registry-infrastructure failure is retried and reported as unevaluated.
 
 - **CodeQL static analysis (`.github/workflows/codeql.yml`).** Closes the one gap
   the existing security gates leave: `audit:check` covers dependency advisories
@@ -66,6 +67,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   requires changes to Clerk middleware and the per-request CSP nonce.
 
 ### Fixed
+
+- **Audit-gate registry failures no longer masquerade as advisories.** The daily
+  autofix workflow now distinguishes a real `audit-ci` report from an explicit
+  allowlist of transient registry errors, retries only the infrastructure path,
+  and warns without attempting a no-op fix when the advisory registry remains
+  unavailable. Unrecognised failures still fail loudly by default.
 
 - **Documentation refreshed against the live repository.** Four workflows shipped
   without ever being described: `codeql.yml`, `audit-autofix.yml`, `gitleaks.yml`,
