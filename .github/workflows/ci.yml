@@ -125,7 +125,7 @@ jobs:
         run: npm run lint:packages
 
       - name: Audit gate (high/critical severity)
-        run: npm run audit:check
+        run: node scripts/audit-gate.mjs --mode=gate
 
       - name: Web production build
         run: npm run build:web

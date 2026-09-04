@@ -7,7 +7,11 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { main, runAudit as runAuditProcess } from "./audit-gate.mjs";
+import {
+  main,
+  parseMode,
+  runAudit as runAuditProcess,
+} from "./audit-gate.mjs";
 import {
   TRANSIENT_AUDIT_MARKERS,
   classifyAuditResult,
@@ -176,7 +180,7 @@ describe("audit gate runner", () => {
     });
   });
 
-  it("writes the stable workflow outputs for green and advisory results", async () => {
+  it("writes the stable workflow outputs in both modes", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "audit-gate-"));
     const outputPath = path.join(directory, "github-output");
     process.env.GITHUB_OUTPUT = outputPath;
@@ -195,9 +199,17 @@ describe("audit gate runner", () => {
             .mockResolvedValue(auditResult(1, "NPM audit report results:")),
         }),
       ).resolves.toBe(0);
+      await expect(
+        main({
+          runAuditImpl: vi
+            .fn()
+            .mockResolvedValue(auditResult(1, "NPM audit report results:")),
+          mode: "gate",
+        }),
+      ).resolves.toBe(1);
 
       await expect(readFile(outputPath, "utf8")).resolves.toBe(
-        "status=green\nred=false\nstatus=advisories\nred=true\n",
+        "status=green\nred=false\nstatus=advisories\nred=true\nstatus=advisories\nred=true\n",
       );
     } finally {
       await rm(directory, { recursive: true });
@@ -233,4 +245,159 @@ describe("audit gate runner", () => {
       "::error title=Audit gate failed unexpectedly::some brand new failure",
     );
   });
+
+  it("fails real advisories in gate mode without autofix wording", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const runAuditImpl = vi
+      .fn()
+      .mockResolvedValue(auditResult(1, "NPM audit report results:"));
+
+    await expect(
+      main({ runAuditImpl, sleepImpl: vi.fn(), mode: "gate" }),
+    ).resolves.toBe(1);
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining("real high/critical advisory findings"),
+    );
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining("npm run audit:check locally"),
+    );
+    expect(error.mock.calls.flat().join(" ")).not.toContain("npm audit fix");
+  });
+
+  it("keeps autofix advisories non-failing and distinct from gate mode", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const runAuditImpl = vi
+      .fn()
+      .mockResolvedValue(auditResult(1, "NPM audit report results:"));
+
+    const autofixExit = await main({
+      runAuditImpl,
+      sleepImpl: vi.fn(),
+      mode: "autofix",
+    });
+    const gateExit = await main({
+      runAuditImpl,
+      sleepImpl: vi.fn(),
+      mode: "gate",
+    });
+
+    expect(autofixExit).toBe(0);
+    expect(gateExit).toBe(1);
+    expect(autofixExit).not.toBe(gateExit);
+  });
+
+  it("passes a green result in gate mode", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await expect(
+      main({
+        runAuditImpl: vi.fn().mockResolvedValue(auditResult(0, "Passed.")),
+        sleepImpl: vi.fn(),
+        mode: "gate",
+      }),
+    ).resolves.toBe(0);
+  });
+
+  it("warns and passes when gate mode cannot evaluate the registry", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await expect(
+      main({
+        runAuditImpl: vi.fn().mockResolvedValue(auditResult(1, "ETIMEDOUT")),
+        sleepImpl: vi.fn(),
+        mode: "gate",
+      }),
+    ).resolves.toBe(0);
+    expect(log).toHaveBeenCalledWith(
+      expect.stringMatching(/^::warning .*The gate was NOT evaluated/),
+    );
+  });
+
+  it("fails an unknown result in gate mode", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(
+      main({
+        runAuditImpl: vi
+          .fn()
+          .mockResolvedValue(auditResult(1, "some brand new failure")),
+        sleepImpl: vi.fn(),
+        mode: "gate",
+      }),
+    ).resolves.toBe(1);
+  });
+
+  it("defaults to the same advisory behavior as autofix mode", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const runAuditImpl = vi
+      .fn()
+      .mockResolvedValue(auditResult(1, "NPM audit report results:"));
+
+    const defaultExit = await main({ runAuditImpl, sleepImpl: vi.fn() });
+    const autofixExit = await main({
+      runAuditImpl,
+      sleepImpl: vi.fn(),
+      mode: "autofix",
+    });
+
+    expect(defaultExit).toBe(autofixExit);
+    expect(defaultExit).toBe(0);
+  });
+
+  it("fails an unrecognised status through the default arm", async () => {
+    vi.resetModules();
+    vi.doMock("./lib/audit-gate-core.mjs", async (importOriginal) => ({
+      ...(await importOriginal()),
+      runGateWithRetry: vi.fn().mockResolvedValue({
+        status: "future-status",
+        output: "unexpected future status",
+        attempts: 1,
+      }),
+    }));
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const runAuditImpl = vi.fn().mockResolvedValue(auditResult(0, "unused"));
+
+    try {
+      const { main: mainWithUnexpectedStatus } = await import(
+        "./audit-gate.mjs"
+      );
+      await expect(
+        mainWithUnexpectedStatus({ runAuditImpl, sleepImpl: vi.fn() }),
+      ).resolves.toBe(1);
+      expect(error).toHaveBeenCalledWith(
+        "::error title=Audit gate failed unexpectedly::unexpected future status",
+      );
+    } finally {
+      vi.doUnmock("./lib/audit-gate-core.mjs");
+      vi.resetModules();
+    }
+  });
+
+  it.each([
+    ["equals syntax", ["--mode=gate"], "gate", 1],
+    ["spaced syntax", ["--mode", "gate"], "gate", 1],
+    ["no mode", [], "autofix", 0],
+    ["unknown mode", ["--mode=other"], "autofix", 0],
+    ["unknown flag", ["--other"], "autofix", 0],
+    ["bare gate value", ["gate"], "autofix", 0],
+  ])(
+    "parses CLI mode with %s",
+    async (_label, args, expectedMode, exitCode) => {
+      vi.spyOn(console, "log").mockImplementation(() => {});
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const mode = parseMode(args);
+
+      expect(mode).toBe(expectedMode);
+      await expect(
+        main({
+          runAuditImpl: vi
+            .fn()
+            .mockResolvedValue(auditResult(1, "NPM audit report results:")),
+          sleepImpl: vi.fn(),
+          mode,
+        }),
+      ).resolves.toBe(exitCode);
+    },
+  );
 });
