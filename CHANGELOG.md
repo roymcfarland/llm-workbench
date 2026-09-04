@@ -68,6 +68,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **CI now distinguishes dependency advisories from npm-registry outages.** The
+  high/critical merge gate uses the audit classifier on both Node matrix legs:
+  real advisory findings fail the gate, while an unavailable advisory registry
+  warns and passes because the audit was not evaluated. The daily autofix and
+  every subsequent push retry the check, avoiding false-red PRs without ever
+  treating an advisory finding as green.
+
 - **Audit-gate registry failures no longer masquerade as advisories.** The daily
   autofix workflow now distinguishes a real `audit-ci` report from an explicit
   allowlist of transient registry errors, retries only the infrastructure path,

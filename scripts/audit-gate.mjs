@@ -47,7 +47,11 @@ async function writeOutput(key, value) {
   await writeFile(process.env.GITHUB_OUTPUT, `${key}=${value}\n`, { flag: "a" });
 }
 
-export async function main({ runAuditImpl = runAudit, sleepImpl } = {}) {
+export async function main({
+  runAuditImpl = runAudit,
+  sleepImpl,
+  mode = "autofix",
+} = {}) {
   const result = await runGateWithRetry({
     runAudit: runAuditImpl,
     sleepImpl,
@@ -60,6 +64,12 @@ export async function main({ runAuditImpl = runAudit, sleepImpl } = {}) {
       console.log("Audit gate is green.");
       return 0;
     case "advisories":
+      if (mode === "gate") {
+        console.error(
+          "::error title=Audit gate found high/critical advisories::The audit gate found real high/critical advisory findings. Run npm run audit:check locally to review and resolve them.",
+        );
+        return 1;
+      }
       console.log("Audit gate is red — attempting npm audit fix.");
       return 0;
     case "infrastructure":
@@ -68,6 +78,7 @@ export async function main({ runAuditImpl = runAudit, sleepImpl } = {}) {
       );
       return 0;
     case "unknown":
+    default:
       console.error(
         `::error title=Audit gate failed unexpectedly::${result.output}`,
       );
@@ -75,7 +86,17 @@ export async function main({ runAuditImpl = runAudit, sleepImpl } = {}) {
   }
 }
 
+export function parseMode(args) {
+  const modeIndex = args.indexOf("--mode");
+  return args.includes("--mode=gate") ||
+    (modeIndex !== -1 && args[modeIndex + 1] === "gate")
+    ? "gate"
+    : "autofix";
+}
+
 const isMain =
   process.argv[1] &&
   resolvePath(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) process.exitCode = await main();
+if (isMain) {
+  process.exitCode = await main({ mode: parseMode(process.argv.slice(2)) });
+}
