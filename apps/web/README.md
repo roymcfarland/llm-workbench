@@ -4,11 +4,11 @@ The hosted reference deployment for [LLM Workbench](../../README.md). It is a
 Next.js 16 (App Router) application that proves the
 runtime works end-to-end against real infrastructure: Supabase for run
 persistence, Clerk for auth, and Vercel AI Gateway for model calls via the AI
-SDK v5.
+SDK v7.
 
 This app is intentionally a **reference**, not a finished product. Expect to
-fork it, swap providers, and harden the trade-offs flagged with `// SECURITY:`
-comments in the source.
+fork it, swap providers, and review the `SECURITY` notes in TypeScript comments
+and the SQL migration, including the trade-offs below.
 
 ## Stack
 
@@ -16,8 +16,8 @@ comments in the source.
 - **Tailwind CSS v4** (CSS-first `@theme` config) + **shadcn/ui** primitives
 - **Clerk** (`@clerk/nextjs`) for authentication and tenancy
 - **Supabase** (`@supabase/supabase-js`) for the `runs` table
-- **AI SDK v5** (`ai`) routed through **Vercel AI Gateway**
-- **`@llm-workbench/runtime`**, **`@llm-workbench/ui`**, **`@llm-workbench/mcp`** — workspace packages (`mcp` powers `/api/mcp`)
+- **AI SDK v7** (`ai`) routed through **Vercel AI Gateway**
+- **`@llm-workbench/runtime`**, **`@llm-workbench/ui`**, **`@llm-workbench/adapters-react`**, **`@llm-workbench/ai-sdk`**, **`@llm-workbench/mcp`** — workspace packages (`mcp` powers `/api/mcp`)
 
 ## Routes
 
@@ -25,7 +25,7 @@ comments in the source.
 
 | Path | What it is |
 | --- | --- |
-| `/` | Marketing landing page with a “Try the playground” CTA. |
+| `/` | Marketing landing page with an “Open the playground” CTA. |
 | `/sign-in`, `/sign-up` | Clerk hosted flows. |
 | `/playground` | Live job-search workflow demo backed by AI Gateway (**auth required**). |
 | `/runs` | Saved runs for the current Clerk org/user. |
@@ -33,7 +33,12 @@ comments in the source.
 | `/runs/demo` | **Public** read-only demo run (no sign-in). |
 | `/blog` | Blog index (Markdown sources under `content/blog/`). |
 | `/blog/[slug]` | Individual article (static paths from `.md` front matter). |
+| `/blog/tags/[tag]` | Articles filtered by tag. |
+| `/docs/getting-started` | Integration quickstart (**public**). |
+| `/docs/architecture` | Package and reference-app architecture (**public**). |
+| `/docs/api` | Generated package API reference (**public**). |
 | `/docs/protocol` | Protocol overview (**public**). |
+| `/faq` | Frequently asked questions (**public**). |
 
 ### HTTP APIs
 
@@ -43,7 +48,7 @@ comments in the source.
 | `GET /api/runs?limit=N` | List runs for the caller’s tenant (`HttpRunRepository.list` shape). |
 | `GET/PUT/DELETE /api/runs/[runId]` | Single-run CRUD using the workbench wire format. |
 | `POST /api/llm` | AI Gateway streaming proxy (demo). |
-| `POST /api/mcp` | MCP JSON-RPC (`tools/list` public; mutating tools require auth — see handler). |
+| `POST /api/mcp` | MCP JSON-RPC (`initialize`, `ping`, `tools/list`, `prompts/list`, `resources/list`, `resources/templates/list`, `completion/complete`, and notifications are public; every `tools/call` requires auth — see handler). |
 | `GET /api/openapi.json` | OpenAPI 3.1 for the run REST surface (**public**). |
 
 ### Discovery & feeds (machine-readable)
@@ -55,6 +60,7 @@ These are intentional entry points for crawlers, assistants, and integrations:
 | `/llms.txt` | Short LLM-oriented site summary + important links. |
 | `/llms-full.txt` | Long-form narrative for model context. |
 | `/agents.md` | Agent-oriented capability summary. |
+| `/humans.txt` | Team credits and software stack. |
 | `/robots.txt`, `/sitemap.xml` | Crawling hints + URL list. |
 | `/.well-known/security.txt` | RFC 9116 security contact (GitHub private advisories). |
 | `/.well-known/mcp.json` | MCP server descriptor. |
@@ -62,7 +68,7 @@ These are intentional entry points for crawlers, assistants, and integrations:
 
 ### Routing & security notes
 
-- **Clerk + CSP** live in [`middleware.ts`](middleware.ts) (Next.js middleware convention). Public routes include `/`, `/blog`, `/feed.xml`, `/docs/*`, discovery URLs above, `/runs/demo`, and `/api/openapi.json`; gated surfaces (`/playground`, `/runs`, `/api/runs`, …) require a session. API routes return **401 JSON** when unauthenticated — they never redirect to HTML sign-in.
+- **Clerk + CSP** live in [`proxy.ts`](proxy.ts) (Next.js 16 proxy convention). Public routes include `/`, `/blog`, `/feed.xml`, `/docs/*`, `/faq`, `/runs/demo`, and `/api/openapi.json`; gated surfaces (`/playground`, `/runs`, `/api/runs`, …) require a session. API routes return **401 JSON** when unauthenticated — they never redirect to HTML sign-in.
 
 ## Prerequisites
 
@@ -135,8 +141,8 @@ volume on the Supabase / Clerk / Vercel free tiers). End-to-end:
    your production URL. Optional: `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`,
   `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `CSP_EXTRA_CONNECT_SRC`.
 6. **Deploy.** Push to `main` (or click Deploy). The first build typically
-   takes a few minutes; CI on GitHub runs `build`, `test`, web `typecheck`,
-   `lint`, and `build:web` (see `.github/workflows/ci.yml`).
+   takes a few minutes; required CI jobs on Node 22 and 24 run package builds, ESM smoke, tests, web typecheck, web/package lint, the audit gate, and the production web build.
+   The audit gate fails on high/critical advisories and unrecognised failures; registry outages warn and pass without evaluating. Coverage, Codecov uploads, and Playwright run on Node 24 only (see `.github/workflows/ci.yml`).
 
 > Cost expectation at design-partner volume: ~$0/month. Supabase free tier
 > covers 500 MB Postgres + 2 GB egress; Clerk free tier covers 10 000 MAUs;
@@ -145,7 +151,7 @@ volume on the Supabase / Clerk / Vercel free tiers). End-to-end:
 
 ## Security trade-offs (read these)
 
-Every shortcut is annotated inline with `// SECURITY:` comments. The big ones:
+`SECURITY` notes appear in `lib/supabase/server.ts`, `lib/runtime/server-actions.ts`, `lib/auth/tenant.ts` (JSDoc), and `supabase/migrations/0001_init.sql` (`-- SECURITY TRADE-OFF`). The big ones:
 
 - **Service-role Supabase key.** The server uses the service role and gates
   access by tenant in `lib/auth/tenant.ts`. RLS is enabled as defense in
