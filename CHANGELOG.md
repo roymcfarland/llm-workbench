@@ -68,6 +68,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Audit-autofix can now update its existing PR branch.** The single-branch
+  update path never worked: a bare `--force-with-lease` had no remote-tracking
+  ref in the single-ref checkout, causing the 2026-09-10 run (34443555608) to
+  fail with `stale info` after verification passed. The push now leases the
+  explicit remote SHA, supporting both branch creation and updates while still
+  rejecting a concurrent push.
+
 - **Audit-gate modes are now strict at both entry points.** CLI flags and direct
   `main()` calls reject unknown, missing, or incorrectly cased modes instead of
   silently falling back to autofix behavior, preventing a typo such as

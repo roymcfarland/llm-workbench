@@ -112,10 +112,11 @@ jobs:
           git checkout -B "$BRANCH"
           git add package-lock.json
           git commit -m "fix(deps): refresh the lockfile to clear audit-gate advisories (${DATE})"
-          git push -u origin "$BRANCH" --force-with-lease
+          bash scripts/push-autofix-branch.sh "$BRANCH"
 
           # Reuse one long-lived branch so a gate that stays red for several
           # days updates a single PR instead of opening one per day.
+          # The script handles both creating and updating the branch.
           if [ -n "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')" ]; then
             echo "Existing PR updated by the push above."
             gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url'
