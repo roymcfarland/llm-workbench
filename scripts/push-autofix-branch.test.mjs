@@ -79,15 +79,35 @@ async function createRepos(configuration, existing = false) {
     push: () => run(runner, "bash", [script, branch]),
     oldPush: () => run(runner, "git", ["push", "-u", "origin", branch, "--force-with-lease"]),
     tip: () => git(directory, `--git-dir=${remote}`, "log", "-1", "--format=%s", `refs/heads/${branch}`),
-    async installConcurrentPush() {
+    async pushWithConcurrentPush() {
       commit(concurrent, "concurrent commit");
-      const hook = path.join(runner, ".git", "hooks", "pre-push");
-      await writeFile(hook, `#!/usr/bin/env bash
-set -euo pipefail
-unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
-git -C "$AUTOFIX_CONCURRENT_REPO" push origin "${branch}"
+      const resolved = run(runner, "bash", ["-c", "command -v git"]);
+      expect(resolved.status, resolved.stderr).toBe(0);
+      const realGit = resolved.stdout.trim();
+      expect(path.isAbsolute(realGit)).toBe(true);
+      const bin = path.join(directory, "bin");
+      await mkdir(bin);
+      const standIn = path.join(bin, "git");
+      // Move the remote after reading its SHA, before push reads the remote.
+      // A pre-push hook runs too late: even --force rejects that race.
+      await writeFile(standIn, `#!/usr/bin/env bash
+set -uo pipefail
+if [[ "$1" == "ls-remote" ]]; then
+  "$AUTOFIX_REAL_GIT" "$@"
+  status=$?
+  "$AUTOFIX_REAL_GIT" -C "$AUTOFIX_CONCURRENT_REPO" push origin "${branch}" >&2
+  exit "$status"
+fi
+exec "$AUTOFIX_REAL_GIT" "$@"
 `);
-      await chmod(hook, 0o755);
+      await chmod(standIn, 0o755);
+      const result = spawnSync("bash", [script, branch], {
+        cwd: runner,
+        env: { ...env, AUTOFIX_REAL_GIT: realGit, PATH: `${bin}${path.delimiter}${env.PATH}` },
+        encoding: "utf8",
+      });
+      if (result.error) throw result.error;
+      return result;
     },
   };
 }
@@ -106,8 +126,7 @@ describe("push-autofix-branch", () => {
 
   it("rejects a concurrent push and preserves its commit", async () => {
     const repos = await createRepos("checkout-style", true);
-    await repos.installConcurrentPush();
-    const result = repos.push();
+    const result = await repos.pushWithConcurrentPush();
     expect(result.status, result.stderr).not.toBe(0);
     expect(repos.tip()).toBe("concurrent commit");
   });
