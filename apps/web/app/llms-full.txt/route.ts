@@ -11,13 +11,13 @@ export const dynamic = "force-dynamic";
 const APP_README_FALLBACK = `# @llm-workbench/web
 
 Hosted reference deployment for LLM Workbench. Next.js 16 App Router,
-Tailwind v4, Clerk auth, Supabase persistence, AI SDK v5 routed through
+Tailwind v4, Clerk auth, Supabase persistence, AI SDK v7 routed through
 Vercel AI Gateway.
 
 Marketing & discoverability (auth optional): \`/\`, \`/blog\`, \`/docs/protocol\`,
 \`/runs/demo\`, \`/feed.xml\`, \`/llms.txt\`, \`/robots.txt\`, \`/sitemap.xml\`, Open Graph
 routes (\`/opengraph-image\`, \`/twitter-image\`). Authenticated shells: \`/playground\`,
-\`/runs\` (middleware + Clerk). APIs: \`/api/openapi.json\`, \`/.well-known/mcp.json\`
+\`/runs\` (\`proxy.ts\` + Clerk). APIs: \`/api/openapi.json\`, \`/.well-known/mcp.json\`
 (public discovery); \`/api/runs…\`, \`/api/llm\`, \`/api/mcp\` require credentials.
 `;
 

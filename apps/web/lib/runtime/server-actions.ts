@@ -43,7 +43,7 @@ export async function compileProfileAction(input: {
   }
 
   const start = Date.now();
-  // AI SDK v5 routes plain "provider/model" strings through Vercel AI Gateway.
+  // The AI SDK routes plain "provider/model" strings through Vercel AI Gateway.
   // The `gateway()` wrapper is only needed when configuring providerOptions.
   const result = await generateObject({
     model: DEMO_MODEL,

@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@llm-workbench/runtime.svg)](https://www.npmjs.com/package/@llm-workbench/runtime)
 [![CI](https://github.com/roymcfarland/llm-workbench/actions/workflows/ci.yml/badge.svg)](https://github.com/roymcfarland/llm-workbench/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/node/v/@llm-workbench/runtime.svg)](https://nodejs.org)
+[![Node: tested on 22 and 24](https://img.shields.io/badge/node-tested_on_22_and_24-brightgreen.svg)](https://nodejs.org)
 [![codecov](https://codecov.io/gh/roymcfarland/llm-workbench/branch/main/graph/badge.svg)](https://codecov.io/gh/roymcfarland/llm-workbench)
 
 **An open-source control plane for LLM-powered products.**
@@ -27,9 +27,9 @@ happened and gives humans a clean control surface over it.
 
 ## Status
 
-**July 2026 — docs and quality pass:** every package now ships consistent
-JSDoc (`@packageDocumentation` blocks, `@param`/`@returns`/`@throws` on
-public APIs), backing a generated
+**July 2026 — docs and quality pass:** packages ship JSDoc with
+`@packageDocumentation` blocks in `ui`, `adapters-react`, `ai-sdk`, and `mcp`,
+and `@param`/`@returns`/`@throws` on public APIs, backing a generated
 [API reference](https://www.llmworkbench.io/docs/api) that's rebuilt from
 source on every deploy rather than hand-maintained. New
 [Getting Started](https://www.llmworkbench.io/docs/getting-started) and
@@ -90,7 +90,7 @@ npm install @llm-workbench/mcp                                 # expose runs ove
 
 All five libraries are published under the
 [`@llm-workbench`](https://www.npmjs.com/org/llm-workbench) scope (MIT, ESM,
-Node 22+). The runtime has no React or framework dependency — it runs in the
+tested on Node 22 and 24). The runtime has no React or framework dependency — it runs in the
 browser, Node, or edge-style runtimes. Jump to the
 [60-second integration](#60-second-integration) for a complete example.
 
@@ -277,7 +277,7 @@ apps/
 | `@llm-workbench/runtime` | Protocol types, `WorkbenchRuntime`, `WorkbenchSession`, `SchemaRegistry`, persistence adapters, bundle import/export, telemetry summaries, and structured `WorkbenchError`. |
 | `@llm-workbench/ui` | `WorkbenchShell`, a themeable React interface for artifacts, rules, traces, gates, and bundles. |
 | `@llm-workbench/adapters-react` | `useWorkbenchRunRevision` for subscribing React components to live run state. |
-| `@llm-workbench/ai-sdk` | Vercel AI SDK v5 wrappers (`tracedGenerateText`, `tracedStreamText`, `tracedGenerateObject`, `tracedStreamObject`, `traceTools`) that emit correlated `model_io`, `tool_call`, and gateway-cost trace events automatically. |
+| `@llm-workbench/ai-sdk` | Vercel AI SDK v5 and v7 wrappers (`tracedGenerateText`, `tracedStreamText`, `tracedGenerateObject`, `tracedStreamObject`, `traceTools`) that emit correlated `model_io`, `tool_call`, and gateway-cost trace events automatically. |
 | `@llm-workbench/mcp` | Model Context Protocol server factory plus HTTP handler (`createWorkbenchMcpHttpHandler`) for exposing the runtime over MCP — see [`packages/mcp/README.md`](packages/mcp/README.md). |
 
 ## Local Development
@@ -314,8 +314,8 @@ const { runId } = runtime.startRun({
     id: "my-pipeline",
     version: 1,
     steps: [
-      { id: "parse", gatePolicy: "PAUSE_BEFORE" },
-      { id: "score", gatePolicy: "AUTO" },
+      { id: "parse", gatePolicy: "PAUSE_BEFORE", inputs: [], outputs: [] },
+      { id: "score", gatePolicy: "AUTO", inputs: [], outputs: [] },
     ],
     edges: [{ id: "e1", from: "parse", to: "score" }],
   },
@@ -365,6 +365,9 @@ console.log(telemetry.totals, telemetry.byProviderModel);
 Drop the shell anywhere in your app:
 
 ```tsx
+import { WorkbenchShell } from "@llm-workbench/ui";
+import "@llm-workbench/ui/theme.css";
+
 <WorkbenchShell runtime={runtime} runId={runId} registry={registry} />
 ```
 
