@@ -9,6 +9,8 @@ name: Blog autopublish
 # (fine-grained, this repo only, Contents: R/W + Pull requests: R/W) so the bot's
 # PR triggers CI + auto-merge; set repo var BLOG_AUTOPUBLISH_ENABLED=true to
 # enable the weekly schedule. Optional: BLOG_MODEL var to override the model.
+# BLOG_AUTOPUBLISH_PAT is shared with audit-autofix.yml (checkout and GH_TOKEN);
+# expiry fails blog checkout and also breaks the daily autofix.
 
 on:
   schedule:

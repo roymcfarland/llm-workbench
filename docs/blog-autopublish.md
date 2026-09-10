@@ -35,6 +35,7 @@ description, date, `##` headings, a `## Sources` section, and the configured
 word-count range. In publish mode the workflow also runs:
 
 ```bash
+npm run build
 npm test -w @llm-workbench/web
 npm run build:web
 ```
@@ -47,7 +48,9 @@ Scheduled runs are dormant by default. To turn them on:
 - Add the `BLOG_AUTOPUBLISH_PAT` repository secret: a fine-grained PAT scoped
   to this repository with **Contents: Read and write** and
   **Pull requests: Read and write**. This token has an expiry and must be
-  rotated before it lapses, or the weekly publish PR will not auto-merge.
+  rotated before it lapses: expiry fails the weekly run at checkout. The same
+  token is used by `audit-autofix.yml` for checkout and `GH_TOKEN`, so expiry
+  also breaks the daily autofix.
 - Set the repository variable `BLOG_AUTOPUBLISH_ENABLED=true`.
 - Optionally set `BLOG_MODEL` to override the default
   `anthropic/claude-opus-4-8` model.
@@ -67,6 +70,13 @@ Use a manual dry run before enabling the weekly schedule:
 
 `dry-run` writes `blog-autopublish-preview.md` as an artifact and never touches
 `apps/web/content/blog`.
+
+Select `fetch-only` to print the selected sources as JSON without generating a
+post. It needs no AI Gateway key. Locally, run:
+
+```bash
+BLOG_MODE=fetch-only npm run blog:autopublish
+```
 
 ## Schedule
 
@@ -89,6 +99,10 @@ once checks pass. The normal Vercel deployment path then takes over from `main`.
 ## Safety Guarantees
 
 The publisher skips the week when fewer than `minItems` recent sources are
-available or when generated markdown fails validation. It cannot merge broken
-content without passing the web blog tests and production build because the PR
-is still gated by CI.
+available, when generated markdown fails validation, or when all three generation
+attempts fail schema validation (`DEFAULT_GENERATION_ATTEMPTS = 3` in
+`scripts/lib/blog-autopublish-core.mjs`). If generation retries are exhausted
+and any failure is an infrastructure error, the run fails instead of skipping.
+The PR remains gated by CI because branch protection requires
+`build & test (node 22)` and `build & test (node 24)`, including the web blog
+tests and production build.

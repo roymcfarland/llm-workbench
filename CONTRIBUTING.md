@@ -50,9 +50,9 @@ npm test
 
 ## Pull request checklist
 
-- [ ] `npm run ci` passes. This is the same sequence CI runs: build → plain-Node
-      ESM smoke → tests → web typecheck → lint → production build.
-- [ ] `npm run audit:check` passes (no new high/critical dependency advisories).
+- [ ] `npm run ci` passes. It mirrors CI’s core sequence: build → plain-Node ESM smoke → tests → web typecheck → web/package lint → production build.
+      CI additionally runs the audit gate, plus coverage, Codecov uploads and Playwright on Node 24.
+- [ ] `node scripts/audit-gate.mjs --mode=gate` passes: it wraps audit-ci and `audit-ci.jsonc`, fails on high/critical advisories, and warns/passes without evaluation on registry outages.
 - [ ] New behavior is covered by tests.
 - [ ] `CHANGELOG.md` updated under `## [Unreleased]`. Dependency bumps get their
       own entry too — see the existing entries for the expected shape.

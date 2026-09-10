@@ -123,17 +123,18 @@ verification transcripts from specific PRs.
 
 ### Automated gates
 
-Alongside that human/agent review, every PR is held to a set of machine gates
-defined in [`.github/workflows/`](.github/workflows):
+Alongside human/agent review, branch protection requires only `build & test (node 22)`
+and `build & test (node 24)`. Other workflows report findings or automate scheduled
+and push-triggered work; they are not PR gates. Defined in [`.github/workflows/`](.github/workflows):
 
-| Workflow | What it enforces |
+| Workflow | Checks or automation |
 | --- | --- |
-| `ci.yml` | Build, plain-Node ESM smoke, tests, typecheck, lint, the audit gate, production build, and Playwright smoke — on Node 22 and 24. |
-| `codeql.yml` | CodeQL static analysis of first-party code (`javascript-typescript`) and of the workflow files themselves (`actions`). |
-| `gitleaks.yml` | Secret scanning on every PR. |
-| `audit-autofix.yml` | Daily check of the dependency audit gate; opens a pre-verified lockfile PR when it goes red. |
-| `blog-autopublish.yml` | The weekly source-grounded blog publisher (see [docs/blog-autopublish.md](docs/blog-autopublish.md)). |
-| `release.yml` | Publishes the packages to npm via OIDC trusted publishing, with provenance. |
+| `ci.yml` | Required build & test jobs on Node 22 and 24: build, ESM smoke, tests, typecheck, lint, audit gate and production build. CI runs `node scripts/audit-gate.mjs --mode=gate`, wrapping audit-ci and `audit-ci.jsonc`: high/critical advisories fail; registry outages warn and **pass without evaluating**; unrecognised failures fail. Coverage, Codecov uploads and Playwright run on Node 24 only. |
+| `codeql.yml` | Reports static analysis of first-party code (`javascript-typescript`) and workflows (`actions`); not a required check and does not block merging. |
+| `gitleaks.yml` | Reports secrets on PRs and pushes to `main`; not a required check and does not block merging. |
+| `audit-autofix.yml` | Daily/manual gate check; opens or updates one `chore/audit-autofix` PR, never auto-merges. Verifies with a clean install, `npm run audit:check` and `npm run ci` on Node 24; the PR’s CI adds Node 22, coverage and Playwright. An unchanged fix fails for triage; registry failure during the gate check warns and opens no PR. Raw verification fails on registry outages. Review all version moves: `npm audit fix` can change packages the gate did not require. |
+| `blog-autopublish.yml` | Scheduled/manual weekly source-grounded blog publisher, not a PR gate (see [docs/blog-autopublish.md](docs/blog-autopublish.md)). |
+| `release.yml` | On pushes to `main`, when enabled, publishes packages to npm via OIDC trusted publishing with provenance; not a PR gate. |
 
 Dependency updates arrive via Dependabot and are triaged deliberately — see
 [ROADMAP.md](ROADMAP.md) for the standing policy on major upgrades.

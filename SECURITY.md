@@ -28,6 +28,10 @@ In scope:
   parsing of run bundles loaded from disk.
 - `@llm-workbench/adapters-react` — React hooks and store subscription
   semantics.
+- `@llm-workbench/ai-sdk` — model-I/O, tool-call, and cost trace-event handling
+  in the Vercel AI SDK wrappers.
+- `@llm-workbench/mcp` — MCP server factory and HTTP handler exposing the
+  runtime over Model Context Protocol.
 
 Out of scope (reportable to the relevant project, not here):
 
@@ -51,28 +55,41 @@ Out of scope (reportable to the relevant project, not here):
 
 ## Automated security gates
 
-These run in CI on every pull request and on `main`:
+Branch protection on `main` requires only `build & test (node 22)` and
+`build & test (node 24)`. CI runs on PRs and pushes to `main`; CodeQL and
+gitleaks report findings but are not required checks and do not block merging.
+The scheduled remediation/blog workflows and push-triggered release workflow
+are automation, not PR gates.
 
-- **Dependency advisories** — `npm run audit:check` (`audit-ci`, configured in
-  [`audit-ci.jsonc`](audit-ci.jsonc)) fails the build on any **high or critical**
-  advisory across the full dependency graph. The allowlist is currently empty;
+- **Dependency advisories** — CI runs `node scripts/audit-gate.mjs --mode=gate`,
+  which wraps `audit-ci` and [`audit-ci.jsonc`](audit-ci.jsonc). Real **high or
+  critical** advisories across the full dependency graph exit 1. If the npm
+  advisory registry is unreachable, it makes two attempts 30 seconds apart,
+  then emits `Audit gate not evaluated` and **passes (exit 0) without evaluating
+  advisories**. Unrecognised failures exit 1. The allowlist is currently empty;
   each accepted exception, if any, must carry a dated reason and a runnable
   REVISIT check. The file's header documents the accept/decline policy.
-- **Automatic advisory remediation** — `audit-autofix.yml` checks the gate daily.
-  If it is red, it runs `npm audit fix`, verifies the result from a clean install
-  against both the audit gate and the full CI pipeline, and only then opens a PR.
-  It never opens an unverified PR, and it does not auto-merge. This exists because
-  the gate blocks the very PRs that would fix it — a red gate once froze the
-  default branch for 21 days.
-- **Static analysis** — CodeQL scans first-party code (`javascript-typescript`)
-  and the GitHub Actions workflows themselves (`actions`). The workflow scanning
-  is deliberate: a past incident was an Actions expression-injection bug where a
-  generated string expanded into a shell step.
-- **Secret scanning** — `gitleaks` runs on every PR. Known-benign test
-  placeholders are allowlisted by fingerprint in `.gitleaks.toml`.
-- **Supply chain** — packages publish to npm via OIDC trusted publishing with
-  build provenance and no long-lived token. Dependabot proposes updates, which
-  are triaged deliberately rather than merged for currency alone.
+- **Automatic advisory remediation** — `audit-autofix.yml` checks daily (or on
+  manual dispatch). An advisory finding triggers `npm audit fix`; verification
+  removes `node_modules`, runs `npm ci`, then `npm run audit:check` and
+  `npm run ci`, on Node 24 only. The PR's own CI adds Node 22, coverage and
+  Playwright. The job opens or updates one `chore/audit-autofix` PR and never
+  auto-merges. If the fix changes nothing, it fails for human triage. If the
+  registry is unreachable during the gate check, it warns and opens no PR;
+  an outage during the raw `audit:check` verification fails the job.
+  `npm audit fix` can also change packages the gate did not require, so review
+  all version moves. A red gate once froze the default branch for 21 days.
+- **Static analysis** — CodeQL reports on first-party code
+  (`javascript-typescript`) and the GitHub Actions workflows (`actions`).
+  Workflow scanning covers issues such as generated strings expanding into
+  shell steps. It is not a required check.
+- **Secret scanning** — `gitleaks` runs on PRs and pushes to `main`, and is not
+  a required check. Known-benign test placeholders are allowlisted by
+  exact-string regex in `.gitleaks.toml`.
+- **Supply chain** — on pushes to `main`, the enabled release workflow publishes
+  packages to npm via OIDC trusted publishing with build provenance and no
+  long-lived token. Dependabot proposes updates, which are triaged deliberately
+  rather than merged for currency alone.
 
 If you're integrating LLM Workbench in a product that handles regulated
 data and want to discuss hardening, reach out via the maintainer's GitHub
