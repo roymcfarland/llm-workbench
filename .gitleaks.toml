@@ -13,7 +13,7 @@ regexes = [
   # (Clerk's documented example key). Used as a CI/e2e env stub.
   '''pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk''',
   # A fake Clerk secret-key STUB used in CI/e2e — base64 decodes to the literal
-  # string "test secret key for e2e". Not a real key (real ones are random).
+  # string "test%20_secret_key_for_e2e". Not a real key (real ones are random).
   '''sk_test_dGVzdCUyMF9zZWNyZXRfa2V5X2Zvcl9lMmU''',
   # A constant NAME (not a value) in the Playwright config.
   '''E2E_CLERK_PUBLISHABLE_KEY''',

@@ -213,8 +213,8 @@ discoverable without auth:
 | `/api/openapi.json`                         | OpenAPI 3.1 description of the run API  |
 | `/runs/demo`                                | Public read-only demo run               |
 
-Authenticated routes (`/playground`, `/runs`, `/api/runs`, `/api/llm`)
-should redirect unauthenticated visitors to `/sign-in`. Public routes (`/blog`, `/feed.xml`, `/docs/protocol`, discovery URLs above) must stay **200** without auth.
+Authenticated page routes (`/playground`, `/runs`) redirect unauthenticated visitors to `/sign-in`; protected API routes (`/api/runs`, `/api/llm`) return JSON **401**.
+Public routes (`/blog`, `/feed.xml`, `/docs/protocol`, discovery URLs above) must stay **200** without auth. `/api/mcp` is public for discovery, with authentication enforced on each tool call.
 
 ### Local Lighthouse (optional)
 

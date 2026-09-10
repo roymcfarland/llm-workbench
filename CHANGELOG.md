@@ -68,6 +68,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Corrected security and automation documentation against the live repository.**
+  Clarified required checks, audit registry-outage behavior, autofix verification
+  and PR updates, resolved advisory notes, blog modes/retries and shared-token
+  failure, package security scope, secret allowlisting and API authentication.
+  Added the missing #191 and #200 lockfile security entries retroactively.
+
 - **Audit-autofix can now update its existing PR branch.** The single-branch
   update path never worked: a bare `--force-with-lease` had no remote-tracking
   ref in the single-ref checkout, causing the 2026-09-10 run (34443555608) to
@@ -183,6 +189,24 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   verified no horizontal overflow across the public pages at 375/768/1024.
 
 ### Security
+
+- **Refreshed `package-lock.json` to clear critical/high advisories (#200,
+  merged 2026-09-10).** Lockfile-only: `next` 16.3.2 → 16.3.4 clears critical
+  `GHSA-p293-qw3h-jr36` and `GHSA-2xp9-vwfh-vxw4` (fixed in 16.3.3);
+  `sharp` 0.35.3 → 0.35.4 clears high `GHSA-rgj7-g3m4-5g8c`; `js-yaml`
+  4.3.1 → 4.3.2 and both nested 3.15.1 → 3.15.2 clear high
+  `GHSA-2883-xcg3-v3hh`. There were 48 version changes, including collateral
+  downgrades: `monaco-editor` 0.56.0 → 0.53.0 removed npm `dompurify`, and
+  `examples/run-repo-server`'s `express` moved 4.22.2 → 4.22.1.
+  Audit: 1 critical / 2 high / 6 moderate / 1 low → 0 critical / 0 high /
+  1 moderate / 0 low.
+
+- **Refreshed `package-lock.json` to clear two high Browserslist advisories
+  (#191, merged 2026-09-01).** Lockfile-only: `browserslist` 4.28.6 → 4.28.8
+  clears `GHSA-c83g-rgw3-j3cx` and `GHSA-73wf-gq98-2v4g` (fixed in 4.28.7).
+  Also moved `baseline-browser-mapping` 2.10.43 → 2.11.20, `caniuse-lite`
+  1.0.30001806 → 1.0.30001810, `electron-to-chromium` 1.5.392 → 1.5.419,
+  `node-releases` 2.0.51 → 2.0.54 and `update-browserslist-db` 1.2.3 → 1.3.2.
 
 - **Refreshed `package-lock.json` to clear six high-severity advisories that had
   deadlocked CI since 2026-08-03.** The audit gate went red on `brace-expansion`
