@@ -79,16 +79,15 @@ resurface if the blocking condition lifts.
 Not scheduled, but recorded so the reasoning is not lost:
 
 - **CDN-cacheable marketing responses.** Every marketing page currently returns
-  `cache-control: private, no-store` because Clerk middleware and a per-request
-  CSP nonce run on every route. Measured cost is small (~200ms), and the change
+  `cache-control: private, no-store` because Clerk in `proxy.ts` and a per-request
+  CSP nonce run on the page routes matched by the proxy (excluding `_next`, dotted paths and `/api/health`). Measured cost is small (~200ms), and the change
   touches a security control.
-- **Override cleanup.** Root `overrides` pin `postcss` and `sharp` to versions
-  Next.js now declares natively. They are retained deliberately as a security
-  *floor* that survives an upstream regression; removing them is a real decision,
-  not a tidy-up.
-- **ESLint compatibility pins.** A `minimatch` override and two
-  `apps/web/eslint.config.mjs` settings exist only because `eslint-config-next`'s
-  plugins do not yet support ESLint 10 natively. Revisit all three together when
-  they do.
-- Larger file-size splits, Upstash rate-limiting, and Ajv precompiled-validator
-  wiring.
+- **Override cleanup.** Root `overrides` retain security floors: `postcss@^8.5.23`
+  matches Next.js 16.3.4's `8.5.23` pin, while `sharp@^0.35.3` now trails
+  Next.js's `^0.35.4` requirement. Whether to retain or remove these overrides
+  remains an open decision, not a tidy-up.
+- **ESLint compatibility pins.** The `minimatch@^10.2.5` override keeps
+  `eslint-config-next`'s import, jsx-a11y and react plugin chains off `minimatch@3`
+  (`GHSA-mh99-v99m-4gvg`). The parser and React-version settings in
+  `apps/web/eslint.config.mjs` work around missing ESLint 10 support; revisit when the plugins update.
+- Larger file-size splits.

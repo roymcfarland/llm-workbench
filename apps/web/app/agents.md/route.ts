@@ -101,8 +101,14 @@ Canonical codes match \`WorkbenchError.code\`: \`HTTP_INVALID_JSON\`,
 
 ## Rate limits
 
-No rate limits in this reference deployment. Production deployments must add
-a per-tenant limiter before exposing the surface to untrusted clients. We
+Proxy-matched \`/api/*\` routes are rate-limited per client IP using sliding
+windows: 120 requests/minute by default, and 30/minute for \`/api/llm\` and
+\`/api/mcp\`. \`/api/health\` and paths containing a dot, such as \`/api/openapi.json\`,
+are excluded. Exceeding a limit returns 429 with \`Retry-After\`.
+Production without Upstash configuration returns 503 ("Rate limiter not configured")
+with \`Retry-After: 60\` on those matched API routes unless \`RATE_LIMIT_ALLOW_UNCONFIGURED=1\`.
+Missing configuration is a no-op in development and test. Limits are per IP,
+not per tenant; add a per-tenant limiter before exposing the surface to untrusted clients. We
 recommend treating MCP tool calls as if each were a REST call for budgeting
 purposes.
 

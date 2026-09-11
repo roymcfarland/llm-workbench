@@ -16,7 +16,7 @@ docs — are welcome.
 
 ## Development setup
 
-Prerequisites: Node.js **>= 22** (CI runs on 22 and 24), npm **>= 9**.
+Prerequisites: Node.js **>= 22** (CI runs on 22 and 24), npm **7+** (workspaces, lockfile v3).
 
 ```bash
 git clone https://github.com/roymcfarland/llm-workbench
@@ -36,8 +36,8 @@ npm test
 ## Conventions
 
 - TypeScript strict mode is on.
-- Vitest is the test runner; co-locate tests next to the file they cover
-  (`foo.ts` ↔ `foo.test.ts`).
+- Vitest runs unit tests; co-locate tests next to the file they cover
+  (`foo.ts` ↔ `foo.test.ts`). Playwright runs `apps/web` e2e smoke tests via `npm run test:e2e -w @llm-workbench/web`.
 - Errors thrown from the runtime should be `WorkbenchError` instances with a
   stable `code`.
 - One logical change per commit; commit subjects in imperative mood, ≤ 72 chars.
@@ -56,10 +56,11 @@ npm test
 - [ ] New behavior is covered by tests.
 - [ ] `CHANGELOG.md` updated under `## [Unreleased]`. Dependency bumps get their
       own entry too — see the existing entries for the expected shape.
+- [ ] If you changed a published `packages/*` library, add a changeset (`npm run changeset`).
 
-Your PR will additionally be checked by CodeQL (first-party code and workflow
-files) and gitleaks. See [SECURITY.md](SECURITY.md#automated-security-gates) for
-what each gate enforces.
+CodeQL (first-party code and workflow files) and gitleaks report findings on
+PRs but are not required checks and do not block merging. See
+[SECURITY.md](SECURITY.md#automated-security-gates) for what each check reports.
 
 ## How changes are reviewed
 
