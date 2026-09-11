@@ -5,7 +5,7 @@
 Use this package when you want assistants or tools speaking MCP to start runs, resolve gates, or inspect traces against any [`RunRepository`](../runtime) implementation.
 
 ```bash
-npm install @llm-workbench/mcp @llm-workbench/runtime
+npm install @llm-workbench/mcp @llm-workbench/runtime @modelcontextprotocol/sdk zod
 ```
 
 ## API surface

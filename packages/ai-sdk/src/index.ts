@@ -1,5 +1,5 @@
 /**
- * `@llm-workbench/ai-sdk` — Vercel AI SDK v5 adapters that emit LLM Workbench
+ * `@llm-workbench/ai-sdk` — Vercel AI SDK v5 and v7 adapters that emit LLM Workbench
  * trace events automatically.
  *
  * Each `traced*` helper is a drop-in replacement for the corresponding AI SDK

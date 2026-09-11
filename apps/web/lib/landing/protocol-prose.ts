@@ -119,9 +119,9 @@ either full replacements (\`writeArtifact\`) or RFC 6902 JSON Patches
 diffs survive replay.
 
 Schemas live in the host: \`registerDemoSchemas\` ships a useful set of
-examples; in production you bring your own Ajv-validated JSON Schemas. The
-runtime refuses to write artifacts that do not validate against the registered
-schema for their \`typeId\`.
+examples; in production you bring your own Ajv-validated JSON Schemas. Validation
+is explicit: hosts call \`validatedWriteArtifact(registry, session, …)\` or
+\`SchemaRegistry.validateArtifact\`. Bare \`writeArtifact\` does not consult a registry.
 
 ### Idempotency
 
@@ -151,11 +151,11 @@ normalize plural vs singular parents — older bundles may only carry \`parentRu
 
 ## Migrations
 
-Bundle migration is a single \`migrateRunBundle\` step keyed off
-\`protocolVersion\`. Bumping the version forces an explicit migration path —
-older bundles are accepted, transformed, and re-signed before they enter the
-runtime. The runtime refuses to import a bundle whose declared protocol
-version it does not understand (unless migration hooks extend the importer).
+Migrations registered with \`registerRunBundleMigration\` let \`migrateRunBundle\`
+transform older bundles and re-validate them against the current \`RunBundleSchema\`.
+Migration does not recompute \`integrity\`; re-export for a fresh hash. No migrations
+are registered for the current protocol version. Imports of other protocol versions
+require a registered migration path; without one, migration throws \`UNSUPPORTED_PROTOCOL_VERSION\`.
 
 ## Sample minimal RunBundle
 

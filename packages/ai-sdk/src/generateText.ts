@@ -139,8 +139,8 @@ function summarizeResultText(result: GenerateTextResult): string | undefined {
 
 /**
  * Emit `tool_call` trace events for the toolCalls present in a `generateText`
- * (or step) result. Best-effort: we tolerate either AI SDK v5 (`input`/`output`)
- * or older (`args`/`result`) shapes.
+ * (or step) result. Best-effort: we tolerate AI SDK v5 and later
+ * (`input`/`output`, including v7) or older (`args`/`result`) shapes.
  *
  * @internal
  */

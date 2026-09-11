@@ -68,6 +68,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Corrected agent-facing rate-limit documentation against the proxy matcher and limiter.** Documented per-IP limits, excluded routes and production configuration requirements; corrected governance, MCP auth, planning, contributor guidance, and deployment comments, preserving historical decisions and implementation behavior.
+
+- **Corrected package docs, site copy, and AI SDK comments against the live code.** The `/docs/protocol` page now describes explicit artifact validation and migrations that re-validate bundles without recomputing integrity; corrected SDK versions, peer installs, UI usage, README examples, route/auth coverage, proxy links, smoke tests, and CI/security notes.
+
 - **Corrected security and automation documentation against the live repository.**
   Clarified required checks, audit registry-outage behavior, autofix verification
   and PR updates, resolved advisory notes, blog modes/retries and shared-token

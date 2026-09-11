@@ -12,7 +12,7 @@ These tests assume a production build exists under `apps/web/.next`. CI runs **`
 | `LLM_WB_E2E_DNS_SHIM` | Set automatically by Playwright for `next start`; rewrites `localhost` → `127.0.0.1` at DNS lookup so Next 16’s internal middleware proxy does not hit `ENOTFOUND localhost`. |
 | GitHub Actions matrix | Playwright install + smoke run **only on Node 24**; Node 22 still builds and unit-tests the repo (second matrix leg). |
 
-Smoke uses **`request` only** (no `page.goto` to `/`). HTML navigations to `/` hit Clerk’s dev handshake with placeholder keys; `GET /llms.txt` hits a **route handler** (plain text) and still exercises `next start` plus the Clerk **`middleware.ts`** middleware pipeline without loading the marketing HTML shell.
+The five smoke tests use `request.get` for `/api/health` and `/llms.txt`, plus `page.goto` for `/` under strict CSP, `/runs/demo` under CSP/script/eval checks, and `/runs/demo?s=ring` followed by header navigation to check hydration. The `/llms.txt` route handler also exercises the Clerk `proxy.ts` pipeline without loading the marketing HTML shell.
 
 ## Skip starting the server
 
