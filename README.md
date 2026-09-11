@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@llm-workbench/runtime.svg)](https://www.npmjs.com/package/@llm-workbench/runtime)
 [![CI](https://github.com/roymcfarland/llm-workbench/actions/workflows/ci.yml/badge.svg)](https://github.com/roymcfarland/llm-workbench/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/node/v/@llm-workbench/runtime.svg)](https://nodejs.org)
+[![Node: tested on 22 and 24](https://img.shields.io/badge/node-tested_on_22_and_24-brightgreen.svg)](https://nodejs.org)
 [![codecov](https://codecov.io/gh/roymcfarland/llm-workbench/branch/main/graph/badge.svg)](https://codecov.io/gh/roymcfarland/llm-workbench)
 
 **An open-source control plane for LLM-powered products.**
@@ -27,9 +27,9 @@ happened and gives humans a clean control surface over it.
 
 ## Status
 
-**July 2026 — docs and quality pass:** every package now ships consistent
-JSDoc (`@packageDocumentation` blocks, `@param`/`@returns`/`@throws` on
-public APIs), backing a generated
+**July 2026 — docs and quality pass:** packages ship JSDoc with
+`@packageDocumentation` blocks in `ui`, `adapters-react`, `ai-sdk`, and `mcp`,
+and `@param`/`@returns`/`@throws` on public APIs, backing a generated
 [API reference](https://www.llmworkbench.io/docs/api) that's rebuilt from
 source on every deploy rather than hand-maintained. New
 [Getting Started](https://www.llmworkbench.io/docs/getting-started) and
@@ -90,7 +90,7 @@ npm install @llm-workbench/mcp                                 # expose runs ove
 
 All five libraries are published under the
 [`@llm-workbench`](https://www.npmjs.com/org/llm-workbench) scope (MIT, ESM,
-Node 22+). The runtime has no React or framework dependency — it runs in the
+tested on Node 22 and 24). The runtime has no React or framework dependency — it runs in the
 browser, Node, or edge-style runtimes. Jump to the
 [60-second integration](#60-second-integration) for a complete example.
 
@@ -123,17 +123,18 @@ verification transcripts from specific PRs.
 
 ### Automated gates
 
-Alongside that human/agent review, every PR is held to a set of machine gates
-defined in [`.github/workflows/`](.github/workflows):
+Alongside human/agent review, branch protection requires only `build & test (node 22)`
+and `build & test (node 24)`. Other workflows report findings or automate scheduled
+and push-triggered work; they are not PR gates. Defined in [`.github/workflows/`](.github/workflows):
 
-| Workflow | What it enforces |
+| Workflow | Checks or automation |
 | --- | --- |
-| `ci.yml` | Build, plain-Node ESM smoke, tests, typecheck, lint, the audit gate, production build, and Playwright smoke — on Node 22 and 24. |
-| `codeql.yml` | CodeQL static analysis of first-party code (`javascript-typescript`) and of the workflow files themselves (`actions`). |
-| `gitleaks.yml` | Secret scanning on every PR. |
-| `audit-autofix.yml` | Daily check of the dependency audit gate; opens a pre-verified lockfile PR when it goes red. |
-| `blog-autopublish.yml` | The weekly source-grounded blog publisher (see [docs/blog-autopublish.md](docs/blog-autopublish.md)). |
-| `release.yml` | Publishes the packages to npm via OIDC trusted publishing, with provenance. |
+| `ci.yml` | Required build & test jobs on Node 22 and 24: build, ESM smoke, tests, typecheck, lint, audit gate and production build. CI runs `node scripts/audit-gate.mjs --mode=gate`, wrapping audit-ci and `audit-ci.jsonc`: high/critical advisories fail; registry outages warn and **pass without evaluating**; unrecognised failures fail. Coverage, Codecov uploads and Playwright run on Node 24 only. |
+| `codeql.yml` | Reports static analysis of first-party code (`javascript-typescript`) and workflows (`actions`); not a required check and does not block merging. |
+| `gitleaks.yml` | Reports secrets on PRs and pushes to `main`; not a required check and does not block merging. |
+| `audit-autofix.yml` | Daily/manual gate check; opens or updates one `chore/audit-autofix` PR, never auto-merges. Verifies with a clean install, `npm run audit:check` and `npm run ci` on Node 24; the PR’s CI adds Node 22, coverage and Playwright. An unchanged fix fails for triage; registry failure during the gate check warns and opens no PR. Raw verification fails on registry outages. Review all version moves: `npm audit fix` can change packages the gate did not require. |
+| `blog-autopublish.yml` | Scheduled/manual weekly source-grounded blog publisher, not a PR gate (see [docs/blog-autopublish.md](docs/blog-autopublish.md)). |
+| `release.yml` | On pushes to `main`, when enabled, publishes packages to npm via OIDC trusted publishing with provenance; not a PR gate. |
 
 Dependency updates arrive via Dependabot and are triaged deliberately — see
 [ROADMAP.md](ROADMAP.md) for the standing policy on major upgrades.
@@ -276,7 +277,7 @@ apps/
 | `@llm-workbench/runtime` | Protocol types, `WorkbenchRuntime`, `WorkbenchSession`, `SchemaRegistry`, persistence adapters, bundle import/export, telemetry summaries, and structured `WorkbenchError`. |
 | `@llm-workbench/ui` | `WorkbenchShell`, a themeable React interface for artifacts, rules, traces, gates, and bundles. |
 | `@llm-workbench/adapters-react` | `useWorkbenchRunRevision` for subscribing React components to live run state. |
-| `@llm-workbench/ai-sdk` | Vercel AI SDK v5 wrappers (`tracedGenerateText`, `tracedStreamText`, `tracedGenerateObject`, `tracedStreamObject`, `traceTools`) that emit correlated `model_io`, `tool_call`, and gateway-cost trace events automatically. |
+| `@llm-workbench/ai-sdk` | Vercel AI SDK v5 and v7 wrappers (`tracedGenerateText`, `tracedStreamText`, `tracedGenerateObject`, `tracedStreamObject`, `traceTools`) that emit correlated `model_io`, `tool_call`, and gateway-cost trace events automatically. |
 | `@llm-workbench/mcp` | Model Context Protocol server factory plus HTTP handler (`createWorkbenchMcpHttpHandler`) for exposing the runtime over MCP — see [`packages/mcp/README.md`](packages/mcp/README.md). |
 
 ## Local Development
@@ -313,8 +314,8 @@ const { runId } = runtime.startRun({
     id: "my-pipeline",
     version: 1,
     steps: [
-      { id: "parse", gatePolicy: "PAUSE_BEFORE" },
-      { id: "score", gatePolicy: "AUTO" },
+      { id: "parse", gatePolicy: "PAUSE_BEFORE", inputs: [], outputs: [] },
+      { id: "score", gatePolicy: "AUTO", inputs: [], outputs: [] },
     ],
     edges: [{ id: "e1", from: "parse", to: "score" }],
   },
@@ -364,6 +365,9 @@ console.log(telemetry.totals, telemetry.byProviderModel);
 Drop the shell anywhere in your app:
 
 ```tsx
+import { WorkbenchShell } from "@llm-workbench/ui";
+import "@llm-workbench/ui/theme.css";
+
 <WorkbenchShell runtime={runtime} runId={runId} registry={registry} />
 ```
 

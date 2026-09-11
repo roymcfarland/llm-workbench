@@ -1,20 +1,20 @@
 # Keeps the CI audit gate unblocked.
 #
-# WHY: `npm run audit:check` fails the whole matrix on any high/critical
-# advisory, so the first one to land blocks EVERY open PR. Dependabot only
-# opens per-package PRs, and each of those needs the same green gate to merge
-# — so the fixes get stuck behind the problem they fix. That deadlocked `main`
-# for 21 days (2026-08-03 → 2026-08-24, PR #181): three weekly blog posts and
-# eleven Dependabot PRs frozen behind six advisories that a single lockfile
-# refresh cleared, with no manifest change at all.
+# WHY: CI runs `node scripts/audit-gate.mjs --mode=gate`, wrapping audit-ci and
+# audit-ci.jsonc; high/critical advisories fail the matrix and block open PRs.
+# This once deadlocked main for 21 days (2026-08-03 to 2026-08-24, PR #181).
 #
-# WHAT: daily, check the gate. Green stops. Non-zero results are classified
-# three ways: a real advisory report attempts `npm audit fix`; a known registry
-# infrastructure failure retries once and then warns; anything unrecognised
-# fails loudly. A fix is verified against the FULL pipeline before opening a PR.
+# WHAT: daily gate check; green stops, advisories trigger `npm audit fix`, known
+# registry failures retry once then warn and open no PR; unknown failures fail.
+# If the fix changes nothing, fail for human triage. Review all version moves:
+# npm audit fix can change packages the gate did not require.
 #
-# Does NOT auto-merge. A verified, green, ready-to-merge PR is enough to break
-# the deadlock; merging a dependency change stays a human decision.
+# Verify on Node 24: remove node_modules, npm ci, npm run audit:check, npm run ci.
+# Raw audit:check fails on registry outages. The PR's CI adds Node 22, coverage
+# and Playwright; these are not part of this workflow's verification.
+#
+# Opens or updates one chore/audit-autofix PR. Does NOT auto-merge; merging
+# dependency changes remains a human decision.
 name: Audit gate autofix
 
 on:
@@ -112,10 +112,11 @@ jobs:
           git checkout -B "$BRANCH"
           git add package-lock.json
           git commit -m "fix(deps): refresh the lockfile to clear audit-gate advisories (${DATE})"
-          git push -u origin "$BRANCH" --force-with-lease
+          bash scripts/push-autofix-branch.sh "$BRANCH"
 
           # Reuse one long-lived branch so a gate that stays red for several
           # days updates a single PR instead of opening one per day.
+          # The script handles both creating and updating the branch.
           if [ -n "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')" ]; then
             echo "Existing PR updated by the push above."
             gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url'

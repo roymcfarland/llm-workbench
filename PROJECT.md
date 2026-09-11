@@ -17,12 +17,12 @@
 - **Monorepo:** npm workspaces (no pnpm/yarn).
 - **Runtime:** Node `>=22` (CI matrix: 22 and 24).
 - **Core packages (`packages/*`):** TypeScript, Zod, Ajv, fast-json-patch.
-- **UI packages:** React 19, Tailwind CSS, `@dnd-kit`, Monaco, React Flow.
-- **Hosted reference plane (`apps/web`):** Next.js 16 (App Router), React 19.
+- **UI packages:** React 18.2+/19 (peer), scoped `lwb-` CSS, `@dnd-kit`, Monaco, React Flow.
+- **Hosted reference plane (`apps/web`):** Next.js 16 (App Router), React 19, Tailwind CSS v4.
 - **Auth & Tenancy:** Clerk.
 - **Persistence:** Supabase (service-role + API-layer tenancy guard).
 - **LLM Gateway:** Vercel AI SDK (`ai`) + AI Gateway.
-- **Optional integrations (env-gated):** Sentry, Upstash (Redis rate-limiting), Resend.
+- **Integrations:** Sentry and Resend are optional (env-gated). Upstash Redis is required in production for rate limiting on proxy-matched `/api/*` routes (excluding `/api/health` and dotted paths such as `/api/openapi.json`), unless `RATE_LIMIT_ALLOW_UNCONFIGURED=1`; missing configuration is a no-op in development and test.
 
 ---
 
@@ -39,8 +39,8 @@ Tenancy is enforced at the API layer via `requireTenant()` in `apps/web/lib/auth
 ## Conventions
 
 - **Auth enforcement:** API routes must return structured JSON `401 Unauthorized` responses when unauthenticated, never HTML redirects.
-- **Middleware:** Clerk auth, CSP headers, and optional Upstash rate-limiting are enforced via Next.js middleware.
-- **MCP discovery:** Protocol discovery routes (`/api/mcp` GET, `/.well-known/mcp.json`) are public; mutating JSON-RPC tools require an authenticated session.
+- **Proxy:** `apps/web/proxy.ts` enforces Clerk auth, a per-request CSP nonce, and rate limiting. It runs on all paths except `_next`, dotted paths, and `/api/health`; rate limiting applies to proxy-matched `/api/*` routes and fails closed in production without Upstash unless `RATE_LIMIT_ALLOW_UNCONFIGURED=1`.
+- **MCP discovery:** Protocol discovery routes (`/api/mcp` GET, `/.well-known/mcp.json`) and MCP discovery methods are public; every `tools/call` requires an authenticated session.
 - **Errors:** Internal errors are sanitized in production to avoid leaking stack traces; `WorkbenchError` is used for structured, stable error codes across package boundaries.
 - **Cross-controller method elevation:** When a refactor splits a class into multiple controllers and one controller's previously `private` method becomes a cross-controller dependency (i.e., other sibling controllers must call it), the elevated method must (a) carry a JSDoc comment that explicitly enumerates the sibling controllers permitted to call it, (b) state that the method is **not** part of the public surface reachable through any facade, and (c) be tagged `@internal` so it is excluded from generated `.d.ts` documentation. The Verifier should fail any PR that elevates such a method without all three. The first instance of this pattern is `RunLifecycleController.assertRunActive` (see `packages/runtime/src/runtime/runLifecycleController.ts`).
 - **Slice scope envelope and incidental cleanup:** A Builder slice's scope envelope is defined by the Builder prompt's authorized edits. Within that scope, the Builder may also remove imports, local helper type aliases, and other declarations that are *mechanically* rendered unused by the slice's exact authorized edit, in the same file as the edit, in the same PR. The Builder may not remove or refactor declarations that merely *happen* to be nearby, dead for unrelated reasons, or stylistically suboptimal. Any such incidental cleanup must be enumerated in the PR description's "Architectural choices" section with a one-sentence justification linking each removal to the authorized edit. The Verifier should fail any PR whose incidental cleanup cannot be justified as mechanically caused by the authorized edit. The first instance of this pattern is the removal of `TraceEvent`, `ArtifactStore`, and `CanStart` declarations in PR #10's `session.ts` constructor refactor (see `docs/process/VERIFIER-AUDIT-PR10.md` Concern A).
@@ -106,7 +106,7 @@ Large files degrade agent context windows and increase merge conflicts. A 500-li
 
 **Verifier behavior:**
 - Warn on any PR that adds to a `.ts` or `.tsx` file (excluding `*.test.ts`/`*.test.tsx` and generated files) pushing it over 500 lines.
-- Hard-fail any PR that pushes a non-generated `.ts` or `.tsx` source file over 800 lines. This hard cap is now active: both named split PRs have landed, with `packages/runtime/src/runtime/session.ts` at 185 lines and `packages/ui/src/WorkbenchShell.tsx` split under the 500-line soft cap.
+- Hard-fail any PR that pushes a non-generated `.ts` or `.tsx` source file over 800 lines. This hard cap is now active: both named split PRs have landed, with `packages/runtime/src/runtime/session.ts` at 185 lines and `packages/ui/src/WorkbenchShell.tsx` split under the 500-line soft cap. **2026-09-10 annotation:** `wc -l` now reports 438 lines for `session.ts` and 474 for `WorkbenchShell.tsx`; both remain under the 500-line soft cap.
 
 ### Q4. Repository visibility and publishing
 
@@ -116,7 +116,7 @@ The repository is public at `github.com/roymcfarland/llm-workbench`. The five `p
 
 **Verifier behavior:**
 - Fail any PR that attempts to make the repository private again (e.g., via a GitHub Actions script or settings change).
-- A release/publish workflow (changesets `version` + `publish`, npm `--provenance`) is **expected**. Do not fail PRs that add or modify npm-publish automation; instead fail any PR that *removes* the publish pipeline once it exists.
+- A release/publish workflow (changesets `version` + `publish`, automatic provenance via npm OIDC trusted publishing) is **expected**. Do not fail PRs that add or modify npm-publish automation; instead fail any PR that *removes* the publish pipeline once it exists.
 - The five `packages/*` must be publishable (no `"private": true`; `"publishConfig": { "access": "public" }`). The root, `apps/web`, and `examples/*` are never published and keep `"private": true`.
 - `npm publish` / `changeset publish` invocations in release automation are permitted and expected.
 
@@ -124,7 +124,7 @@ The repository is public at `github.com/roymcfarland/llm-workbench`. The five `p
 
 **Answer: In scope as site-ops tooling for `apps/web`, via the Vercel AI Gateway.**
 
-A scheduled GitHub Actions workflow may generate `apps/web` blog posts by grounding a Vercel AI Gateway model call in real, freshly fetched sources, validating the result against the blog front-matter schema (`apps/web/lib/blog/schema.ts`) and the project's CI gates, and publishing only when valid (otherwise skipping that run). This is website operations for the reference deployment — not a runtime / control-plane capability — and does not make LLM Workbench a model provider, an eval / LLM-as-judge harness, or a model-routing product (it performs none of those).
+A scheduled GitHub Actions workflow may generate `apps/web` blog posts by grounding a Vercel AI Gateway model call in real, freshly fetched sources, validating the result against the blog front-matter schema (`apps/web/lib/blog/schema.ts`) and the project's CI gates, and publishing only when valid. The run skips when there are too few recent sources, when the generated post fails validation, or when all three generation attempts (`DEFAULT_GENERATION_ATTEMPTS = 3`) fail schema validation. A successful retry proceeds; if all attempts fail and any failure was an infrastructure error, `GenerationRetryError` fails the run instead of skipping. This is website operations for the reference deployment — not a runtime / control-plane capability — and does not make LLM Workbench a model provider, an eval / LLM-as-judge harness, or a model-routing product (it performs none of those).
 
 **Verifier behavior:**
 - Do not fail a PR that adds or modifies the automated blog publisher (its workflow, generator script, RSS/source config, or tests) on the grounds of the "not a model provider" non-goal — that non-goal scopes `@llm-workbench/runtime`, not `apps/web` site-ops tooling.
@@ -137,7 +137,7 @@ A scheduled GitHub Actions workflow may generate `apps/web` blog posts by ground
 When agents encounter conflicts between this document and other files in the repository, the order of authority is:
 
 1. **This PROJECT.md** (authoritative for intent, scope, non-goals, and the resolved open questions above).
-2. **`README.md`** (authoritative for contributor conventions not covered here).
+2. **`CONTRIBUTING.md`** (authoritative for contributor conventions not covered here).
 3. **`package.json`, schema files, CI config** (authoritative for the technical facts they encode, subject to corrections required by this document).
 4. **Inline code comments** (lowest authority; must be corrected when they contradict the above).
 

@@ -1,9 +1,10 @@
 name: CodeQL
 
-# Static analysis of FIRST-PARTY code, which the other two security gates cannot see:
-# `audit:check` (audit-ci) covers dependency advisories, and `gitleaks` covers committed
-# secrets. Neither looks at the code in this repo for injection, path traversal, or unsafe
-# data flow. CodeQL closes that gap.
+# Static analysis of FIRST-PARTY code. CI runs `node scripts/audit-gate.mjs --mode=gate`,
+# wrapping audit-ci and audit-ci.jsonc to fail on high/critical dependency advisories;
+# registry outages warn and pass without evaluation. Gitleaks reports committed secrets.
+# CodeQL and gitleaks are not required checks. CodeQL covers injection, path traversal,
+# and unsafe data flow in this repo.
 #
 # Two languages are scanned:
 #   - javascript-typescript — packages/*, apps/web, scripts/, examples/

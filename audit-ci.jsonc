@@ -2,14 +2,12 @@
   // Gate CI on HIGH and CRITICAL severity advisories only.
   //
   // WHY NOT all severities: `npm audit` reports advisories against the entire
-  // dependency graph regardless of reachability, and this tree's moderate/low
-  // advisories fall into three unactionable classes:
-  //   1. PHANTOM — `dompurify` is pulled by monaco-editor, which VENDORS its own
-  //      copy (`esm/vs/base/browser/dompurify/dompurify.js`) and imports THAT,
-  //      not the npm package. The npm `dompurify` is never executed; there is no
-  //      reachable vulnerability and nothing to fix. The advisory DB mints new
-  //      DOMPurify bypass advisories continuously (8 -> 16 in days, 17 as of
-  //      2026-07-27), so a per-GHSA allowlist is an unwinnable treadmill.
+  // dependency graph regardless of reachability. Classify moderate/low
+  // advisories using these policy categories, with evidence for each decision:
+  //   1. PHANTOM — a reported package is not the copy the application executes.
+  //      Historical example: monaco-editor used its vendored DOMPurify instead
+  //      of npm dompurify. The npm entry is now RESOLVED: PR #200 removed it
+  //      when monaco-editor moved from 0.56.0 to 0.53.0.
   //   2. NOT WORTH THE FIX — transitive advisories that a root `overrides` entry
   //      COULD reach, but only by forcing a major version into a parent that
   //      pins an exact older one. Root overrides DO reach nested transitives of
@@ -18,37 +16,30 @@
   //      the real reason. State the actual cost/benefit instead. NO current
   //      members -- kept as guidance for classifying future entries.
   //   3. UNREACHABLE — the vulnerable code path is not imported by anything this
-  //      repo actually uses (see @hono/node-server below).
+  //      repo actually uses (historical example: @hono/node-server below).
   //
   // Gating on all severities produced constant red CI that blocked unrelated PRs
   // and trains force-merging -- a worse security posture than green CI that fails
   // only on what is actually severe and actionable. High/critical advisories are
-  // rare, warrant breaking the build, and are usually fixable. Current tree:
-  // 0 high package findings, 0 critical, and no allowlist entries. Every
-  // remaining moderate traces to one of the two entries enumerated below
-  // (dompurify via monaco-editor, @hono/node-server); run `npm audit` to
-  // review them.
+  // rare, warrant breaking the build, and are usually fixable.
+  // Current-tree snapshot (2026-09-10): 0 critical, 0 high, 1 moderate, 0 low;
+  // no allowlist entries. The remaining moderate is qs@6.14.2 at
+  // examples/run-repo-server/node_modules/qs, under that example's express@4.22.1:
+  //   GHSA-q8mj-m7cp-5q26 (>=6.11.1 <=6.15.1),
+  //   GHSA-x5fp-wj9c-mxmx (>=6.14.2 <=6.15.3),
+  //   GHSA-4mjr-xmp4-gh2g (>=2.2.5 <6.16.0).
+  // npm reports fixAvailable: true. Run `npm audit` to review current findings.
   //
-  // KNOWN ACCEPTED moderate/low advisories (informational; below the gate, so not
-  // listed as allowlist entries -- re-triage on major dependency upgrades):
-  //   - dompurify (via monaco-editor): PHANTOM, see above. 17 distinct GHSAs as
-  //     of 2026-07-27. No fix possible/needed.
+  // RESOLVED moderate/low advisory notes (informational; not allowlist entries):
+  //   - dompurify (via monaco-editor) was accepted as PHANTOM, class 1 above;
+  //     now RESOLVED -- npm dompurify was removed by PR #200.
   //   (@opentelemetry/core GHSA-8988-4f7v-96qf was accepted here as class 2 and is
-  //   now RESOLVED -- lighthouse@13.4.1 dropped its bundled @sentry/node entirely,
-  //   removing all 11 @opentelemetry/instrumentation-* packages and all 12 nested
-  //   @opentelemetry/core@1.30.1 copies. One hoisted @opentelemetry/core@2.10.0
-  //   remains, from this repo's own @sentry/nextjs. Landed via PR #153.)
-  //   - @hono/node-server: GHSA-frvp-7c67-39w9 (`<2.0.5`, path traversal in
-  //     `serve-static`). UNREACHABLE, class 3 above, re-verified 2026-07-27 against
-  //     @modelcontextprotocol/sdk@1.30.0. Reached via
-  //     packages/mcp -> @modelcontextprotocol/sdk -> @hono/node-server@1.19.14.
-  //     Only the SDK's Node-specific `server/streamableHttp.js` transport imports
-  //     @hono/node-server; `packages/mcp/src/http.ts` imports
-  //     `server/webStandardStreamableHttp.js`, which contains ZERO hono references.
-  //     The vulnerable serve-static path is never loaded. Fixing would force a major
-  //     (>=2.0.5) against the SDK's declared `^1.19.9`. REVISIT if packages/mcp ever
-  //     switches to the Node `streamableHttp` transport, or when the SDK widens its
-  //     range -- re-check with `grep -rl "@hono/node-server"` against the installed SDK.
+  //   now RESOLVED. Landed via PR #153. The current lighthouse@13.4.1 still
+  //   depends on @sentry/node ^10.0.0; the lockfile has one @sentry/node@10.70.0
+  //   and one @opentelemetry/core@2.10.0, with no nested 1.30.1 copies.)
+  //   - @hono/node-server GHSA-frvp-7c67-39w9 (<2.0.5, serve-static path
+  //     traversal) was accepted as UNREACHABLE, class 3; now RESOLVED --
+  //     PR #181 moved 1.19.14 to 2.1.1 on 2026-08-24, outside the affected range.
   //
   // If a HIGH/critical advisory ever lands that is itself phantom/unfixable,
   // allowlist that ONE advisory here by GHSA id with a dated reason -- a rare,

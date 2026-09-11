@@ -23,7 +23,7 @@ What you expected to happen instead.
 
 ## Environment
 
-- Package + version: <!-- e.g. @llm-workbench/runtime@0.2.0 -->
+- Package + version: <!-- e.g. @llm-workbench/runtime@x.y.z (npm ls @llm-workbench/runtime) -->
 - Node version: <!-- node -v -->
 - Runtime: <!-- browser / Node / edge -->
 - Bundler (if any): <!-- Vite / Next.js / none -->

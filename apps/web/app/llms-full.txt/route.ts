@@ -11,13 +11,13 @@ export const dynamic = "force-dynamic";
 const APP_README_FALLBACK = `# @llm-workbench/web
 
 Hosted reference deployment for LLM Workbench. Next.js 16 App Router,
-Tailwind v4, Clerk auth, Supabase persistence, AI SDK v5 routed through
+Tailwind v4, Clerk auth, Supabase persistence, AI SDK v7 routed through
 Vercel AI Gateway.
 
 Marketing & discoverability (auth optional): \`/\`, \`/blog\`, \`/docs/protocol\`,
 \`/runs/demo\`, \`/feed.xml\`, \`/llms.txt\`, \`/robots.txt\`, \`/sitemap.xml\`, Open Graph
 routes (\`/opengraph-image\`, \`/twitter-image\`). Authenticated shells: \`/playground\`,
-\`/runs\` (middleware + Clerk). APIs: \`/api/openapi.json\`, \`/.well-known/mcp.json\`
+\`/runs\` (\`proxy.ts\` + Clerk). APIs: \`/api/openapi.json\`, \`/.well-known/mcp.json\`
 (public discovery); \`/api/runs…\`, \`/api/llm\`, \`/api/mcp\` require credentials.
 `;
 
@@ -77,7 +77,7 @@ A Streamable HTTP MCP endpoint registers:
 
 Discovery via \`/.well-known/mcp.json\`. Resources expose \`runs://{runId}\` bundle URIs — see \`packages/mcp/README.md\`.
 
-HTML crawlers and link previews do not carry Clerk sessions. Middleware explicitly allows OG/Twitter metadata image routes (\`/opengraph-image\`, \`/twitter-image\`) and marketing paths; tenant APIs and MCP stay behind auth (\`robots.txt\` \`Disallow\` on private APIs for crawl-budget hygiene).
+HTML crawlers and link previews do not carry Clerk sessions. \`proxy.ts\` allows OG/Twitter metadata image routes (\`/opengraph-image\`, \`/twitter-image\`) and marketing paths; tenant APIs require auth; \`/api/mcp\` is public for discovery, and every tool call requires auth (\`robots.txt\` \`Disallow\` on private APIs for crawl-budget hygiene).
 
 ## Error model
 
@@ -85,9 +85,14 @@ Errors are JSON: \`{ "error": "<human message>", "code": "<optional canonical co
 
 ## Rate limits
 
-No rate limits are enforced in this reference deployment. Production
-deployments must add a per-tenant limiter at the API or MCP layer before
-exposing this surface to untrusted clients.
+Proxy-matched \`/api/*\` routes are rate-limited per client IP using sliding
+windows: 120 requests/minute by default, and 30/minute for \`/api/llm\` and
+\`/api/mcp\`. \`/api/health\` and paths containing a dot, such as \`/api/openapi.json\`,
+are excluded. Exceeding a limit returns 429 with \`Retry-After\`.
+Production without Upstash configuration returns 503 ("Rate limiter not configured")
+with \`Retry-After: 60\` on those matched API routes unless \`RATE_LIMIT_ALLOW_UNCONFIGURED=1\`.
+Missing configuration is a no-op in development and test. Limits are per IP,
+not per tenant; add a per-tenant limiter before exposing the surface to untrusted clients.
 `;
 
 async function readWithFallback(filePath: string, fallback: string): Promise<string> {

@@ -107,13 +107,16 @@ console.log(telemetry.totals, telemetry.byProviderModel);
 ## Add the UI
 
 \`\`\`tsx
+import { WorkbenchShell } from "@llm-workbench/ui";
+import "@llm-workbench/ui/theme.css";
+
 <WorkbenchShell runtime={runtime} runId={runId} registry={registry} />
 \`\`\`
 
-Install \`@llm-workbench/ui\` and \`@llm-workbench/adapters-react\`, drop the
-shell in anywhere in your app, and the same run above renders as trace
-timeline, artifacts, and gates — the exact surface the
-[live demo](/runs/demo) shows.
+Install \`@llm-workbench/ui\` (React 18.2+ or 19), drop the shell in your app,
+and the same run above renders as trace timeline, artifacts, and gates — the
+exact surface the [live demo](/runs/demo) shows. The shell subscribes to run
+updates through its included \`@llm-workbench/adapters-react\` dependency.
 
 ## Where to go next
 
@@ -123,7 +126,7 @@ timeline, artifacts, and gates — the exact surface the
   reference app fit together.
 - [API reference](/docs/api) — generated API details for every public package export.
 - [Live demo](/runs/demo) — a real run, rendered read-only, no signup.
-- \`@llm-workbench/ai-sdk\` — automatic trace events for Vercel AI SDK v5 calls.
+- \`@llm-workbench/ai-sdk\` — automatic trace events for Vercel AI SDK v5 and v7 calls.
 - \`@llm-workbench/mcp\` — expose runs over the Model Context Protocol.
 - [Contributing](https://github.com/roymcfarland/llm-workbench/blob/main/CONTRIBUTING.md) —
   local dev setup and PR conventions.

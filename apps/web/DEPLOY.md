@@ -179,7 +179,7 @@ In the Vercel dashboard:
    - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` *(API rate limiting)*
    - `RATE_LIMIT_ALLOW_UNCONFIGURED=1` *(only if you deliberately run
      production without Upstash; otherwise missing Upstash config makes
-     `/api/*` except `/api/health` return `503`)*
+     proxy-matched `/api/*` routes (excluding `/api/health` and dotted paths such as `/api/openapi.json`) return `503`)*
    - **`GOOGLE_SITE_VERIFICATION`** / **`BING_SITE_VERIFICATION`** / **`YANDEX_SITE_VERIFICATION`** *(optional HTML-tag verification via `lib/site-verification.ts` — omit until you paste tokens from Search Console / Bing / Yandex)*
 3. **Domains**: attach a real domain (or use the preview URL) and set
    `NEXT_PUBLIC_SITE_ORIGIN` to it before redeploying — sitemap.xml,
@@ -213,8 +213,8 @@ discoverable without auth:
 | `/api/openapi.json`                         | OpenAPI 3.1 description of the run API  |
 | `/runs/demo`                                | Public read-only demo run               |
 
-Authenticated routes (`/playground`, `/runs`, `/api/runs`, `/api/llm`)
-should redirect unauthenticated visitors to `/sign-in`. Public routes (`/blog`, `/feed.xml`, `/docs/protocol`, discovery URLs above) must stay **200** without auth.
+Authenticated page routes (`/playground`, `/runs`) redirect unauthenticated visitors to `/sign-in`; protected API routes (`/api/runs`, `/api/llm`) return JSON **401**.
+Public routes (`/blog`, `/feed.xml`, `/docs/protocol`, discovery URLs above) must stay **200** without auth. `/api/mcp` is public for discovery, with authentication enforced on each tool call.
 
 ### Local Lighthouse (optional)
 
