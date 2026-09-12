@@ -170,3 +170,34 @@ describe("renderMarkdown", () => {
     expect(headings[0]!.id).toBe("parameters");
   });
 });
+
+
+describe("generated HTML escaping", () => {
+  it.each([
+    ['```x" onmouseover="alert(1)', 'class="language-x&quot; onmouseover=&quot;alert(1)"'],
+    ['## Title" onfocus="alert(1)', 'aria-label="Anchor link to: Title&quot; onfocus=&quot;alert(1)"'],
+    ['[x](https://a.example" onmouseover="alert(1))', 'href="https://a.example&quot; onmouseover=&quot;alert(1"'],
+  ])("keeps breakout input inside the attribute: %s", (input, attribute) => {
+    const html = renderMarkdown(input);
+    expect(html).toContain(attribute);
+    // Discard complete quoted values before checking actual attribute names.
+    const tags = html.match(/<[^>]+>/g) ?? [];
+    for (const tag of tags) {
+      expect(tag.replace(/"[^"]*"|'[^']*'/g, '""')).not.toMatch(/\son\w+\s*=/i);
+    }
+  });
+
+  it("escapes both quote characters in paragraph text", () => {
+    expect(renderMarkdown(`He said "it's fine".`)).toContain("He said &quot;it&#39;s fine&quot;.");
+  });
+
+  it("unescapes doubled backslashes in inline text", () => {
+    expect(renderMarkdown("a\\\\b")).toContain("a\\b</p>");
+  });
+
+  it("round-trips escaped brackets and backslashes in a link label", () => {
+    const html = renderMarkdown("[a\\\\b \\[x\\] \\\\](https://a.example)");
+    expect(html).toContain('href="https://a.example"');
+    expect(html).toContain(">a\\b [x] \\</a>");
+  });
+});

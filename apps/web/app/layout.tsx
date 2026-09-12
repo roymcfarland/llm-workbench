@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@/lib/security/json-ld";
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Newsreader, Outfit } from "next/font/google";
 import { headers } from "next/headers";
@@ -174,11 +175,11 @@ export default async function RootLayout({
       <body className="min-h-screen overflow-x-clip antialiased">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationJsonLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteJsonLd) }}
         />
         <ScrollChrome />
         <a

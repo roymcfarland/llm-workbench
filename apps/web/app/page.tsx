@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@/lib/security/json-ld";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
@@ -69,7 +70,7 @@ export default async function LandingPage() {
       <script
         type="application/ld+json"
         // server-rendered, so dangerouslySet here is safe and intentional
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
 
       <div className="relative isolate overflow-hidden">
