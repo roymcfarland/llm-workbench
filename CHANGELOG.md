@@ -194,7 +194,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
-- Fixed a `__proto__` segment in a redaction path that could write to `Object.prototype` or swap the exported clone's prototype. Paths are host-registered via `exportRedactPaths`; own `__proto__` data keys are still redacted. This fix closes CodeQL #6 (#<pending>).
+- Fixed a `__proto__` segment in a redaction path that could write to `Object.prototype` or swap the exported clone's prototype. Paths are host-registered via `exportRedactPaths`; own `__proto__` data keys are still redacted. This fix closes CodeQL #6 (#208).
 - Escaped generated HTML attributes from Markdown fence language tags, headings, and link URLs, escaped backslashes in RSS source link titles, and prevented JSON-LD values from terminating script elements. CSP limited script execution but did not prevent attribute or HTML injection; this fix closes CodeQL #8, #9, and #11 (#207).
 - **Refreshed `package-lock.json` to clear critical/high advisories (#200,
   merged 2026-09-10).** Lockfile-only: `next` 16.3.2 → 16.3.4 clears critical
