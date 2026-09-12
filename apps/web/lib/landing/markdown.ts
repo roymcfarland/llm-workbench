@@ -9,7 +9,9 @@ function escape(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function inline(s: string): string {
@@ -24,7 +26,7 @@ function inline(s: string): string {
   // literal character before the markup regexes below get a chance to
   // misinterpret it (e.g. `\_` as italics, `\[x\]` as a link fragment).
   const escapedMarker: string[] = [];
-  withCode = withCode.replace(/\\([<>{}[\]|_])/g, (_m, ch) => {
+  withCode = withCode.replace(/\\([<>{}[\]|_\\])/g, (_m, ch) => {
     const idx = escapedMarker.push(ch) - 1;
     return `\u0000ESC${idx}\u0000`;
   });

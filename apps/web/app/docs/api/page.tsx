@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@/lib/security/json-ld";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -90,11 +91,11 @@ export default async function ApiReferenceDocsPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(techArticleJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(techArticleJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <div className="relative isolate">
         <div

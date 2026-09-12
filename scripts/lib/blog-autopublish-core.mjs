@@ -7,7 +7,7 @@ function oneLine(value) {
 }
 
 function escapeLinkText(value) {
-  return oneLine(value).replace(/([\[\]])/g, "\\$1");
+  return oneLine(value).replace(/([\\\[\]])/g, "\\$1");
 }
 
 const DEFAULT_GENERATION_ATTEMPTS = 3;

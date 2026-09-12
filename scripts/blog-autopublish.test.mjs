@@ -355,3 +355,13 @@ describe("blog autopublish core", () => {
     expect(blogFrontMatterSchema.safeParse(parsed.data).success).toBe(true);
   });
 });
+
+
+it("escapes backslashes and brackets in Sources link titles", () => {
+  const section = buildSourcesSection([{
+    title: "a\\b [x] \\",
+    link: "https://a.example",
+    feedName: "Example",
+  }]);
+  expect(section).toBe("\n## Sources\n\n- [a\\\\b \\[x\\] \\\\](https://a.example) — Example\n");
+});
