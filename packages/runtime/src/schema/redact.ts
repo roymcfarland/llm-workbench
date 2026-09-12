@@ -26,7 +26,13 @@ function setAtPointer(root: unknown, pointer: string, replacement: unknown) {
     const last = i === parts.length - 1;
     if (last) {
       if (cur && typeof cur === "object" && !Array.isArray(cur)) {
-        (cur as Record<string, unknown>)[key] = replacement;
+        if (key === "__proto__") {
+          // Redact own data keys without invoking the inherited prototype setter.
+          if (!Object.hasOwn(cur, key)) throw new Error(`Cannot set path ${pointer}`);
+          Object.defineProperty(cur, key, { value: replacement, writable: true, enumerable: true, configurable: true });
+        } else {
+          (cur as Record<string, unknown>)[key] = replacement;
+        }
       } else if (Array.isArray(cur)) {
         const idx = Number(key);
         if (!Number.isFinite(idx)) throw new Error(`Invalid array index: ${key}`);
@@ -41,7 +47,7 @@ function setAtPointer(root: unknown, pointer: string, replacement: unknown) {
 }
 
 function drill(cur: unknown, key: string): unknown {
-  if (cur && typeof cur === "object" && !Array.isArray(cur)) return (cur as Record<string, unknown>)[key];
+  if (cur && typeof cur === "object" && !Array.isArray(cur)) return Object.hasOwn(cur, key) ? (cur as Record<string, unknown>)[key] : undefined;
   if (Array.isArray(cur)) return (cur as unknown[])[Number(key)];
   throw new Error(`Cannot drill into path segment ${key}`);
 }
