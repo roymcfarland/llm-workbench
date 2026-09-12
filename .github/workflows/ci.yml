@@ -8,6 +8,9 @@ on:
       - "autopublish/**"
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build-test:
     name: build & test (node ${{ matrix.node }})

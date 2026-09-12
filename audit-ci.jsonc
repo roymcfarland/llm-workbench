@@ -22,15 +22,17 @@
   // and trains force-merging -- a worse security posture than green CI that fails
   // only on what is actually severe and actionable. High/critical advisories are
   // rare, warrant breaking the build, and are usually fixable.
-  // Current-tree snapshot (2026-09-10): 0 critical, 0 high, 1 moderate, 0 low;
-  // no allowlist entries. The remaining moderate is qs@6.14.2 at
-  // examples/run-repo-server/node_modules/qs, under that example's express@4.22.1:
-  //   GHSA-q8mj-m7cp-5q26 (>=6.11.1 <=6.15.1),
-  //   GHSA-x5fp-wj9c-mxmx (>=6.14.2 <=6.15.3),
-  //   GHSA-4mjr-xmp4-gh2g (>=2.2.5 <6.16.0).
-  // npm reports fixAvailable: true. Run `npm audit` to review current findings.
+  // Current-tree snapshot (2026-09-12): 0 critical, 0 high, 0 moderate, 0 low;
+  // no allowlist entries. Run `npm audit` to review current findings.
   //
   // RESOLVED moderate/low advisory notes (informational; not allowlist entries):
+  //   - qs: GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g and GHSA-q8mj-m7cp-5q26.
+  //     examples/run-repo-server's express@4.22.1 pins qs ~6.14.0; the newest
+  //     Express 4 (4.22.2) still pins ~6.15.1. The root override "qs": "^6.16.0"
+  //     (PR #210) removed the nested qs@6.14.2 copy. In the advisor's spike,
+  //     `npm audit fix` alone changed nothing.
+  //     REVISIT: remove the override once `npm view express@4 dependencies.qs`
+  //     allows >=6.16.0, or once the example leaves Express 4.
   //   - dompurify (via monaco-editor) was accepted as PHANTOM, class 1 above;
   //     now RESOLVED -- npm dompurify was removed by PR #200.
   //   (@opentelemetry/core GHSA-8988-4f7v-96qf was accepted here as class 2 and is

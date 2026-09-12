@@ -194,6 +194,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- Set the CI workflow token to `contents: read` (the repository default is write), closing CodeQL #1. A root `qs` override clears GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g and GHSA-q8mj-m7cp-5q26 in `examples/run-repo-server`; the only lockfile change removes nested `qs@6.14.2`, and the example's behaviour is unchanged (#210).
 - Fixed a `__proto__` segment in a redaction path that could write to `Object.prototype` or swap the exported clone's prototype. Paths are host-registered via `exportRedactPaths`; own `__proto__` data keys are still redacted. This fix closes CodeQL #6 (#208).
 - Escaped generated HTML attributes from Markdown fence language tags, headings, and link URLs, escaped backslashes in RSS source link titles, and prevented JSON-LD values from terminating script elements. CSP limited script execution but did not prevent attribute or HTML injection; this fix closes CodeQL #8, #9, and #11 (#207).
 - **Refreshed `package-lock.json` to clear critical/high advisories (#200,
