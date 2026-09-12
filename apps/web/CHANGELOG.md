@@ -1,5 +1,16 @@
 # @llm-workbench/web
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [4fabf80]
+  - @llm-workbench/runtime@0.3.3
+  - @llm-workbench/adapters-react@0.3.4
+  - @llm-workbench/ai-sdk@0.3.4
+  - @llm-workbench/mcp@0.3.4
+  - @llm-workbench/ui@0.3.4
+
 ## 0.1.4
 
 ### Patch Changes
