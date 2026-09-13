@@ -169,6 +169,38 @@ describe("renderMarkdown", () => {
     const { headings } = renderMarkdownWithHeadings("## Parameters");
     expect(headings[0]!.id).toBe("parameters");
   });
+
+  it("leaves a link with a code span in its URL unlinked", () => {
+    const html = renderMarkdown("[x](https://a.example/`x`)");
+    expect(html).not.toContain("<a ");
+    expect(html).toContain("[x](https://a.example/<code");
+    expect(html).not.toMatch(/href="[^"]*</);
+  });
+
+  it("leaves a link with bold in its URL unlinked", () => {
+    const html = renderMarkdown("[x](https://a.example/**b**)");
+    expect(html).not.toContain("<a ");
+    expect(html).toContain("[x](https://a.example/<strong>b</strong>)");
+    expect(html).not.toMatch(/href="[^"]*</);
+  });
+
+  it("leaves a link with italics in its URL unlinked", () => {
+    const html = renderMarkdown("[x](https://a.example/ *b* )");
+    expect(html).not.toContain("<a ");
+    expect(html).toContain("[x](https://a.example/ <em>b</em> )");
+    expect(html).not.toMatch(/href="[^"]*</);
+  });
+
+  it("still links a label containing a code span", () => {
+    const html = renderMarkdown("[`run()` docs](https://a.example/)");
+    expect(html).toContain('href="https://a.example/"');
+    expect(html).toContain("run()</code> docs</a>");
+  });
+
+  it("still links a bold label", () => {
+    const html = renderMarkdown("[**x**](https://a.example/)");
+    expect(html).toContain("<strong>x</strong></a>");
+  });
 });
 
 
