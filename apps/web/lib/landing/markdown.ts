@@ -2,8 +2,10 @@
  * Microscopic markdown → HTML renderer for the landing/docs surface. Handles
  * H1–H4 headings (with slugified ids and a hover-revealed `#` anchor),
  * paragraphs, fenced code blocks, unordered lists, GFM-style pipe tables,
- * blockquotes, inline `code`, **bold**, and *italic*. Anything more exotic
- * should be authored as JSX directly.
+ * blockquotes, inline `code`, **bold**, *italic*, `[links](url)` (http(s) and
+ * root-relative only; left as literal text when the URL contains code or emphasis),
+ * and backslash-escaped punctuation. Anything more exotic should be authored
+ * as JSX directly.
  */
 function escape(s: string): string {
   return s

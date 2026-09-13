@@ -70,6 +70,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Corrected site copy, agent descriptors and code comments against the live code.** `llms-full.txt` no longer claims every API response carries the `Link` header. `agents.md` lists all eight MCP tools, describes public MCP discovery and the other public routes, and points at `proxy.ts`. The FAQ no longer claims spans, an in-browser demo or a hosted-only Langfuse. The wire format is attributed to `HttpRunRepository.save()` in `agents.md`, `openapi.json` and the runs-store comment. Also corrected: the markdown renderer header, the runtime README quick-start and the e2e README script names. (#<pending>)
+
 - **Corrected contributor, deploy and automation docs against the live repository.** The PR template checklist now matches CONTRIBUTING. Also corrected: the npm floor (root overrides need 8.3+), the changelog rule for dependency PRs, CI push triggers, the Supabase security-note pointer, DEPLOY.md's `KV_REST_API_*` aliases and untracked org fan-out, stale lockfile versions in `audit-ci.jsonc`, the autofix PR body, and the release/blog gating comments. Private vulnerability reporting was enabled in repository settings, so the advisory links in SECURITY.md, the issue template and security.txt now work. (#213)
 
 - Link URLs containing a code span, bold or italics now render as literal text instead of emitting markup inside `href`; corrected the runtime 0.3.3 changelog text. (#211)

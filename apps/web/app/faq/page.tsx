@@ -10,7 +10,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "How is this different from LangSmith, Langfuse, or Helicone?",
-    a: "Those are hosted observability dashboards — your telemetry lives in their database. LLM Workbench is protocol-first: each run is a self-contained, cryptographically signed bundle (with a sha256 integrity hash) you can export, verify, and replay anywhere. Human approval gates and run replay/fork are first-class, not add-ons.",
+    a: "Those are observability and evaluation platforms built around a trace store, hosted or (for Langfuse) self-hosted. LLM Workbench is protocol-first: each run is a self-contained, cryptographically signed bundle (with a sha256 integrity hash) you can export, verify, and replay anywhere. Human approval gates and run replay/fork are first-class, not add-ons.",
   },
   {
     q: 'What\'s a "run bundle"?',
@@ -18,7 +18,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "How do I add it to my code?",
-    a: "One import. Swap `generateText` for `tracedGenerateText` from `@llm-workbench/ai-sdk`, pass a session handle, and every call emits trace events, spans, artifacts, and cost automatically — your returned result is unchanged.",
+    a: "One import. Swap `generateText` for `tracedGenerateText` from `@llm-workbench/ai-sdk`, pass a session handle, and every call emits `model_io` trace events with token usage and gateway cost automatically (plus `tool_call` events via `traceTools`, and an artifact when you pass `writeArtifact`) — your returned result is unchanged.",
   },
   {
     q: "Which models and providers does it support?",
@@ -34,7 +34,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Where does my data go? Is it private?",
-    a: "The public demo runs entirely in your browser — no account, no persistence. Authenticated runs persist to your own database, and because every run is an exportable bundle, you're never locked in.",
+    a: "The public demo run is generated fresh on each request and never saved — no account, no persistence. Authenticated runs persist to your own database, and because every run is an exportable bundle, you're never locked in.",
   },
   {
     q: "Is it open source? Is it a product?",

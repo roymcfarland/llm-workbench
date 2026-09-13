@@ -33,8 +33,8 @@ PUT    /api/runs/{runId}             body: SerializedRunStoreState   → 204
 DELETE /api/runs/{runId}                                             → 204
 \`\`\`
 
-The wire format is the literal output of \`HttpRunRepository.serializeState\`
-from \`@llm-workbench/runtime\`. Maps are serialized as \`Array<[key, value]>\`
+The wire format is the JSON body \`HttpRunRepository.save()\` sends and \`load()\` parses
+in \`@llm-workbench/runtime\`. Maps are serialized as \`Array<[key, value]>\`
 entries; everything else is plain JSON.
 
 ### MCP (Streamable HTTP)
@@ -43,10 +43,12 @@ entries; everything else is plain JSON.
 POST/GET /api/mcp
 \`\`\`
 
-Tools, all tenant-scoped:
+Tools (every \`tools/call\` requires a Clerk session; run tools are tenant-scoped):
 
 - \`list_runs(limit?: number)\` → \`SavedRunMeta[]\`
 - \`get_run(runId: string)\` → serialized \`RunStoreState\`
+- \`verify_run_integrity(bundle)\` → \`{ ok, sha256 }\`
+- \`validate_run_bundle(bundle)\` → \`{ ok }\` or \`{ ok: false, error }\`
 - \`start_run(workflowId: "jobSearchWorkflow")\` → \`{ runId }\`
 - \`resolve_gate(runId, stepId, gate, decision, note?)\` → \`{ ok: true }\`
 - \`write_artifact(runId, artifactKey, typeId, data, idempotencyKey?)\` → \`{ version }\`
@@ -59,7 +61,7 @@ a PR or use the REST PUT for everything else.
 
 ## Authentication
 
-Both surfaces require a Clerk-issued session.
+The REST API requires a Clerk-issued session. On \`/api/mcp\`, discovery methods (\`initialize\`, \`ping\`, \`tools/list\`, \`resources/list\` and similar) are public, and every \`tools/call\` requires a session.
 
 - **Browser context:** Clerk's session cookie is forwarded automatically on \`fetch(..., { credentials: "include" })\`.
 - **Server-to-server / agent context:** issue a Clerk M2M token (or use a Clerk JWT template) and pass \`Authorization: Bearer <token>\` on every request. The MCP descriptor advertises \`auth.type = "clerk-bearer"\`.
@@ -68,17 +70,17 @@ The runtime resolves \`tenantId = orgId ?? "user:" + userId\` and refuses to
 serve cross-tenant data. There is no public anonymous access to mutating
 endpoints. The \`/runs/demo\` page and read-only descriptors (\`llms.txt\`,
 \`llms-full.txt\`, \`agents.md\`, \`mcp.json\`, \`openapi.json\`,
-\`robots.txt\`, \`sitemap.xml\`) are the only public-by-design surfaces.
+\`robots.txt\`, \`sitemap.xml\`) are public machine-readable surfaces; marketing pages, docs, the blog, the FAQ, \`/feed.xml\`, \`/api/health\` and MCP discovery are also public.
 
 ## Search engines, crawlers & link previews
 
 - \`${origin}/robots.txt\` uses a single \`User-agent: *\` block so every bot inherits the same \`Allow\` / \`Disallow\`: marketing URLs stay reachable; Clerk-gated shells (\`/playground\`, \`/runs…\`), private APIs (\`/api/runs…\`, \`/api/llm\`, \`/api/mcp\`), and sign-in/up flows stay out of the crawl frontier. Public exception: \`/runs/demo\`.
 - \`${origin}/sitemap.xml\` lists indexable URLs only (no authenticated app shells).
-- Open Graph / Twitter preview fetches OG image routes without cookies—the hosted server keeps \`/opengraph-image\`, \`/twitter-image\`, and blog image routes reachable outside the Clerk gate (middleware \`apps/web/middleware.ts\`).
+- Open Graph / Twitter preview fetches OG image routes without cookies—the hosted server keeps \`/opengraph-image\`, \`/twitter-image\`, and blog image routes reachable outside the Clerk gate (\`apps/web/proxy.ts\`).
 
 ## Expected request shape
 
-REST PUT bodies match exactly the output of \`HttpRunRepository.serializeState\`.
+REST PUT bodies match exactly the JSON body \`HttpRunRepository.save()\` sends and \`load()\` parses.
 Reject anything that fails \`assertRunStoreStateStructuralInvariants\`. JSON
 must be well-formed; bodies > 25 MB are rejected with HTTP 413.
 

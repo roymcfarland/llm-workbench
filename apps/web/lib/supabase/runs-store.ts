@@ -16,8 +16,8 @@ import {
 import { getServiceSupabase } from "./server";
 
 /**
- * Wire format that `HttpRunRepository.serializeState` produces and
- * `deserializeState` consumes. Mirrored exactly so the client's
+ * Wire format that `HttpRunRepository.save()` sends and `load()` parses.
+ * Mirrored exactly so the client's
  * `PUT /runs/:runId` body lands here unchanged.
  */
 export type SerializedRun = {

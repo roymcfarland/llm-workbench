@@ -22,7 +22,7 @@ function buildOpenApi(origin: string) {
   const SerializedRunStoreState = {
     type: "object",
     description:
-      "Wire format produced by `HttpRunRepository.serializeState`. Maps are serialized as `Array<[key, value]>` entries.",
+      "Wire format produced by the JSON body `HttpRunRepository.save()` sends. Maps are serialized as `Array<[key, value]>` entries.",
     required: [
       "revision",
       "run",
@@ -165,7 +165,7 @@ function buildOpenApi(origin: string) {
       title: "LLM Workbench REST API",
       version: WORKBENCH_PROTOCOL_VERSION,
       description:
-        "Tenant-scoped REST surface for LLM Workbench runs. The wire format is the literal output of `HttpRunRepository.serializeState`.",
+        "Tenant-scoped REST surface for LLM Workbench runs. The wire format is the literal output of the JSON body `HttpRunRepository.save()` sends.",
       contact: {
         name: "LLM Workbench agents contract",
         url: `${origin}/agents.md`,

@@ -42,7 +42,7 @@ WorkbenchSession
 └─ RuleController           replaceRuleSet / reorderRules / annotate
 \`\`\`
 
-Every method call on any controller ends the same way: a typed \`TraceEvent\`
+Every state-changing call on a controller ends the same way: a typed \`TraceEvent\`
 appended to \`RunStoreState\`. Nothing is inferred after the fact from logs —
 if it happened, there's an event for it. The full wire format (\`RunBundle\`
 vs. \`RunStoreState\`, canonical hashing, correlation IDs) is documented in the

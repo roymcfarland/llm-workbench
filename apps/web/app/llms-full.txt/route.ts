@@ -18,7 +18,7 @@ Marketing & discoverability (auth optional): \`/\`, \`/blog\`, \`/docs/protocol\
 \`/runs/demo\`, \`/feed.xml\`, \`/llms.txt\`, \`/robots.txt\`, \`/sitemap.xml\`, Open Graph
 routes (\`/opengraph-image\`, \`/twitter-image\`). Authenticated shells: \`/playground\`,
 \`/runs\` (\`proxy.ts\` + Clerk). APIs: \`/api/openapi.json\`, \`/.well-known/mcp.json\`
-(public discovery); \`/api/runs…\`, \`/api/llm\`, \`/api/mcp\` require credentials.
+(public discovery); \`/api/runs…\` and \`/api/llm\` require credentials; \`/api/mcp\` discovery is public and tool calls require credentials.
 `;
 
 const ROOT_README_FALLBACK = `# LLM Workbench
@@ -63,7 +63,7 @@ Two surfaces expose the runtime over the network:
 - \`GET /api/runs/{runId}\` returns the serialized \`RunStoreState\` (the same wire format \`HttpRunRepository\` produces).
 - \`PUT /api/runs/{runId}\` persists a serialized state. Body limit is 25 MB. Validates structural invariants and rejects \`state.run.id !== runId\`.
 - \`DELETE /api/runs/{runId}\` removes a run.
-- All responses carry \`Link: </api/openapi.json>; rel="describedby"\`.
+- Responses from these route handlers carry \`Link: </api/openapi.json>; rel="describedby"\`; the 401, 429 and 503 responses returned earlier by \`proxy.ts\` do not.
 - Auth is Clerk-based: the request must carry a session cookie (or a Clerk bearer token in production deployments). Tenants are derived as \`orgId ?? "user:" + userId\`.
 
 The full schema lives at \`/api/openapi.json\` (OpenAPI 3.1).
@@ -75,7 +75,7 @@ A Streamable HTTP MCP endpoint registers:
 - Core (\`@llm-workbench/mcp\`): \`list_runs\`, \`get_run\`, \`verify_run_integrity\`, \`validate_run_bundle\`.
 - Reference app additions: \`start_run\`, \`resolve_gate\`, \`write_artifact\`, \`export_bundle\` (full-profile tamper-evident bundle).
 
-Discovery via \`/.well-known/mcp.json\`. Resources expose \`runs://{runId}\` bundle URIs — see \`packages/mcp/README.md\`.
+Discovery via \`/.well-known/mcp.json\`. Resources expose \`runs://{runId}\` bundle URIs (registered in \`packages/mcp/src/server.ts\`).
 
 HTML crawlers and link previews do not carry Clerk sessions. \`proxy.ts\` allows OG/Twitter metadata image routes (\`/opengraph-image\`, \`/twitter-image\`) and marketing paths; tenant APIs require auth; \`/api/mcp\` is public for discovery, and every tool call requires auth (\`robots.txt\` \`Disallow\` on private APIs for crawl-budget hygiene).
 

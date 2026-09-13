@@ -19,7 +19,7 @@ npm install @llm-workbench/runtime
 
 ## Quick start
 
-A complete, runnable example lives in the repository root [`README.md`](../../README.md#60-second-integration). It imports the package and exercises gates, artifacts, model-I/O telemetry, and a signed bundle export under plain Node.
+A complete, runnable example lives in the repository root [`README.md`](../../README.md#60-second-integration). It imports the package and exercises gates, artifacts and model-I/O telemetry under plain Node. `npm run smoke:esm` additionally exports a signed bundle.
 
 ## Docs
 
