@@ -43,7 +43,7 @@ npm run clean:next -w @llm-workbench/web
 
 | Symptom | What to try |
 |---------|---------------|
-| `EADDRINUSE` | Something else owns the port — pick another: `PLAYWRIGHT_WEB_PORT=3405 npm run test:e2e:full`. |
+| `EADDRINUSE` | Something else owns the port — pick another: `PLAYWRIGHT_WEB_PORT=3405 npm run test:e2e:full -w @llm-workbench/web`. |
 | `EMFILE` / too many open files | Quit other heavy apps or raise `ulimit -n` temporarily; reopen Terminal. |
-| `ENOENT` on `.next`/manifest | **`npm run clean:next`** then **`npm run test:e2e:full`** (or `npm run build:web` with CI-style env vars). |
+| `ENOENT` on `.next`/manifest | **`npm run clean:next -w @llm-workbench/web`** then **`npm run test:e2e:full -w @llm-workbench/web`** (or `npm run build:web` (from the repo root) with CI-style env vars). |
 | `Failed to proxy http://localhost:…` / `ENOTFOUND localhost` | Usually broken `localhost` resolution; Playwright enables a small DNS shim. Fix `/etc/hosts` (`127.0.0.1 localhost`) or keep the default shim. |
