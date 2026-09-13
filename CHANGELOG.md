@@ -49,6 +49,17 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Upgraded `@vitejs/plugin-react` from 5 to 6 (dev dependency) in `apps/web` and `examples/job-search-demo`;
+  v6 requires `vite@^8`, which both already resolve, and drops the Babel JSX-transform plugins and `react-refresh`
+  from the lockfile. (#187)
+
+- Grouped npm minor/patch bump — 21 packages, all within-major, including `zod` 4.4.3 → 4.5.4, `ai` 7.0.76 →
+  7.0.93, `@clerk/nextjs` 7.8.0 → 7.9.1, `@sentry/nextjs` 10.70.0 → 10.73.0, `eslint-config-next` 16.3.2 →
+  16.3.4, `typescript-eslint` 8.67.0 → 8.70.0 and `postcss` 8.5.26 → 8.5.28. (#203)
+
+- Grouped npm minor/patch bump — 26 packages, all within-major, including `next` 16.2.12 → 16.3.2, `vite` 8.1.5 →
+  8.2.2, `ai` 7.0.37 → 7.0.76, `@clerk/nextjs` 7.6.1 → 7.8.0 and `@sentry/nextjs` 10.68.0 → 10.70.0. (#183)
+
 - **Reduced-motion visitors no longer download the three.js hero bundle.**
   Production measured Performance ~45, LCP 6.3s (6.9 / 6.3 / 6.3), a 1,719ms
   render delay on the text LCP element, and a 329KB transferred / 1,065KB raw
@@ -69,6 +80,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   requires changes to Clerk middleware and the per-request CSP nonce.
 
 ### Fixed
+
+- **Corrected `ROADMAP.md` against live state and backfilled missing dependency-bump changelog rows.** Removed
+  the closed signed-in-E2E priority (#160), recorded the declined Changesets v3 majors (#178, #189), fixed the
+  `postcss` override description, and added the missing rows for #183, #203 and #187. (#<pending>)
 
 - **Corrected site copy, agent descriptors and code comments against the live code.** `llms-full.txt` no longer claims every API response carries the `Link` header. `agents.md` lists all eight MCP tools, describes public MCP discovery and the other public routes, and points at `proxy.ts`. The FAQ no longer claims spans, an in-browser demo or a hosted-only Langfuse. The wire format is attributed to `HttpRunRepository.save()` in `agents.md`, `openapi.json` and the runs-store comment. Also corrected: the markdown renderer header, the runtime README quick-start and the e2e README script names. (#214)
 
