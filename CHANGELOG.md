@@ -68,7 +68,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Link URLs containing a code span, bold or italics now render as literal text instead of emitting markup inside `href`; corrected the runtime 0.3.3 changelog text. (#<pending>)
+- Link URLs containing a code span, bold or italics now render as literal text instead of emitting markup inside `href`; corrected the runtime 0.3.3 changelog text. (#211)
 
 - **Corrected agent-facing rate-limit documentation against the proxy matcher and limiter.** Documented per-IP limits, excluded routes and production configuration requirements; corrected governance, MCP auth, planning, contributor guidance, and deployment comments, preserving historical decisions and implementation behavior.
 
