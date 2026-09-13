@@ -134,6 +134,10 @@ export type RunCompletionDispatcher = (
   args: MaybeFireArgs,
 ) => Promise<RunCompletionDispatchResult>;
 
+export class RunIdConflictError extends Error {
+  name = "RunIdConflictError";
+}
+
 export async function saveRunForTenant(
   tenantId: string,
   state: RunStoreState,
@@ -181,10 +185,37 @@ export async function saveRunForTenant(
     }
   }
 
-  const { error } = await getServiceSupabase()
-    .from(TABLE)
-    .upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: "id" });
-  if (error) throw new Error(`Supabase save error: ${error.message}`);
+  const writeRow = { ...row, updated_at: new Date().toISOString() };
+  const updateRow = {
+    workflow_id: writeRow.workflow_id,
+    status: writeRow.status,
+    started_at: writeRow.started_at,
+    ended_at: writeRow.ended_at,
+    tags: writeRow.tags,
+    state: writeRow.state,
+    updated_at: writeRow.updated_at,
+  };
+  async function updateOwnRun(): Promise<boolean> {
+    const { data, error } = await getServiceSupabase()
+      .from(TABLE)
+      .update(updateRow)
+      .eq("tenant_id", tenantId)
+      .eq("id", state.run.id)
+      .select("id");
+    if (error) throw new Error(`Supabase save error: ${error.message}`);
+    return (data?.length ?? 0) > 0;
+  }
+
+  if (!(await updateOwnRun())) {
+    const { error } = await getServiceSupabase().from(TABLE).insert(writeRow);
+    if (error) {
+      if (error.code !== "23505") {
+        throw new Error(`Supabase save error: ${error.message}`);
+      }
+      // A concurrent first save may have inserted our row; never claim another tenant's.
+      if (!(await updateOwnRun())) throw new RunIdConflictError();
+    }
+  }
 
   // Fire-and-forget. The dispatcher swallows its own errors and never
   // throws, but we wrap with try/catch + a tail .catch on the returned

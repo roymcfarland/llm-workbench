@@ -8,6 +8,7 @@ import {
 import { TenantAuthError, requireTenant } from "@/lib/auth/tenant";
 import { publicInternalErrorMessage } from "@/lib/server/internal-error";
 import {
+  RunIdConflictError,
   deleteRunForTenant,
   loadRunForTenant,
   saveRunForTenant,
@@ -141,6 +142,11 @@ function errorResponse(e: unknown, op: "GET" | "PUT" | "DELETE"): Response {
   if (e instanceof TenantAuthError) {
     return withDescribedBy(
       NextResponse.json({ error: e.message }, { status: 401 }),
+    );
+  }
+  if (e instanceof RunIdConflictError) {
+    return withDescribedBy(
+      NextResponse.json({ error: "Run id is not available" }, { status: 409 }),
     );
   }
   if (e instanceof WorkbenchError) {

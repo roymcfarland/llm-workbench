@@ -61,8 +61,8 @@ function toolError(message: string): ToolError {
 /**
  * Build a `RunRepository` view of the Supabase-backed runs table that is
  * already scoped to the caller's tenant. The reference deployment uses the
- * service-role key (which bypasses RLS), so this adapter is the single guard
- * that keeps tenant data isolated. Pair with `requireTenant()` upstream.
+ * service-role key (which bypasses RLS), so this adapter, and the tenant-scoped
+ * runs-store queries it calls, keep tenant data isolated. Pair with `requireTenant()` upstream.
  */
 function tenantRepository(tenantId: string): RunRepository {
   return {

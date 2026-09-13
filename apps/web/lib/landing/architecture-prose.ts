@@ -57,12 +57,12 @@ marketing/discovery routes (this site) and session-gated application routes
 handlers under \`apps/web/app/api/\`; the browser/React entry points are the
 page components themselves.
 
-Tenancy is enforced at the API layer via \`requireTenant()\` in
-\`apps/web/lib/auth/tenant.ts\`, which derives a stable tenant scope from the
-Clerk session. This is a hard security boundary: the Supabase persistence
-layer (\`apps/web/lib/supabase/runs-store.ts\`) uses a service-role key that
-bypasses Row Level Security, so the tenant check at the API layer is the only
-thing standing between one tenant's runs and another's.
+Tenancy is enforced at the API layer. \`requireTenant()\` in
+\`apps/web/lib/auth/tenant.ts\` derives a stable tenant scope from the Clerk session,
+and every runs-store query is scoped to it: reads and deletes filter by \`tenant_id\`,
+and saves update only the caller's own row and reject a run id held by another tenant.
+This is a hard security boundary: the Supabase persistence layer uses a service-role key that bypasses Row Level Security,
+so these server-side checks are the only thing standing between one tenant's runs and another's.
 
 ## Where to go next
 

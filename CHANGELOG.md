@@ -202,6 +202,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Scoped run writes to the caller's tenant (GHSA-63qm-whww-m2cf).** Saves previously upserted by run id alone, so an authenticated caller who knew another tenant's run id could overwrite that run through `PUT /api/runs/{runId}`. Saves now update only the caller's own row, insert new runs, and reject a run id owned by another tenant with `409`. MCP tools, `/api/llm` and the published npm packages were not affected.
 - Set the CI workflow token to `contents: read` (the repository default is write), closing CodeQL #1. A root `qs` override clears GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g and GHSA-q8mj-m7cp-5q26 in `examples/run-repo-server`; the only lockfile change removes nested `qs@6.14.2`, and the example's behaviour is unchanged (#210).
 - Fixed a `__proto__` segment in a redaction path that could write to `Object.prototype` or swap the exported clone's prototype. Paths are host-registered via `exportRedactPaths`; own `__proto__` data keys are still redacted. This fix closes CodeQL #6 (#208).
 - Escaped generated HTML attributes from Markdown fence language tags, headings, and link URLs, escaped backslashes in RSS source link titles, and prevented JSON-LD values from terminating script elements. CSP limited script execution but did not prevent attribute or HTML injection; this fix closes CodeQL #8, #9, and #11 (#207).

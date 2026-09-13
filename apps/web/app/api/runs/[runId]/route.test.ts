@@ -10,6 +10,9 @@ vi.mock("@/lib/auth/tenant", () => {
   return { TenantAuthError, requireTenant: vi.fn() };
 });
 vi.mock("@/lib/supabase/runs-store", () => ({
+  RunIdConflictError: class RunIdConflictError extends Error {
+    name = "RunIdConflictError";
+  },
   listRunsForTenant: vi.fn().mockResolvedValue([]),
   loadRunForTenant: vi.fn().mockResolvedValue(null),
   saveRunForTenant: vi.fn().mockResolvedValue(undefined),
@@ -30,7 +33,9 @@ beforeEach(() => {
 });
 
 function expectNoStoreCalls() {
-  for (const mock of Object.values(store)) expect(mock).not.toHaveBeenCalled();
+  for (const mock of Object.values(store)) {
+    if (vi.isMockFunction(mock)) expect(mock).not.toHaveBeenCalled();
+  }
 }
 
 function seedRun() {
@@ -83,6 +88,17 @@ describe("/api/runs/[runId] tenant boundary", () => {
     vi.mocked(store.serializedToState).mockReturnValueOnce(state);
     const res = await PUT(request("PUT", runId), { params: Promise.resolve({ runId }) });
     expect(res.status).toBe(204);
+    expect(store.saveRunForTenant).toHaveBeenCalledExactlyOnceWith("tenant-a", state);
+  });
+
+  it("returns 409 with the Link header when a run id is unavailable", async () => {
+    const { runId, state } = seedRun();
+    vi.mocked(store.serializedToState).mockReturnValueOnce(state);
+    vi.mocked(store.saveRunForTenant).mockRejectedValueOnce(new store.RunIdConflictError());
+    const res = await PUT(request("PUT", runId), { params: Promise.resolve({ runId }) });
+    expect(res.status).toBe(409);
+    await expect(res.json()).resolves.toEqual({ error: "Run id is not available" });
+    expect(res.headers.get("Link")).toBe('</api/openapi.json>; rel="describedby"');
     expect(store.saveRunForTenant).toHaveBeenCalledExactlyOnceWith("tenant-a", state);
   });
 });

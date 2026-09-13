@@ -249,6 +249,10 @@ function buildOpenApi(origin: string) {
               description: "Invalid body or runId mismatch",
               content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
             },
+            "409": {
+              description: "Run id already in use by another tenant",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
+            },
             "413": {
               description: "Body too large (>25MB)",
               content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },

@@ -81,7 +81,7 @@ HTML crawlers and link previews do not carry Clerk sessions. \`proxy.ts\` allows
 
 ## Error model
 
-Errors are JSON: \`{ "error": "<human message>", "code": "<optional canonical code>" }\`. Status codes follow standard REST conventions: \`400\` invalid body, \`401\` missing session, \`404\` unknown run, \`413\` body too large, \`500\` for unexpected failures.
+Errors are JSON: \`{ "error": "<human message>", "code": "<optional canonical code>" }\`. Status codes follow standard REST conventions: \`400\` invalid body, \`401\` missing session, \`404\` unknown run, \`409\` run id already in use by another tenant, \`413\` body too large, \`500\` for unexpected failures.
 
 ## Rate limits
 

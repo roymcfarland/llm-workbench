@@ -12,8 +12,9 @@ export type TenantContext = {
  * Resolve the caller's tenant identity from Clerk. Throws if unauthenticated.
  *
  * SECURITY: Every API route and server action that touches the runs table
- * must call this first. The Supabase service-role key bypasses RLS, so this
- * function is the single guard that scopes data per Clerk org/user.
+ * must call this first. The Supabase service-role key bypasses RLS, so the tenant id
+ * returned here, applied to every runs-store read, write and delete, is what scopes
+ * data per Clerk org/user.
  */
 export async function requireTenant(): Promise<TenantContext> {
   const { userId, orgId } = await auth();

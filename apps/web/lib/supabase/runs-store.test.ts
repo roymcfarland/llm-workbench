@@ -4,15 +4,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // We model the queries the runs-store actually issues:
 //   1) `.from("runs").select("status").eq("tenant_id", t).eq("id", r).maybeSingle()`
 //      — only when the incoming status is terminal
-//   2) `.from("runs").upsert(row, { onConflict: "id" })`
+//   2) `.update(payload).eq("tenant_id", t).eq("id", r).select("id")`
+//   3) `.insert(row)` when the scoped update matched no rows
 
 type Status = "running" | "completed" | "failed" | "cancelled";
 
+type SaveError = { message: string; code?: string };
+type UpdateResult = { data: Array<{ id: string }> | null; error: SaveError | null };
+type UpdateCall = { payload: Record<string, unknown>; filters: Array<[string, string]>; columns?: string };
+
 const supabaseState = {
   priorStatusByRunId: new Map<string, Status>(),
-  upsertResult: { error: null as null | { message: string } },
+  insertResult: { error: null as SaveError | null },
+  updateResults: [] as UpdateResult[],
   selectError: null as null | { message: string },
-  upsertCalls: [] as Array<{ id: string; status: string; tenant_id: string }>,
+  insertCalls: [] as Array<Record<string, unknown>>,
+  updateCalls: [] as UpdateCall[],
   selectCalls: [] as Array<{ id: string; tenant_id: string }>,
 };
 
@@ -35,21 +42,31 @@ vi.mock("./server", () => ({
           }),
         }),
       }),
-      upsert: async (
-        row: { id: string; status: string; tenant_id: string },
-      ) => {
-        supabaseState.upsertCalls.push({
-          id: row.id,
-          status: row.status,
-          tenant_id: row.tenant_id,
-        });
-        return supabaseState.upsertResult;
+      update: (payload: Record<string, unknown>) => {
+        const call: UpdateCall = { payload, filters: [] };
+        supabaseState.updateCalls.push(call);
+        const query = {
+          eq: (column: string, value: string) => {
+            call.filters.push([column, value]);
+            return query;
+          },
+          select: async (columns: string) => {
+            call.columns = columns;
+            return supabaseState.updateResults.shift() ?? { data: [], error: null };
+          },
+        };
+        return query;
+      },
+      insert: async (row: Record<string, unknown>) => {
+        supabaseState.insertCalls.push(row);
+        return supabaseState.insertResult;
       },
     }),
   }),
 }));
 
 import {
+  RunIdConflictError,
   type RunCompletionDispatcher,
   saveRunForTenant,
 } from "./runs-store";
@@ -94,19 +111,21 @@ async function flushMicrotasks() {
   await Promise.resolve();
 }
 
+beforeEach(() => {
+  supabaseState.priorStatusByRunId = new Map();
+  supabaseState.insertResult = { error: null };
+  supabaseState.updateResults = [];
+  supabaseState.selectError = null;
+  supabaseState.insertCalls = [];
+  supabaseState.updateCalls = [];
+  supabaseState.selectCalls = [];
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("saveRunForTenant — run-completion email hook", () => {
-  beforeEach(() => {
-    supabaseState.priorStatusByRunId = new Map();
-    supabaseState.upsertResult = { error: null };
-    supabaseState.selectError = null;
-    supabaseState.upsertCalls = [];
-    supabaseState.selectCalls = [];
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it("dispatches once on a first-write terminal status", async () => {
     const dispatch: RunCompletionDispatcher = vi
       .fn()
@@ -122,8 +141,9 @@ describe("saveRunForTenant — run-completion email hook", () => {
     await flushMicrotasks();
 
     expect(supabaseState.selectCalls).toHaveLength(1);
-    expect(supabaseState.upsertCalls).toEqual([
-      { id: "run_first", status: "completed", tenant_id: "user:user_a" },
+    expect(supabaseState.updateCalls).toHaveLength(1);
+    expect(supabaseState.insertCalls).toEqual([
+      expect.objectContaining({ id: "run_first", status: "completed", tenant_id: "user:user_a" }),
     ]);
     expect(dispatch).toHaveBeenCalledTimes(1);
     const call = vi.mocked(dispatch).mock.calls[0]![0];
@@ -137,6 +157,7 @@ describe("saveRunForTenant — run-completion email hook", () => {
 
   it("dispatches with the prior status when one exists", async () => {
     supabaseState.priorStatusByRunId.set("run_known", "running");
+    supabaseState.updateResults = [{ data: [{ id: "run_known" }], error: null }];
     const dispatch: RunCompletionDispatcher = vi
       .fn()
       .mockResolvedValue({ ok: true, emailId: "e_2" });
@@ -151,6 +172,9 @@ describe("saveRunForTenant — run-completion email hook", () => {
     await flushMicrotasks();
     const call = vi.mocked(dispatch).mock.calls[0]![0];
     expect(call.priorStatus).toBe("running");
+    expect(supabaseState.updateCalls).toHaveLength(1);
+    expect(supabaseState.updateCalls[0]!.payload.status).toBe("completed");
+    expect(supabaseState.insertCalls).toHaveLength(0);
   });
 
   it("does not select prior status for non-terminal writes", async () => {
@@ -163,7 +187,8 @@ describe("saveRunForTenant — run-completion email hook", () => {
     });
     await flushMicrotasks();
     expect(supabaseState.selectCalls).toHaveLength(0);
-    expect(supabaseState.upsertCalls).toHaveLength(1);
+    expect(supabaseState.updateCalls).toHaveLength(1);
+    expect(supabaseState.insertCalls).toHaveLength(1);
     // Dispatcher is still invoked so the hook can record its skip reason
     // — keeps the runs-store free of hard-coded terminal-status policy.
     expect(dispatch).toHaveBeenCalledTimes(1);
@@ -208,8 +233,12 @@ describe("saveRunForTenant — run-completion email hook", () => {
     );
   });
 
-  it("propagates supabase upsert errors", async () => {
-    supabaseState.upsertResult = { error: { message: "boom" } };
+  it.each(["update", "insert"] as const)("propagates supabase %s errors", async (path) => {
+    if (path === "update") {
+      supabaseState.updateResults = [{ data: null, error: { message: "boom" } }];
+    } else {
+      supabaseState.insertResult = { error: { message: "boom" } };
+    }
     const state = freshState({ id: "run_err", status: "running" });
     await expect(saveRunForTenant("user:user_a", state)).rejects.toThrow(
       /Supabase save error: boom/,
@@ -235,8 +264,107 @@ describe("saveRunForTenant — run-completion email hook", () => {
       expect.stringContaining("prior-status select failed"),
       expect.objectContaining({ runId: "run_select_err" }),
     );
-    expect(supabaseState.upsertCalls).toHaveLength(1);
+    expect(supabaseState.updateCalls).toHaveLength(1);
+    expect(supabaseState.insertCalls).toHaveLength(1);
     expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("saveRunForTenant — tenant ownership", () => {
+  const tenantId = "user:caller";
+
+  function setup() {
+    const state = freshState({ status: "completed", endedAt: "2026-04-27T19:57:48.000Z" });
+    const dispatch = vi.fn().mockResolvedValue({ ok: true, emailId: "e_owned" });
+    const save = () => saveRunForTenant(tenantId, state, { dispatchCompletion: dispatch });
+    return { state, dispatch, save };
+  }
+
+  function expectScopedUpdate(runId: string) {
+    for (const call of supabaseState.updateCalls) {
+      expect(call.filters).toEqual([["tenant_id", tenantId], ["id", runId]]);
+      expect(call.columns).toBe("id");
+      expect(call.payload).not.toHaveProperty("id");
+      expect(call.payload).not.toHaveProperty("tenant_id");
+    }
+  }
+
+  it("updates an own existing run with tenant and id filters and no identity payload", async () => {
+    const { state, save } = setup();
+    supabaseState.updateResults = [{ data: [{ id: state.run.id }], error: null }];
+    await expect(save()).resolves.toBeUndefined();
+    expect(supabaseState.updateCalls).toHaveLength(1);
+    expectScopedUpdate(state.run.id);
+    expect(supabaseState.updateCalls[0]!.payload).toMatchObject({
+      workflow_id: state.run.workflowId,
+      status: state.run.status,
+      started_at: state.run.startedAt,
+      ended_at: state.run.endedAt,
+      tags: null,
+      state: expect.objectContaining({ run: state.run }),
+      updated_at: expect.any(String),
+    });
+    expect(supabaseState.insertCalls).toHaveLength(0);
+  });
+
+  it("inserts a new run with the caller's tenant and run id", async () => {
+    const { state, save } = setup();
+    await expect(save()).resolves.toBeUndefined();
+    expect(supabaseState.updateCalls).toHaveLength(1);
+    expectScopedUpdate(state.run.id);
+    expect(supabaseState.insertCalls).toEqual([
+      { ...supabaseState.updateCalls[0]!.payload, id: state.run.id, tenant_id: tenantId },
+    ]);
+  });
+
+  it("rejects another tenant's id after one scoped retry without dispatching", async () => {
+    const { state, dispatch, save } = setup();
+    supabaseState.updateResults = [{ data: [], error: null }, { data: [], error: null }];
+    supabaseState.insertResult = { error: { code: "23505", message: "duplicate key" } };
+    await expect(save()).rejects.toThrow(RunIdConflictError);
+    expect(supabaseState.updateCalls).toHaveLength(2);
+    expectScopedUpdate(state.run.id);
+    expect(supabaseState.insertCalls).toHaveLength(1);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("recovers a same-tenant concurrent first save with one scoped retry", async () => {
+    const { state, dispatch, save } = setup();
+    supabaseState.updateResults = [{ data: [], error: null }, { data: [{ id: state.run.id }], error: null }];
+    supabaseState.insertResult = { error: { code: "23505", message: "duplicate key" } };
+    await expect(save()).resolves.toBeUndefined();
+    expect(supabaseState.updateCalls).toHaveLength(2);
+    expectScopedUpdate(state.run.id);
+    expect(supabaseState.insertCalls).toHaveLength(1);
+    expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects a non-23505 insert error without retrying", async () => {
+    const { dispatch, save } = setup();
+    supabaseState.insertResult = { error: { code: "42501", message: "denied" } };
+    await expect(save()).rejects.toThrow(/Supabase save error: denied/);
+    expect(supabaseState.updateCalls).toHaveLength(1);
+    expect(supabaseState.insertCalls).toHaveLength(1);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("rejects an update error without inserting", async () => {
+    const { dispatch, save } = setup();
+    supabaseState.updateResults = [{ data: null, error: { message: "update failed" } }];
+    await expect(save()).rejects.toThrow(/Supabase save error: update failed/);
+    expect(supabaseState.updateCalls).toHaveLength(1);
+    expect(supabaseState.insertCalls).toHaveLength(0);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("propagates a retry update error without dispatching or further retries", async () => {
+    const { dispatch, save } = setup();
+    supabaseState.updateResults = [{ data: [], error: null }, { data: null, error: { message: "retry failed" } }];
+    supabaseState.insertResult = { error: { code: "23505", message: "duplicate key" } };
+    await expect(save()).rejects.toThrow(/Supabase save error: retry failed/);
+    expect(supabaseState.updateCalls).toHaveLength(2);
+    expect(supabaseState.insertCalls).toHaveLength(1);
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });
 
