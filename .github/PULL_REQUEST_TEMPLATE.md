@@ -12,10 +12,11 @@ What does this PR change, and why?
 
 ## Checklist
 
-- [ ] `npm run build` and `npm test` pass
-- [ ] `npm run smoke:esm` passes (packages still import under plain Node ESM)
+- [ ] `npm run ci` passes (see CONTRIBUTING.md)
+- [ ] `node scripts/audit-gate.mjs --mode=gate` passes
 - [ ] New behavior is covered by tests
-- [ ] `CHANGELOG.md` updated under `## [Unreleased]` if user-facing
+- [ ] `CHANGELOG.md` updated under `## [Unreleased]`
+- [ ] If you changed a published `packages/*` library, a changeset is added (`npm run changeset`)
 - [ ] If an exported signature in `@llm-workbench/runtime` changed, it's called out above
 
 ## Notes for reviewers

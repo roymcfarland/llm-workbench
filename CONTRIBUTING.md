@@ -16,7 +16,7 @@ docs — are welcome.
 
 ## Development setup
 
-Prerequisites: Node.js **>= 22** (CI runs on 22 and 24), npm **7+** (workspaces, lockfile v3).
+Prerequisites: Node.js **>= 22** (CI runs on 22 and 24), npm **10+** (workspaces, lockfile v3; root `overrides` need npm 8.3 or later).
 
 ```bash
 git clone https://github.com/roymcfarland/llm-workbench
@@ -54,8 +54,8 @@ npm test
       CI additionally runs the audit gate, plus coverage, Codecov uploads and Playwright on Node 24.
 - [ ] `node scripts/audit-gate.mjs --mode=gate` passes: it wraps audit-ci and `audit-ci.jsonc`, fails on high/critical advisories, and warns/passes without evaluation on registry outages.
 - [ ] New behavior is covered by tests.
-- [ ] `CHANGELOG.md` updated under `## [Unreleased]`. Dependency bumps get their
-      own entry too — see the existing entries for the expected shape.
+- [ ] `CHANGELOG.md` updated under `## [Unreleased]`. Dependency changes get their own entry too — for Dependabot
+      npm PRs the maintainer adds it at merge; GitHub Actions bumps and Version Packages PRs don't get one.
 - [ ] If you changed a published `packages/*` library, add a changeset (`npm run changeset`).
 
 CodeQL (first-party code and workflow files) and gitleaks report findings on

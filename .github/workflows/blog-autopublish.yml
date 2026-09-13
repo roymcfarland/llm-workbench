@@ -1,8 +1,8 @@
 name: Blog autopublish
 
 # Weekly source-grounded blog post via the Vercel AI Gateway. Site-ops tooling
-# for apps/web (PROJECT.md Q5). DORMANT BY DEFAULT for scheduled runs — gated on
-# the BLOG_AUTOPUBLISH_ENABLED repo variable. Manual dispatch always runs (for
+# for apps/web (PROJECT.md Q5). Scheduled runs are gated on the BLOG_AUTOPUBLISH_ENABLED repo variable (enabled in
+# this repository; a fork stays dormant until it sets it). Manual dispatch always runs (for
 # testing), defaulting to a no-publish dry-run.
 #
 # Setup: add the AI_GATEWAY_API_KEY secret and BLOG_AUTOPUBLISH_PAT secret

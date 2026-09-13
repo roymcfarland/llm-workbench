@@ -37,8 +37,8 @@
   //     now RESOLVED -- npm dompurify was removed by PR #200.
   //   (@opentelemetry/core GHSA-8988-4f7v-96qf was accepted here as class 2 and is
   //   now RESOLVED. Landed via PR #153. The current lighthouse@13.4.1 still
-  //   depends on @sentry/node ^10.0.0; the lockfile has one @sentry/node@10.70.0
-  //   and one @opentelemetry/core@2.10.0, with no nested 1.30.1 copies.)
+  //   depends on @sentry/node ^10.0.0; the lockfile has a single @sentry/node 10.x and a single @opentelemetry/core 2.x,
+  //   with no nested 1.30.1 copies.)
   //   - @hono/node-server GHSA-frvp-7c67-39w9 (<2.0.5, serve-static path
   //     traversal) was accepted as UNREACHABLE, class 3; now RESOLVED --
   //     PR #181 moved 1.19.14 to 2.1.1 on 2026-08-24, outside the affected range.

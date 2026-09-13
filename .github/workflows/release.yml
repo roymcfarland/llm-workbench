@@ -19,8 +19,8 @@ name: Release
 #   Environment:          (leave blank)
 #   Allowed actions:      npm publish
 #
-# DORMANT BY DEFAULT: the job only runs when the repo variable
-# `RELEASE_ENABLED` is set to "true" (gh variable set RELEASE_ENABLED --body true).
+# GATED: the job only runs when the repo variable `RELEASE_ENABLED` is "true" (it is set
+# in this repository; a fork stays dormant until it runs gh variable set RELEASE_ENABLED --body true).
 
 on:
   push:

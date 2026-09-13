@@ -149,8 +149,8 @@ export type RunCompletionDispatchResult =
 
 /**
  * Tenants are stored as either `user:<clerkUserId>` (single-user accounts) or
- * a Clerk organisation id (`org_*`). For now we only notify user-scoped
- * tenants — see SKILL note in the issue, org admin fan-out is future work.
+ * a Clerk organisation id (`org_*`). For now we only notify user-scoped tenants;
+ * org admin fan-out is future work and not yet tracked.
  */
 function extractUserId(tenantId: string): string | null {
   if (tenantId.startsWith("user:")) {
