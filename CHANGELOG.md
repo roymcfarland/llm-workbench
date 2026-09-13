@@ -83,7 +83,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - **Corrected `ROADMAP.md` against live state and backfilled missing dependency-bump changelog rows.** Removed
   the closed signed-in-E2E priority (#160), recorded the declined Changesets v3 majors (#178, #189), fixed the
-  `postcss` override description, and added the missing rows for #183, #203 and #187. (#<pending>)
+  `postcss` override description, and added the missing rows for #183, #203 and #187. (#215)
 
 - **Corrected site copy, agent descriptors and code comments against the live code.** `llms-full.txt` no longer claims every API response carries the `Link` header. `agents.md` lists all eight MCP tools, describes public MCP discovery and the other public routes, and points at `proxy.ts`. The FAQ no longer claims spans, an in-browser demo or a hosted-only Langfuse. The wire format is attributed to `HttpRunRepository.save()` in `agents.md`, `openapi.json` and the runs-store comment. Also corrected: the markdown renderer header, the runtime README quick-start and the e2e README script names. (#214)
 
