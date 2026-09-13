@@ -176,7 +176,7 @@ In the Vercel dashboard:
    - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/playground`
    - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/playground`
    - `AI_GATEWAY_API_KEY` *(omit if using OIDC)*
-   - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` *(API rate limiting)*
+   - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (or the Marketplace-injected `KV_REST_API_URL` + `KV_REST_API_TOKEN`) *(API rate limiting)*
    - `RATE_LIMIT_ALLOW_UNCONFIGURED=1` *(only if you deliberately run
      production without Upstash; otherwise missing Upstash config makes
      proxy-matched `/api/*` routes (excluding `/api/health` and dotted paths such as `/api/openapi.json`) return `503`)*
@@ -275,8 +275,8 @@ How it behaves:
   Resend outage cannot block a `PUT /api/runs/:id`.
 - Each `(runId, status)` pair carries an idempotency key, so retried
   writes never deliver duplicate emails (Resend dedupes for 24 h).
-- Tenant scoping uses the `user:<clerkUserId>` form. Org tenants are
-  silently skipped at v0 — see the follow-up issue for org admin fan-out.
+- Tenant scoping uses the `user:<clerkUserId>` form. Org tenants are skipped at v0
+  (`skipped-org-tenant`); fanning out to org admins is not yet tracked.
 
 To disable the feature, **unset both env vars**. The runs-store logs an
 `info`-level "skipping email send" line and proceeds. There is no warning

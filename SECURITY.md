@@ -56,7 +56,7 @@ Out of scope (reportable to the relevant project, not here):
 ## Automated security gates
 
 Branch protection on `main` requires only `build & test (node 22)` and
-`build & test (node 24)`. CI runs on PRs and pushes to `main`; CodeQL and
+`build & test (node 24)`. CI runs on PRs and on pushes to `main` and `autopublish/**`; CodeQL and
 gitleaks report findings but are not required checks and do not block merging.
 The scheduled remediation/blog workflows and push-triggered release workflow
 are automation, not PR gates.

@@ -130,5 +130,5 @@ jobs:
                 '' \
                 'Review the version moves below before merging — this is automation proposing a change, not a change that has been reviewed.' \
                 '' \
-                'If this PR is open, the audit gate is red on `main` and every other PR is blocked behind it.')"
+                'This PR was opened because the audit gate was red on `main` when this workflow ran. While the gate stays red, every PR is blocked; if it has since gone green, close this PR.')"
           fi
