@@ -49,9 +49,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- Upgraded `@vitejs/plugin-react` from 5 to 6 (dev dependency) in `apps/web` and `examples/job-search-demo`;
-  v6 requires `vite@^8`, which both already resolve, and drops the Babel JSX-transform plugins and `react-refresh`
-  from the lockfile. (#187)
+- Upgraded `@vitejs/plugin-react` to 6.1.1 (dev dependency): `apps/web` from 5.2.0 — a major bump that requires
+  `vite@^8` (already resolved) and drops the Babel JSX-transform plugins and `react-refresh` from the lockfile — and
+  `examples/job-search-demo` from 6.0.3. (#187)
 
 - Grouped npm minor/patch bump — 21 packages, all within-major, including `zod` 4.4.3 → 4.5.4, `ai` 7.0.76 →
   7.0.93, `@clerk/nextjs` 7.8.0 → 7.9.1, `@sentry/nextjs` 10.70.0 → 10.73.0, `eslint-config-next` 16.3.2 →
