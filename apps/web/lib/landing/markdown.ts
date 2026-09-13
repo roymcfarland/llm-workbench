@@ -48,6 +48,8 @@ function inline(s: string): string {
   withCode = withCode.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     (_m, label, href) => {
+      // A code span, bold or italic inside the URL would put markup in the href; leave it unlinked.
+      if (href.includes("\u0000CODE") || href.includes("<")) return _m;
       const safe = /^(https?:\/\/|\/)/.test(href) ? href : "#";
       return `<a href="${safe}" class="underline-offset-4 hover:underline text-cyan-300">${label}</a>`;
     },

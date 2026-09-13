@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 4fabf80: Prevent redaction paths from polluting Object.prototype or changing the exported clone's prototype while preserving redaction of own **proto** data keys.
+- 4fabf80: Prevent redaction paths from polluting Object.prototype or changing the exported clone's prototype while preserving redaction of own `__proto__` data keys.
 
 ## 0.3.2
 
