@@ -8,7 +8,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Tenant-boundary unit tests cover `requireTenant`, signed-out 401s with no store or model access on `api/runs`, `api/runs/[runId]`, and `api/llm`, the server action rejecting before validation, and runs-store queries filtering by `tenant_id`; the `/runs` page inline query remains untested. (#<pending>)
+- Tenant-boundary unit tests cover `requireTenant`, signed-out 401s with no store or model access on `api/runs`, `api/runs/[runId]`, and `api/llm`, the server action rejecting before validation, and runs-store queries filtering by `tenant_id`; the `/runs` page inline query remains untested. (#212)
 
 - **`Audit gate autofix` workflow (`.github/workflows/audit-autofix.yml`).**
   Closes the process gap that froze `main` for 21 days (2026-08-03 → 08-24, see
