@@ -15,19 +15,6 @@ Feature requests and bug reports are welcome; see
 
 ## Current priorities
 
-### Signed-in end-to-end test coverage
-[Issue #160](https://github.com/roymcfarland/llm-workbench/issues/160).
-There is no automated way to exercise a **signed-in** session. Everything
-requiring a session is verified by hand, which is how a Clerk provider change
-shipped with its signed-in path checked only manually. This matters because
-`requireTenant()` in `apps/web/lib/auth/tenant.ts` fronts a service-role Supabase
-key that bypasses RLS — the auth boundary is a hard security control with no
-signed-in regression net.
-
-Blocked on a Clerk **development** instance and a test user being provisioned as
-repository secrets. The test code is designed to skip cleanly when those are
-absent, so it can land before they exist.
-
 ### Marketing-page performance
 Largest Contentful Paint on `/` is ~6.3s against Google's 2.5s "good" threshold.
 Two changes already landed (Clerk no longer loads for anonymous visitors;
@@ -71,6 +58,12 @@ decision is not re-litigated each time Dependabot reopens them:
   tests and no CI coverage, so there would be nothing to verify the upgrade
   against.
 
+- **Changesets v3 (`@changesets/cli` 3 with `changesets/action` v2).** No advisory; CLI 2.x (`maintenance-v2`)
+  and action v1 are maintained. The two must move together — action v2 targets Changesets v3, renames the
+  `version`/`publish` inputs `release.yml` passes, and v3 stops versioning private packages and exits non-zero
+  when there are no changesets. CI never runs `release.yml`, so this needs one PR verified by a real release run.
+  Declined 2026-09-12 (#178, #189).
+
 Declined majors are closed **without** `@dependabot ignore` directives, so they
 resurface if the blocking condition lifts.
 
@@ -78,12 +71,18 @@ resurface if the blocking condition lifts.
 
 Not scheduled, but recorded so the reasoning is not lost:
 
+- **Signed-in end-to-end tests against a real Clerk runtime.**
+  [Issue #160](https://github.com/roymcfarland/llm-workbench/issues/160), closed as not planned. #212 added unit
+  coverage of the tenant boundary — `requireTenant`, signed-out 401s on the runs and llm APIs, and `tenant_id`
+  filtering. The `/runs` page's inline query and live Clerk sessions stay uncovered; they would need a Clerk
+  development instance and a test user provisioned as CI and Dependabot secrets. Revisit with a future
+  `@clerk/nextjs` major or an auth-flow change.
 - **CDN-cacheable marketing responses.** Every marketing page currently returns
   `cache-control: private, no-store` because Clerk in `proxy.ts` and a per-request
   CSP nonce run on the page routes matched by the proxy (excluding `_next`, dotted paths and `/api/health`). Measured cost is small (~200ms), and the change
   touches a security control.
 - **Override cleanup.** Root `overrides` retain security floors: `postcss@^8.5.23`
-  matches Next.js 16.3.4's `8.5.23` pin, while `sharp@^0.35.3` now trails
+  floors at Next.js 16.3.4's exact `8.5.23` pin but resolves the tree to `postcss@8.5.28`, while `sharp@^0.35.3` now trails
   Next.js's `^0.35.4` requirement. Whether to retain or remove these overrides
   remains an open decision, not a tidy-up.
 - **ESLint compatibility pins.** The `minimatch@^10.2.5` override keeps
