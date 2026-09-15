@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.0",
     "audit-ci": "^7.1.0",
     "eslint": "^10.10.0",
     "rss-parser": "^3.13.0",
