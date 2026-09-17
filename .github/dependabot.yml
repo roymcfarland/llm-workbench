@@ -21,6 +21,13 @@ updates:
         versions: [">=19.3.0"]
       - dependency-name: "@types/react-dom"
         versions: [">=19.3.0"]
+      # @changesets/cli v3 is a currency-only major, coupled to changesets/action v2
+      # (v2 renames release.yml's inputs, and CI never exercises release.yml). Migrate
+      # the CLI and the action together in one PR verified by a real release run.
+      # Ignoring the major stops the weekly re-raise; remove this entry to do that
+      # coupled migration. v2.x minor/patch still flows through.
+      - dependency-name: "@changesets/cli"
+        versions: [">=3.0.0"]
     groups:
       npm-minor-patch:
         update-types:
