@@ -9,6 +9,18 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    # React 19.3+ is blocked by @react-three/fiber's peer range (>=19 <19.3);
+    # holding the whole React quartet together until Fiber ships a 19.3-compatible
+    # release. Recheck: npm view @react-three/fiber@latest peerDependencies.react
+    ignore:
+      - dependency-name: "react"
+        versions: [">=19.3.0"]
+      - dependency-name: "react-dom"
+        versions: [">=19.3.0"]
+      - dependency-name: "@types/react"
+        versions: [">=19.3.0"]
+      - dependency-name: "@types/react-dom"
+        versions: [">=19.3.0"]
     groups:
       npm-minor-patch:
         update-types:
