@@ -50,7 +50,7 @@ decision is not re-litigated each time Dependabot reopens them:
 - **`@types/node` beyond the engine floor.** These types should track the
   *lowest* supported runtime. `engines.node` is `>=22`, so `^22.x` is correct;
   a newer major would type APIs that do not exist on a runtime CI actually tests
-  against. Revisit when the engine floor moves.
+  against. Revisit when the engine floor moves. Enforced by a `@types/node >=23.0.0` ignore entry in `.github/dependabot.yml`; remove it together with this note when the floor moves.
 - **TypeScript 7.** Blocked upstream — `typedoc` and `typescript-eslint` both cap
   below it. It is also a compiler port, which is a migration project rather than
   a dependency bump.

@@ -28,6 +28,12 @@ updates:
       # coupled migration. v2.x minor/patch still flows through.
       - dependency-name: "@changesets/cli"
         versions: [">=3.0.0"]
+      # @types/node tracks the lowest supported runtime (engines.node >=22, CI
+      # tests Node 22), so newer majors would type APIs missing there. ROADMAP.md
+      # records the decision. Remove this entry when the engine floor moves.
+      # 22.x minor/patch still flows through the group.
+      - dependency-name: "@types/node"
+        versions: [">=23.0.0"]
     groups:
       npm-minor-patch:
         update-types:
