@@ -66,7 +66,8 @@ are automation, not PR gates.
   critical** advisories across the full dependency graph exit 1. If the npm
   advisory registry is unreachable, it makes two attempts 30 seconds apart,
   then emits `Audit gate not evaluated` and **passes (exit 0) without evaluating
-  advisories**. Unrecognised failures exit 1. The allowlist is currently empty;
+  advisories**. Unrecognised failures exit 1. The allowlist has one entry dated
+  2026-10-04: GHSA-vfj7-8cjw-p6xm (dev-only `braces`, no patched release);
   each accepted exception, if any, must carry a dated reason and a runnable
   REVISIT check. The file's header documents the accept/decline policy.
 - **Automatic advisory remediation** — `audit-autofix.yml` checks daily (or on

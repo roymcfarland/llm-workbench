@@ -569,6 +569,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Accepted one dev-only `braces` advisory (2026-10-04).** Allowlisted
+  `GHSA-vfj7-8cjw-p6xm`, a high-severity stack-exhaustion DoS reachable through
+  Changesets and Next.js ESLint tooling; `npm ls braces --omit=dev` is empty.
+  `braces@3.0.3` is the latest release and no patched version exists. The dated
+  exception includes a runnable REVISIT check, and `SECURITY.md` reflects the
+  single entry. Dependencies, lockfile, severity threshold and gate are unchanged.
+
 - **Scoped run writes to the caller's tenant (GHSA-63qm-whww-m2cf).** Saves previously upserted by run id alone, so an authenticated caller who knew another tenant's run id could overwrite that run through `PUT /api/runs/{runId}`. Saves now update only the caller's own row, insert new runs, and reject a run id owned by another tenant with `409`. MCP tools, `/api/llm` and the published npm packages were not affected.
 - Set the CI workflow token to `contents: read` (the repository default is write), closing CodeQL #1. A root `qs` override clears GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g and GHSA-q8mj-m7cp-5q26 in `examples/run-repo-server`; the only lockfile change removes nested `qs@6.14.2`, and the example's behaviour is unchanged (#210).
 - Fixed a `__proto__` segment in a redaction path that could write to `Object.prototype` or swap the exported clone's prototype. Paths are host-registered via `exportRedactPaths`; own `__proto__` data keys are still redacted. This fix closes CodeQL #6 (#208).
