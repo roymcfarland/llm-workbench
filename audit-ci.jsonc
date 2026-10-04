@@ -22,8 +22,8 @@
   // and trains force-merging -- a worse security posture than green CI that fails
   // only on what is actually severe and actionable. High/critical advisories are
   // rare, warrant breaking the build, and are usually fixable.
-  // Current-tree snapshot (2026-09-12): 0 critical, 0 high, 0 moderate, 0 low;
-  // no allowlist entries. Run `npm audit` to review current findings.
+  // Current-tree snapshot (2026-10-04): one dated allowlist entry for the
+  // unfixable dev-only braces advisory. Run `npm audit` for current findings.
   //
   // RESOLVED moderate/low advisory notes (informational; not allowlist entries):
   //   - qs: GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g and GHSA-q8mj-m7cp-5q26.
@@ -47,5 +47,15 @@
   // allowlist that ONE advisory here by GHSA id with a dated reason -- a rare,
   // deliberate exception, not a standing treadmill.
   "high": true,
-  "allowlist": []
+  // Accepted 2026-10-04: GHSA-vfj7-8cjw-p6xm (high) — stack-exhaustion DoS
+  // through deeply nested brace patterns in braces <=3.0.3.
+  // Class 3 UNREACHABLE in production / dev-only. Dependency paths:
+  //   @changesets/cli -> @changesets/config -> micromatch -> braces
+  //   eslint-config-next -> @next/eslint-plugin-next -> fast-glob -> micromatch -> braces
+  // Evidence: `npm ls braces --omit=dev` returns an empty tree.
+  // No patched release exists; `npm view braces version` reports 3.0.3 latest.
+  // REVISIT: npm view braces versions --json | tail -3
+  // Remove this entry once a version greater than 3.0.3 exists, then run
+  // `npm update braces --package-lock-only` and `npm run audit:check`.
+  "allowlist": ["GHSA-vfj7-8cjw-p6xm"]
 }
