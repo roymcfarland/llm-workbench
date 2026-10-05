@@ -1,6 +1,6 @@
 import { serializeJsonLd } from "@/lib/security/json-ld";
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Newsreader, Outfit } from "next/font/google";
+import localFont from "next/font/local";
 import { headers } from "next/headers";
 import { ClerkProvider } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
@@ -22,25 +22,28 @@ import { siteVerificationFields } from "@/lib/site-verification";
 
 import "./globals.css";
 
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const outfit = localFont({
+  src: "./fonts/outfit-latin-wght-normal.woff2",
+  weight: "400 700",
   display: "swap",
   variable: "--font-outfit",
+  adjustFontFallback: "Arial",
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const jetbrainsMono = localFont({
+  src: "./fonts/jetbrains-mono-latin-wght-normal.woff2",
+  weight: "400 600",
   display: "swap",
   variable: "--font-jetbrains",
+  adjustFontFallback: false,
 });
 
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const newsreader = localFont({
+  src: "./fonts/newsreader-latin-wght-normal.woff2",
+  weight: "400 700",
   display: "swap",
   variable: "--font-newsreader",
+  adjustFontFallback: "Times New Roman",
 });
 
 export const metadata: Metadata = {
