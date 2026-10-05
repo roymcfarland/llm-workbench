@@ -148,6 +148,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Web fonts are loaded from committed local files.** Outfit, JetBrains Mono,
+  and Newsreader use Latin variable WOFF2 files with their OFL licenses, so
+  production builds no longer depend on Google Fonts network availability.
+
 - Upgraded `@vitejs/plugin-react` to 6.1.1 (dev dependency): `apps/web` from 5.2.0 — a major bump that requires
   `vite@^8` (already resolved) and drops the Babel JSX-transform plugins and `react-refresh` from the lockfile — and
   `examples/job-search-demo` from 6.0.3. (#187)
