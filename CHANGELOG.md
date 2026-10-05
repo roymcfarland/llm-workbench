@@ -379,6 +379,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Deduplicated three.js in the web app.** The web app and its three.js
+  libraries now share a single `three` copy after a lockfile-only update to
+  `postprocessing` 6.39.5; the "Multiple instances of Three.js" console warning
+  is gone.
+
 - **Corrected `ROADMAP.md` against live state and backfilled missing dependency-bump changelog rows.** Removed
   the closed signed-in-E2E priority (#160), recorded the declined Changesets v3 majors (#178, #189), fixed the
   `postcss` override description, and added the missing rows for #183, #203 and #187. (#215)
