@@ -49,6 +49,55 @@ test.describe("Public smoke (no sign-in)", () => {
     expect(cspViolations).toEqual([]);
   });
 
+  test("GET / loads fonts under CSP without font-src or style-src violations", async ({
+    page,
+  }) => {
+    const cspViolations: string[] = [];
+    const fontFailures: string[] = [];
+    await page.context().addCookies([
+      {
+        name: "__clerk_db_jwt",
+        value: "e2e-dev-browser",
+        domain: "localhost",
+        path: "/",
+        sameSite: "Lax",
+      },
+    ]);
+
+    page.on("console", (msg) => {
+      const text = msg.text();
+      if (
+        /violates the following Content Security Policy/i.test(text) &&
+        /font-src|style-src/i.test(text)
+      ) {
+        cspViolations.push(text);
+      }
+    });
+    page.on("requestfailed", (request) => {
+      if (request.resourceType() === "font") {
+        fontFailures.push(`${request.url()}: ${request.failure()?.errorText}`);
+      }
+    });
+    page.on("response", (response) => {
+      if (response.request().resourceType() === "font" && !response.ok()) {
+        fontFailures.push(`${response.url()}: HTTP ${response.status()}`);
+      }
+    });
+
+    const response = await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
+
+    expect(response?.status()).toBe(200);
+    expect(cspViolations).toEqual([]);
+    expect(fontFailures).toEqual([]);
+    const loadedFaces = await page.evaluate(
+      () =>
+        Array.from(document.fonts).filter((face) => face.status === "loaded")
+          .length,
+    );
+    expect(loadedFaces).toBeGreaterThan(0);
+  });
+
   test("GET /runs/demo renders the workbench under strict CSP without script or eval violations", async ({
     page,
   }) => {
