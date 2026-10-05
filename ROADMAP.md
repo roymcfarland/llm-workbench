@@ -89,4 +89,11 @@ Not scheduled, but recorded so the reasoning is not lost:
   `eslint-config-next`'s import, jsx-a11y and react plugin chains off `minimatch@3`
   (`GHSA-mh99-v99m-4gvg`). The parser and React-version settings in
   `apps/web/eslint.config.mjs` work around missing ESLint 10 support; revisit when the plugins update.
+- **`braces` audit allowlist entry (GHSA-vfj7-8cjw-p6xm).** The only allowlisted
+  advisory (high; `braces <= 3.0.3`, dev-only via changesets and the ESLint config
+  chain; no patched release exists). Revisit when
+  `npm view braces versions --json | tail -3` shows a version above 3.0.3: remove
+  the entry from `audit-ci.jsonc`, run `npm update braces --package-lock-only`,
+  then `npm run audit:check`. Nothing alerts on a new release, so check this at
+  each dependency pass.
 - Larger file-size splits.
