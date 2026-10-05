@@ -148,6 +148,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Removed unused Google Fonts hosts from the web CSP.** `style-src` no longer
+  allows `fonts.googleapis.com`, and `font-src` no longer allows
+  `fonts.gstatic.com`; self-hosted fonts remain covered by `'self'`.
 - **Web fonts are loaded from committed local files.** Outfit, JetBrains Mono,
   and Newsreader use Latin variable WOFF2 files with their OFL licenses, so
   production builds no longer depend on Google Fonts network availability.

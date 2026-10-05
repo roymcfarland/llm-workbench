@@ -29,11 +29,41 @@ function expectHardenedDirectives(policy: string): void {
   expect(directives).toContain("object-src 'none'");
 }
 
+function directive(policy: string, name: string): string {
+  const value = policy.split("; ").find((part) => part.startsWith(`${name} `));
+  if (!value) throw new Error(`Missing ${name} directive: ${policy}`);
+  return value;
+}
+
 describe("contentSecurityPolicy", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.resetModules();
   });
+
+  it.each([
+    { mode: "production", nonce: "nonce-value" },
+    { mode: "production", nonce: undefined },
+    { mode: "development", nonce: undefined },
+    { mode: "development", nonce: "dev-nonce" },
+  ])(
+    "keeps fonts and styles local in $mode with nonce $nonce",
+    async ({ mode, nonce }) => {
+      const { contentSecurityPolicy } = await loadCsp({ NODE_ENV: mode });
+      const policy = contentSecurityPolicy(nonce);
+      const styleSources = directive(policy, "style-src");
+      const fontSources = directive(policy, "font-src");
+
+      expect(styleSources).not.toMatch(/googleapis|gstatic/i);
+      expect(fontSources).not.toMatch(/googleapis|gstatic/i);
+      expect(styleSources.split(" ")).toEqual(
+        expect.arrayContaining(["'self'", "'unsafe-inline'"]),
+      );
+      expect(fontSources.split(" ")).toEqual(
+        expect.arrayContaining(["'self'", "data:"]),
+      );
+    },
+  );
 
   it("uses nonce plus strict-dynamic without unsafe-eval in production", async () => {
     const { contentSecurityPolicy } = await loadCsp({
