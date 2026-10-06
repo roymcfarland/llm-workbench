@@ -13,8 +13,8 @@
     "@llm-workbench/adapters-react": "0.3.4",
     "@llm-workbench/runtime": "0.3.3",
     "@llm-workbench/ui": "0.3.4",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
