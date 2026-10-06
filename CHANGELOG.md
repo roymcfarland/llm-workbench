@@ -4,6 +4,9 @@ All notable changes to LLM Workbench are documented here. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Package releases from 0.3.0 onward are recorded by Changesets in each package's
+own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
+
 ## [Unreleased]
 
 ### Added
@@ -151,9 +154,21 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Removed unused Google Fonts hosts from the web CSP.** `style-src` no longer
   allows `fonts.googleapis.com`, and `font-src` no longer allows
   `fonts.gstatic.com`; self-hosted fonts remain covered by `'self'`.
+  (#246)
 - **Web fonts are loaded from committed local files.** Outfit, JetBrains Mono,
   and Newsreader use Latin variable WOFF2 files with their OFL licenses, so
   production builds no longer depend on Google Fonts network availability.
+  (#245)
+
+- **Dependabot ignores `@types/node` majors above the Node 22 floor.**
+  Ignores `>=23.0.0` to avoid typing APIs absent from the lowest supported
+  runtime; 22.x minor/patch updates remain eligible. Remove the rule when the
+  engine floor moves. (#242)
+
+- **Dependabot ignores the `@changesets/cli` v3 major.** Ignores `>=3.0.0`
+  pending a coupled CLI/`changesets/action` v2 migration verified by a real
+  release run: v2 renames workflow inputs, and CI never exercises `release.yml`.
+  CLI v2.x minor/patch updates remain eligible. (#225)
 
 - Upgraded `@vitejs/plugin-react` to 6.1.1 (dev dependency): `apps/web` from 5.2.0 — a major bump that requires
   `vite@^8` (already resolved) and drops the Babel JSX-transform plugins and `react-refresh` from the lockfile — and
@@ -379,17 +394,31 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Corrected shipped bundle integrity and replay copy, deployment storage wording, landing counts to exclude seeded demos and hide absent metrics, landing JSON-LD, MCP tool discovery, the application name, and the humans.txt update claim.
+- **Corrected runtime and UI README claims.** Documented explicit schema
+  validation helpers and SHA-256 integrity hashes, corrected both `esm-smoke`
+  messages, and documented the UI rule-reorder helpers. (#258)
 
-- Unmatched dotted-path requests (e.g. `/.env`) render the normal 404 page without a Clerk `auth()` error.
+- **Corrected governance, web README, deploy and config-comment claims.**
+  Documented Upstash as required in production unless explicitly bypassed,
+  commented out optional keys in `.env.example`, and corrected dotted-path
+  and proxy-bypass notes. (#257)
+
+- **Corrected shipped bundle integrity and replay copy.** Also corrected
+  deployment storage wording, landing counts to exclude seeded demos and hide
+  absent metrics, landing JSON-LD, MCP tool discovery, the application name,
+  and the humans.txt update claim. (#255)
+
+- **Unmatched dotted-path requests render the normal 404 page.** Requests
+  such as `/.env` no longer cause a Clerk `auth()` error. (#254)
 
 - Preview deployments now allow the Vercel toolbar's frame, realtime connection,
   and fonts in the CSP; the production policy is unchanged.
+  (#252)
 
-- **Deduplicated three.js in the web app.** The web app and its three.js
-  libraries now share a single `three` copy after a lockfile-only update to
-  `postprocessing` 6.39.5; the "Multiple instances of Three.js" console warning
-  is gone.
+- **Deduplicated three.js in the web app.** A lockfile-only update to
+  `postprocessing` 6.39.5 removes the duplicate `three` copy that triggered the
+  console warning; `stats-gl` (a `drei` dependency) keeps its own nested
+  0.170.0. (#249)
 
 - **Corrected `ROADMAP.md` against live state and backfilled missing dependency-bump changelog rows.** Removed
   the closed signed-in-E2E priority (#160), recorded the declined Changesets v3 majors (#178, #189), fixed the
@@ -588,12 +617,25 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- **Refreshed the lockfile for `sharp` (2026-10-06).** Lockfile-only: `sharp`
+  and its platform packages 0.35.4 → 0.35.5, bundled libvips 1.3.3 → 1.3.4;
+  clears high `GHSA-wq5f-xc86-pv6w`. (#256)
+
+- **Refreshed the lockfile for `proxy-addr` and `source-map-js` (2026-10-06).**
+  Lockfile-only: `proxy-addr` 2.0.7 → 2.0.8 clears critical `GHSA-jqcg-44mw-7w3h`;
+  `source-map-js` 1.2.1 → 1.2.2 clears high `GHSA-68fv-2mgg-jv7q`. (#253)
+
 - **Accepted one dev-only `braces` advisory (2026-10-04).** Allowlisted
   `GHSA-vfj7-8cjw-p6xm`, a high-severity stack-exhaustion DoS reachable through
   Changesets and Next.js ESLint tooling; `npm ls braces --omit=dev` is empty.
   `braces@3.0.3` is the latest release and no patched version exists. The dated
   exception includes a runnable REVISIT check, and `SECURITY.md` reflects the
   single entry. Dependencies, lockfile, severity threshold and gate are unchanged.
+  (#240)
+
+- **Refreshed the lockfile to clear seven high/critical advisories (2026-10-04).** Lockfile-only:
+  `next` 16.3.5 → 16.3.8 (`GHSA-vcvr-r3jv-pc5j`), `brace-expansion` 5.0.9 → 5.0.12 (`GHSA-6j4f-fj2g-mc7p`, `GHSA-qhr7-859c-m2p7`), and `fast-uri` 3.1.6 → 3.1.8 (`GHSA-58mr-gqgx-xq4g`, `GHSA-qw65-cvwx-89v3`);
+  `undici` 7.29.0 → 7.30.0 (`GHSA-rfgv-xxqx-mfg5`, `GHSA-w293-vg96-wgc3`). Also moved `ip-address` 10.5.0 → 10.7.3 and `markdown-it` 14.3.0 → 14.3.2. (#235)
 
 - **Scoped run writes to the caller's tenant (GHSA-63qm-whww-m2cf).** Saves previously upserted by run id alone, so an authenticated caller who knew another tenant's run id could overwrite that run through `PUT /api/runs/{runId}`. Saves now update only the caller's own row, insert new runs, and reject a run id owned by another tenant with `409`. MCP tools, `/api/llm` and the published npm packages were not affected.
 - Set the CI workflow token to `contents: read` (the repository default is write), closing CodeQL #1. A root `qs` override clears GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g and GHSA-q8mj-m7cp-5q26 in `examples/run-repo-server`; the only lockfile change removes nested `qs@6.14.2`, and the example's behaviour is unchanged (#210).
@@ -635,7 +677,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Retired the final high-severity audit allowlist entry.** A root
   `minimatch@^10.2.5` override moves ESLint and all three current
   `eslint-config-next` plugin chains off `minimatch@3`, clearing
-  `GHSA-mh99-v99m-4gvg`. The allowlist is now empty; the
+  `GHSA-mh99-v99m-4gvg`. The allowlist is now empty (superseded 2026-10-04 by a single `braces` entry; see the "Accepted one dev-only `braces` advisory" Security entry above); the
   `brace-expansion@^5.0.8` override remains as an explicit security floor.
 - **Verified root overrides against Next.js's pinned transitives and fixed four
   advisories.** A clean resolution moved Next.js's exact `postcss@8.4.31` pin
@@ -754,7 +796,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `RATE_LIMIT_ALLOW_UNCONFIGURED=1`. `X-Frame-Options` tightened
   `SAMEORIGIN` → `DENY` to match the CSP's `frame-ancestors 'none'`.
 
-## 0.2.0
+## 0.2.0 — 2026-04-27
 
 The first internal release containing the runtime, UI, AI SDK adapter,
 and the `apps/web` reference deployment. The runtime adds
