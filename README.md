@@ -27,6 +27,14 @@ happened and gives humans a clean control surface over it.
 
 ## Status
 
+**October 2026:** merge CI runs the audit gate
+(`node scripts/audit-gate.mjs --mode=gate`), and the daily
+`audit-autofix.yml` workflow opens lockfile fix PRs when needed. Web fonts are
+self-hosted via `next/font/local`; the CSP no longer allows Google font hosts
+and adds Vercel-toolbar sources only on preview deployments. Dependabot majors
+are declined unless an advisory, EOL, or unblocking driver exists (see
+[ROADMAP.md](ROADMAP.md#standing-policy-dependency-upgrades)).
+
 **July 2026 — docs and quality pass:** packages ship JSDoc with
 `@packageDocumentation` blocks in `ui`, `adapters-react`, `ai-sdk`, and `mcp`,
 and `@param`/`@returns`/`@throws` on public APIs, backing a generated
@@ -225,8 +233,8 @@ of that approval — that's what LLM Workbench is for.
   approvals, rejections, edits, and notes, then resume with traceable intent.
 - **Schema-validated artifacts and rules.** Bring JSON Schemas, validate data
   through Ajv, patch artifacts safely, and export redacted user bundles.
-- **Tamper-evident run bundles.** Exports are SHA-256 signed over canonical
-  JSON. Imports verify integrity by default.
+- **Tamper-evident run bundles.** Exports carry a SHA-256 integrity hash over
+  canonical JSON. Imports verify integrity by default.
 - **Telemetry-ready traces.** Track provider, model, usage, duration, cost,
   user, tenant, account, and plan metadata without locking into a vendor.
 - **Cost and usage summaries.** `summarizeModelTelemetry` turns raw trace

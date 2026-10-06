@@ -8,7 +8,7 @@
 // `--clerk-app <id>` we surface the deep link to the api-keys page;
 // when they don't, we surface the same deep link and ask them to
 // create the app manually. We deliberately don't pretend to do more
-// than the Backend API supports — see ROADMAP.md week-1 risk register.
+// than the Backend API supports — see apps/web/DEPLOY.md.
 
 import { request, HttpError } from "./http.mjs";
 

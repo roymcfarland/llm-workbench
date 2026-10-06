@@ -10,8 +10,9 @@ the reference app reads and writes through `HttpRunRepository`.
 # 2. Log in
 supabase login
 
-# 3. Link your local repo to a project (run from this directory)
-supabase link --project-ref <your-project-ref>
+# 3. Link your local repo to a project (from the repo root, enter apps/web)
+cd apps/web
+supabase link --project-ref <ref-from-dashboard-url>
 
 # 4. Apply the migration to the linked project
 supabase db push

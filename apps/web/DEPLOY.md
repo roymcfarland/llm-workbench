@@ -123,7 +123,9 @@ dashboard.
 ## 3. Vercel AI Gateway
 
 The Gateway proxies model calls from your deployment to OpenAI, Anthropic,
-Google, etc., and gives you per-tenant usage tracking out of the box.
+Google, etc. Per-tenant usage attribution requires passing tenant identifiers
+through `providerOptions.gateway.user` / `tags`; this reference app does not
+pass those options.
 
 - **Local dev**: copy an `AI_GATEWAY_API_KEY` from
   <https://vercel.com/dashboard/ai/api-keys>. Put it in
@@ -176,15 +178,18 @@ In the Vercel dashboard:
    - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/playground`
    - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/playground`
    - `AI_GATEWAY_API_KEY` *(omit if using OIDC)*
-   - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (or the Marketplace-injected `KV_REST_API_URL` + `KV_REST_API_TOKEN`) *(API rate limiting)*
+   - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (or the Marketplace-injected `KV_REST_API_URL` + `KV_REST_API_TOKEN`) *(required in production for API rate limiting unless explicitly bypassed below)*
    - `RATE_LIMIT_ALLOW_UNCONFIGURED=1` *(only if you deliberately run
      production without Upstash; otherwise missing Upstash config makes
      proxy-matched `/api/*` routes (excluding `/api/health` and dotted paths such as `/api/openapi.json`) return `503`)*
    - **`GOOGLE_SITE_VERIFICATION`** / **`BING_SITE_VERIFICATION`** / **`YANDEX_SITE_VERIFICATION`** *(optional HTML-tag verification via `lib/site-verification.ts` — omit until you paste tokens from Search Console / Bing / Yandex)*
 3. **Domains**: attach a real domain (or use the preview URL) and set
-   `NEXT_PUBLIC_SITE_ORIGIN` to it before redeploying — sitemap.xml,
-   robots.txt, llms.txt, and the OpenAPI `servers` block all derive
-   absolute URLs from this var.
+   `NEXT_PUBLIC_SITE_ORIGIN` to it before redeploying. This sets `metadataBase`
+   and the fallback origin for `siteOrigin()`. For sitemap.xml, robots.txt,
+   llms.txt, and the OpenAPI `servers` block, `siteOrigin()` prefers the
+   request's `x-forwarded-host` (then `host`) and `x-forwarded-proto` (defaulting
+   to HTTP in development and HTTPS otherwise); only without a request host
+   does it use the env var, then `DEFAULT_ORIGIN`.
 4. Click **Deploy**.
 
 The first build will compile `@llm-workbench/runtime`, `…/ui`,
@@ -294,8 +299,10 @@ because un-configuration is the supported opt-out, not an error.
   implementation and pass it to `new WorkbenchRuntime({ artifactStore })`.
 - **Observability.** Convert traces to OTLP via
   `traceEventsToOtelSpans()` and ship to Datadog / Honeycomb / Tempo.
-- **Cost guardrails.** AI SDK calls go through the Gateway, which gives
-  you per-tenant spend caps in the Vercel dashboard. Use them.
+- **Cost guardrails.** AI SDK calls go through the Gateway. Use AI Gateway
+  team budgets, or project budgets for OIDC deployments, in the Vercel
+  dashboard. These do not automatically cap spend per Clerk tenant; this
+  reference app sends no `providerOptions.gateway.user` / `tags` attribution.
 
 ---
 

@@ -8,6 +8,9 @@ import { contentSecurityPolicy } from "@/lib/security/csp";
 // discoverability (blog, RSS, robots/sitemap), and the agentic discovery files
 // (llms.txt / llms-full.txt / agents.md / openapi / mcp.json). Everything else
 // (the (app) group, /api/runs, /api/llm) requires an authenticated session.
+// Dotted paths and `/api/health` never reach this proxy, so public matcher
+// entries for `/llms.txt`, `/feed.xml`, `/.well-known/*` and `/api/openapi.json`
+// are inert.
 //
 // SEO / crawlers: keep `isPublicRoute` aligned with `app/robots.txt`, `app/sitemap.ts`,
 // and playground CTAs (`components/playground-marketing-link.tsx`). Next.js OG routes

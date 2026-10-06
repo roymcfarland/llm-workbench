@@ -26,7 +26,7 @@ and the SQL migration, including the trade-offs below.
 | Path | What it is |
 | --- | --- |
 | `/` | Marketing landing page with an “Open the playground” CTA. |
-| `/sign-in`, `/sign-up` | Clerk hosted flows. |
+| `/sign-in`, `/sign-up` | Embedded Clerk `<SignIn />` / `<SignUp />` pages (see `app/(auth)`). |
 | `/playground` | Live job-search workflow demo backed by AI Gateway (**auth required**). |
 | `/runs` | Saved runs for the current Clerk org/user. |
 | `/runs/[runId]` | Run detail: trace timeline, artifact viewer, gate panel. |
@@ -68,7 +68,8 @@ These are intentional entry points for crawlers, assistants, and integrations:
 
 ### Routing & security notes
 
-- **Clerk + CSP** live in [`proxy.ts`](proxy.ts) (Next.js 16 proxy convention). Public routes include `/`, `/blog`, `/feed.xml`, `/docs/*`, `/faq`, `/runs/demo`, and `/api/openapi.json`; gated surfaces (`/playground`, `/runs`, `/api/runs`, …) require a session. API routes return **401 JSON** when unauthenticated — they never redirect to HTML sign-in.
+- **Clerk + CSP** live in [`proxy.ts`](proxy.ts) (Next.js 16 proxy convention). Public routes that pass through the proxy include `/`, `/blog`, `/docs/*`, `/faq`, and `/runs/demo`; gated surfaces (`/playground`, `/runs`, `/api/runs`, …) require a session. Protected API routes return **401 JSON** when unauthenticated — they never redirect to HTML sign-in.
+- **Proxy bypasses.** Paths containing a dot (including `/feed.xml` and `/api/openapi.json`) and `/api/health` skip `proxy.ts` entirely: no Clerk, CSP, or rate limit from the proxy. Unmatched dotted paths render the normal 404 because [`getSessionUserId()`](lib/auth/session.ts) returns `null` when `x-nonce` is absent.
 
 ## Prerequisites
 
@@ -107,9 +108,14 @@ Builds production, serves `next start` briefly, audits `/`, and writes scores un
 
 ## Deploying
 
-This app is designed to deploy on Vercel with zero modification.
+This app is designed to deploy on Vercel after configuring the required services
+and environment variables. Production requires Upstash for proxy-matched
+`/api/*` routes: set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
+(or `KV_REST_API_URL` + `KV_REST_API_TOKEN`), or explicitly opt out with
+`RATE_LIMIT_ALLOW_UNCONFIGURED=1`. Without either, those routes return **503**;
+`/api/health` and dotted paths such as `/api/openapi.json` bypass the proxy.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/roymcfarland/llm-workbench&project-name=llm-workbench-reference&repository-name=llm-workbench-reference&env=NEXT_PUBLIC_SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,AI_GATEWAY_API_KEY,NEXT_PUBLIC_SITE_ORIGIN)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/roymcfarland/llm-workbench&project-name=llm-workbench-reference&repository-name=llm-workbench-reference&env=NEXT_PUBLIC_SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,AI_GATEWAY_API_KEY,NEXT_PUBLIC_SITE_ORIGIN,UPSTASH_REDIS_REST_URL,UPSTASH_REDIS_REST_TOKEN)
 
 When deployed on Vercel, prefer OIDC-based auth for AI Gateway (`vercel env
 pull` will inject `VERCEL_OIDC_TOKEN`) so you do not have to rotate

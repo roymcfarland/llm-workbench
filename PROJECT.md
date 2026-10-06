@@ -60,7 +60,7 @@ The following are explicitly **out of scope** for this product. Agents should re
 - **Not a marketplace.** No third-party tool registry, no plugin store, no shared-prompts directory.
 - **Not a billing / cost-reconciliation product.** Cost telemetry is recorded; reconciliation, invoicing, and seat-management are out of scope.
 - **Not a multi-tenant admin platform / B2B product.** `apps/web` is per-user with optional Clerk org scoping, but it is not a workspace, SSO, RBAC, or org-admin product. *(Deferred — possible future release; if pursued, must be added as scoped roadmap item and this PROJECT.md updated before implementation begins).*
-- **Not a hosted multi-tenant SaaS for outside users.** `apps/web` is the reference deployment, intended for the maintainer or paid licensees to self-host. *(Deferred — possible future release; if pursued, must be added as scoped roadmap item and this PROJECT.md updated before implementation begins).*
+- **Not a hosted multi-tenant SaaS for outside users.** `apps/web` is the reference deployment, intended for the maintainer, or anyone self-hosting under the MIT licence. *(Deferred — possible future release; if pursued, must be added as scoped roadmap item and this PROJECT.md updated before implementation begins).*
 - **Not a native mobile app.** Surface is web.
 - **Not a realtime collaboration tool.** No websockets, no presence, no shared editing of in-progress runs.
 - **Not a data-warehouse or analytics product.** Trace events are the canonical artifact; building a warehouse-shaped query layer, dashboards-as-product, or BI integration is out of scope.
