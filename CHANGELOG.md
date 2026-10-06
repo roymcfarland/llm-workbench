@@ -379,6 +379,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Unmatched dotted-path requests (e.g. `/.env`) render the normal 404 page without a Clerk `auth()` error.
+
 - Preview deployments now allow the Vercel toolbar's frame, realtime connection,
   and fonts in the CSP; the production policy is unchanged.
 

@@ -1,6 +1,18 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Public smoke (no sign-in)", () => {
+  test("unmatched dotted paths render a normal 404 without a Clerk error", async ({
+    request,
+  }) => {
+    for (const path of ["/.env", "/some.file.txt"]) {
+      const res = await request.get(path);
+      expect(res.status()).toBe(404);
+      const html = await res.text();
+      expect(html).toContain("Not found");
+      expect(html).not.toContain('E{\\"digest\\":');
+    }
+  });
+
   test("GET /api/health", async ({ request }) => {
     const res = await request.get("/api/health");
     expect(res.ok()).toBeTruthy();
