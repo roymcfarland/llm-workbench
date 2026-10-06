@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
+import { getSessionUserId } from "@/lib/auth/session";
 
 import { PlaygroundMarketingLink } from "@/components/playground-marketing-link";
 import { WORKBENCH_PROTOCOL_VERSION } from "@llm-workbench/runtime";
@@ -19,7 +19,7 @@ const socialIconLink =
   "inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--color-muted-foreground)] transition hover:text-[var(--color-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]";
 
 export async function SiteFooter() {
-  const { userId } = await auth();
+  const userId = await getSessionUserId();
 
   return (
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-background)]/60">

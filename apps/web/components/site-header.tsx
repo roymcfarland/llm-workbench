@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
+import { getSessionUserId } from "@/lib/auth/session";
 import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { SiteNavMobile } from "@/components/site-nav-mobile";
 const navBtn = "h-9 shrink-0 whitespace-nowrap px-2 text-xs md:px-3";
 
 export async function SiteHeader() {
-  const { userId } = await auth();
+  const userId = await getSessionUserId();
   const isSignedIn = Boolean(userId);
 
   return (
