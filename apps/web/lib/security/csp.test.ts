@@ -152,4 +152,142 @@ describe("contentSecurityPolicy", () => {
     });
     expectHardenedDirectives(developmentPolicy());
   });
+
+  it.each(["production", "development"])(
+    "allows the Vercel toolbar frame only in preview with NODE_ENV=%s",
+    async (mode) => {
+      const { contentSecurityPolicy } = await loadCsp({
+        NODE_ENV: mode,
+        VERCEL_ENV: "preview",
+      });
+
+      expect(
+        directive(contentSecurityPolicy("nonce-value"), "frame-src").split(" "),
+      ).toContain("https://vercel.live");
+    },
+  );
+
+  it("allows the Vercel toolbar realtime connection in preview", async () => {
+    const { contentSecurityPolicy } = await loadCsp({
+      NODE_ENV: "production",
+      VERCEL_ENV: "preview",
+    });
+
+    expect(
+      directive(contentSecurityPolicy("nonce-value"), "connect-src").split(" "),
+    ).toContain("wss://ws-us3.pusher.com");
+  });
+
+  it.each(["https://vercel.live", "https://assets.vercel.com"])(
+    "allows the Vercel toolbar font source %s in preview",
+    async (source) => {
+      const { contentSecurityPolicy } = await loadCsp({
+        NODE_ENV: "production",
+        VERCEL_ENV: "preview",
+      });
+
+      expect(
+        directive(contentSecurityPolicy("nonce-value"), "font-src").split(" "),
+      ).toContain(source);
+    },
+  );
+
+  it.each([
+    { mode: "production", vercelEnv: "production" },
+    { mode: "production", vercelEnv: undefined },
+    { mode: "development", vercelEnv: "development" },
+  ])(
+    "excludes preview-only toolbar sources with NODE_ENV=$mode and VERCEL_ENV=$vercelEnv",
+    async ({ mode, vercelEnv }) => {
+      vi.stubEnv("VERCEL_ENV", vercelEnv);
+      const { contentSecurityPolicy } = await loadCsp({ NODE_ENV: mode });
+
+      for (const nonce of [undefined, "nonce-value"]) {
+        const policy = contentSecurityPolicy(nonce);
+        expect(directive(policy, "frame-src").split(" ")).not.toContain(
+          "https://vercel.live",
+        );
+        expect(directive(policy, "font-src").split(" ")).not.toContain(
+          "https://vercel.live",
+        );
+        expect(directive(policy, "font-src").split(" ")).not.toContain(
+          "https://assets.vercel.com",
+        );
+        expect(directive(policy, "connect-src").split(" ")).not.toContain(
+          "wss://ws-us3.pusher.com",
+        );
+        expect(directive(policy, "connect-src").split(" ")).toContain(
+          "https://vercel.live",
+        );
+      }
+    },
+  );
+
+  it.each([undefined, "nonce-value"])(
+    "keeps production and unset policies byte-identical to main with nonce %s",
+    async (nonce) => {
+      vi.stubEnv("VERCEL_ENV", undefined);
+      const { contentSecurityPolicy: unsetPolicy } = await loadCsp({
+        NODE_ENV: "production",
+        CSP_EXTRA_CONNECT_SRC: "",
+      });
+      const withoutVercelEnv = unsetPolicy(nonce);
+      const { contentSecurityPolicy: productionPolicy } = await loadCsp({
+        NODE_ENV: "production",
+        VERCEL_ENV: "production",
+        CSP_EXTRA_CONNECT_SRC: "",
+      });
+
+      // Pin the complete pre-change policy: equality between the two envs alone
+      // would miss an accidental widening applied to both production and unset.
+      const expectedMainPolicy = [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+        "object-src 'none'",
+        nonce
+          ? "script-src 'self' 'nonce-nonce-value' 'strict-dynamic' 'unsafe-inline' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.vercel-scripts.com"
+          : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.vercel-scripts.com",
+        "style-src 'self' 'unsafe-inline'",
+        "font-src 'self' data:",
+        "img-src 'self' data: blob: https:",
+        "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev wss://*.clerk.com https://clerk-telemetry.com https://*.supabase.co wss://*.supabase.co wss://*.supabase.io https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://vercel.live https://*.vercel-insights.com https://vitals.vercel-insights.com https://*.vercel.com https://*.vercel.app https://*.vercel.sh",
+        "frame-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+        "worker-src 'self' blob:",
+        "media-src 'self' blob:",
+        "child-src 'self' blob:",
+        "upgrade-insecure-requests",
+      ].join("; ");
+
+      expect(productionPolicy(nonce)).toBe(withoutVercelEnv);
+      expect(withoutVercelEnv).toBe(expectedMainPolicy);
+    },
+  );
+
+  it.each(["production", "development"])(
+    "preserves local font sources and script-src in preview with NODE_ENV=%s",
+    async (mode) => {
+      vi.stubEnv("VERCEL_ENV", undefined);
+      const { contentSecurityPolicy: unsetPolicy } = await loadCsp({
+        NODE_ENV: mode,
+      });
+      const originalScripts = [
+        scriptSrc(unsetPolicy()),
+        scriptSrc(unsetPolicy("nonce-value")),
+      ];
+      const { contentSecurityPolicy: previewPolicy } = await loadCsp({
+        NODE_ENV: mode,
+        VERCEL_ENV: "preview",
+      });
+
+      for (const [index, nonce] of [undefined, "nonce-value"].entries()) {
+        const policy = previewPolicy(nonce);
+        const fontSources = directive(policy, "font-src").split(" ");
+        expect(fontSources).toContain("'self'");
+        expect(fontSources).toContain("data:");
+        expect(scriptSrc(policy)).toBe(originalScripts[index]);
+      }
+    },
+  );
 });

@@ -32,6 +32,9 @@ function clerkFrontendApiOrigin(): string | null {
 
 export function contentSecurityPolicy(nonce?: string): string {
   const isProd = process.env.NODE_ENV === "production";
+  // https://vercel.com/docs/vercel-toolbar/managing-toolbar
+  // Toolbar sources are preview-only; production never loads the toolbar.
+  const isPreview = process.env.VERCEL_ENV === "preview";
   const extraConnect = (process.env.CSP_EXTRA_CONNECT_SRC ?? "")
     .split(/\s+/)
     .map((s) => s.trim())
@@ -65,6 +68,7 @@ export function contentSecurityPolicy(nonce?: string): string {
     "https://*.vercel.com",
     "https://*.vercel.app",
     "https://*.vercel.sh",
+    ...(isPreview ? ["wss://ws-us3.pusher.com"] : []),
     ...extraConnect,
   ];
 
@@ -82,10 +86,12 @@ export function contentSecurityPolicy(nonce?: string): string {
     "object-src 'none'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
-    "font-src 'self' data:",
+    isPreview
+      ? "font-src 'self' https://vercel.live https://assets.vercel.com data:"
+      : "font-src 'self' data:",
     "img-src 'self' data: blob: https:",
     `connect-src ${connectParts.join(" ")}`,
-    `frame-src 'self' ${clerkHosts.join(" ")} https://challenges.cloudflare.com`,
+    `frame-src 'self' ${clerkHosts.join(" ")} https://challenges.cloudflare.com${isPreview ? " https://vercel.live" : ""}`,
     "worker-src 'self' blob:",
     "media-src 'self' blob:",
     "child-src 'self' blob:",

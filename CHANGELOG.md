@@ -379,6 +379,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Preview deployments now allow the Vercel toolbar's frame, realtime connection,
+  and fonts in the CSP; the production policy is unchanged.
+
 - **Deduplicated three.js in the web app.** The web app and its three.js
   libraries now share a single `three` copy after a lockfile-only update to
   `postprocessing` 6.39.5; the "Multiple instances of Three.js" console warning
