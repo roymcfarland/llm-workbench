@@ -36,6 +36,7 @@ yarn add 'monaco-editor@>=0.25.0 <1'
 | `WorkbenchShell` | full control panel for a run (artifacts, rules, traces, gates, import/export) |
 | `WorkflowGraph` | React Flow DAG view of a workflow + `layoutWorkflow` helper |
 | `MonacoArtifactEditor` | Monaco-based JSON artifact editor |
+| `computeReorderedRuleIds` / `buildRuleReorderHandler` | compute reordered IDs from current rule IDs and active/over IDs (or return `null` for no change or unknown IDs); build a drag-end callback from a rule set and session that calls `session.reorderRules` for a valid move |
 | `@llm-workbench/ui/theme.css` | scoped (`lwb-`) base styles |
 
 ## Docs

@@ -11,15 +11,16 @@ npm install @llm-workbench/runtime
 | Export | Role |
 | --- | --- |
 | `WorkbenchRuntime` / `WorkbenchSession` | start runs; drive steps and gates; write & patch artifacts; log model I/O and tool calls |
-| `SchemaRegistry` | register JSON Schemas and Ajv-validate artifacts before they become run state |
+| `SchemaRegistry` | register JSON Schemas and explicitly validate artifacts and rule payloads; bare `session.writeArtifact` does not validate against registered schemas |
+| `validatedWriteArtifact` / `validatedReplaceRuleSet` | validate with a `SchemaRegistry` before writing an artifact or replacing a rule set through a session |
 | `MemoryRunRepository`, IndexedDB, HTTP adapters | pluggable persistence behind one `RunRepository` interface |
-| `parseRunBundleJson` / `verifyRunBundleIntegrity` | import/verify SHA-256-signed, canonical-JSON run bundles |
+| `parseRunBundleJson` / `verifyRunBundleIntegrity` | parse and verify canonical-JSON run bundles that carry a SHA-256 integrity hash (attached on export; migrating an older bundle does not re-attach it). The hash detects modification but does not prove who produced the bundle. |
 | `summarizeModelTelemetry` | typed cost/usage ledger grouped by provider, model, step, user, tenant, plan |
 | `WorkbenchError` | structured errors with stable `code`s across package boundaries |
 
 ## Quick start
 
-A complete, runnable example lives in the repository root [`README.md`](../../README.md#60-second-integration). It imports the package and exercises gates, artifacts and model-I/O telemetry under plain Node. `npm run smoke:esm` additionally exports a signed bundle.
+A complete, runnable example lives in the repository root [`README.md`](../../README.md#60-second-integration). It imports the package and exercises gates, artifacts and model-I/O telemetry under plain Node. `npm run smoke:esm` additionally exports a run bundle with a SHA-256 integrity hash.
 
 ## Docs
 
