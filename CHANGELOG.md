@@ -379,6 +379,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Corrected shipped bundle integrity and replay copy, deployment storage wording, landing counts to exclude seeded demos and hide absent metrics, landing JSON-LD, MCP tool discovery, the application name, and the humans.txt update claim.
+
 - Unmatched dotted-path requests (e.g. `/.env`) render the normal 404 page without a Clerk `auth()` error.
 
 - Preview deployments now allow the Vercel toolbar's frame, realtime connection,

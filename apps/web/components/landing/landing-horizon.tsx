@@ -12,7 +12,7 @@ export function LandingHorizon() {
         <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
           audit trails for cognition
         </span>
-        : runs you can diff, sign, and replay.
+        : runs you can diff, verify, and replay.
       </blockquote>
     </section>
   );

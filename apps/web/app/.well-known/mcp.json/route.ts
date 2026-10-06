@@ -10,7 +10,7 @@ export async function GET(): Promise<Response> {
     name: "llm-workbench",
     version: WORKBENCH_PROTOCOL_VERSION,
     description:
-      "Drive LLM Workbench runs (start, list, get, write artifact, resolve gate, export bundle) over MCP.",
+      "Drive LLM Workbench runs (start, list, get, verify integrity, validate bundle, write artifact, resolve gate, export bundle) over MCP.",
     transport: "streamable-http",
     endpoint: `${origin}/api/mcp`,
     auth: {
@@ -24,23 +24,31 @@ export async function GET(): Promise<Response> {
       },
       {
         name: "get_run",
-        description: "Return a full RunBundle for a runId",
+        description: "Return the serialized RunStoreState for a runId",
+      },
+      {
+        name: "verify_run_integrity",
+        description: "Verify a RunBundle's integrity.sha256 against its canonical JSON",
+      },
+      {
+        name: "validate_run_bundle",
+        description: "Validate a RunBundle's schema and structural invariants",
       },
       {
         name: "start_run",
-        description: "Start a new run from a workflow id",
+        description: "Start a new run from jobSearchWorkflow (the only supported workflow id)",
       },
       {
         name: "resolve_gate",
-        description: "Resolve a human gate",
+        description: "Resolve a human gate for a step in a saved run",
       },
       {
         name: "write_artifact",
-        description: "Write or patch a typed artifact",
+        description: "Write a typed artifact to a saved run",
       },
       {
         name: "export_bundle",
-        description: "Return a tamper-evident RunBundle JSON",
+        description: "Return a tamper-evident, integrity-hashed RunBundle JSON (full profile, with engine snapshot)",
       },
     ],
   } as const;

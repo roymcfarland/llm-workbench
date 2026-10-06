@@ -63,7 +63,7 @@ export default async function LandingPage() {
   ]);
   const isSignedIn = Boolean(userId);
 
-  const jsonLd = buildJsonLd({ origin, runsCount });
+  const jsonLd = buildJsonLd({ origin });
 
   return (
     <>
@@ -124,7 +124,7 @@ export default async function LandingPage() {
               >
                 LLM Workbench turns each run of your agent into a tamper-evident,
                 model-agnostic, human-gated bundle: trace events, artifacts, gates,
-                and cost — signed, exportable, and replayable.
+                and cost — integrity-hashed, exportable, and replayable.
               </p>
 
               <div
@@ -153,10 +153,13 @@ export default async function LandingPage() {
               className="landing-reveal order-3 font-mono text-[11px] text-[var(--color-muted-foreground)] lg:col-start-1 lg:row-start-3"
               style={{ animationDelay: "0.28s" }}
             >
-              <span className="text-[var(--color-foreground)]">
-                {runsCount === null ? "—" : runsCount.toLocaleString()}
-              </span>{" "}
-              runs persisted · v{WORKBENCH_PROTOCOL_VERSION} ·{" "}
+              {runsCount !== null && runsCount > 0 ? (
+                <>
+                  <span className="text-[var(--color-foreground)]">{runsCount.toLocaleString()}</span>{" "}
+                  runs persisted ·{" "}
+                </>
+              ) : null}
+              v{WORKBENCH_PROTOCOL_VERSION} ·{" "}
               <a
                 href={LICENSE_URL}
                 target="_blank"
@@ -258,10 +261,8 @@ export default async function LandingPage() {
 
 function buildJsonLd({
   origin,
-  runsCount,
 }: {
   origin: string;
-  runsCount: number | null;
 }) {
   const url = origin;
   return [
@@ -273,19 +274,9 @@ function buildJsonLd({
       operatingSystem: "Any",
       url,
       description: SITE_TAGLINE,
-      softwareVersion: WORKBENCH_PROTOCOL_VERSION,
       license: LICENSE_URL,
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       codeRepository: GITHUB_URL,
-      ...(runsCount !== null
-        ? {
-            interactionStatistic: {
-              "@type": "InteractionCounter",
-              interactionType: "https://schema.org/UseAction",
-              userInteractionCount: runsCount,
-            },
-          }
-        : {}),
     },
     {
       "@context": "https://schema.org",

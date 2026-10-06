@@ -6,11 +6,11 @@ import type { ReactNode } from "react";
 const faqs: { q: string; a: string }[] = [
   {
     q: "What is LLM Workbench?",
-    a: "It turns every run of your LLM agent into a tamper-evident, model-agnostic, human-gated bundle: trace events, artifacts, gates, and cost — signed, exportable, and replayable. Instead of opaque API calls scattered across logs, each run becomes a self-contained record you own.",
+    a: "It turns every run of your LLM agent into a tamper-evident, model-agnostic, human-gated bundle: trace events, artifacts, gates, and cost — integrity-hashed, exportable, and replayable. Instead of opaque API calls scattered across logs, each run becomes a self-contained record you own.",
   },
   {
     q: "How is this different from LangSmith, Langfuse, or Helicone?",
-    a: "Those are observability and evaluation platforms built around a trace store, hosted or (for Langfuse) self-hosted. LLM Workbench is protocol-first: each run is a self-contained, cryptographically signed bundle (with a sha256 integrity hash) you can export, verify, and replay anywhere. Human approval gates and run replay/fork are first-class, not add-ons.",
+    a: "Those are observability and evaluation platforms built around a trace store, hosted or (for Langfuse) self-hosted. LLM Workbench is protocol-first: each run is a self-contained bundle with a SHA-256 integrity hash, so any change after export is detectable. You can export, verify, and replay it anywhere. Human approval gates and run replay/fork are first-class, not add-ons.",
   },
   {
     q: 'What\'s a "run bundle"?',
@@ -30,11 +30,11 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Can I replay or fork a run?",
-    a: "Yes — the signed bundle lets you replay a run deterministically, or fork from any step to explore a different path, with full lineage tracked.",
+    a: "Yes — the integrity-hashed bundle lets you replay a run, or fork from any step to explore a different path, with full lineage tracked. The runtime re-opens the recorded run and lets you fork it from any step; it does not re-execute model calls.",
   },
   {
     q: "Where does my data go? Is it private?",
-    a: "The public demo run is generated fresh on each request and never saved — no account, no persistence. Authenticated runs persist to your own database, and because every run is an exportable bundle, you're never locked in.",
+    a: "The public demo run is generated fresh on each request and never saved — no account, no persistence. Runs you save are stored in this deployment's Supabase, scoped to your user or org. Self-host to keep them in your own database; you can always export a bundle.",
   },
   {
     q: "Is it open source? Is it a product?",

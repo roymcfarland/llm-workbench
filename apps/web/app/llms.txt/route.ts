@@ -16,7 +16,7 @@ calls explicit APIs to record what happened. Protocol v${WORKBENCH_PROTOCOL_VERS
 
 ## Key concepts
 
-- run bundle — signed JSON of run, trace, artifacts, ruleSets, optional engine snapshot.
+- run bundle — integrity-hashed JSON of run, trace, artifacts, ruleSets, optional engine snapshot.
 - trace event — typed, time-ordered fact (step_started, model_io, artifact_written, human_gate_resolved, span_started, etc.).
 - artifact — versioned, schema-validated structured output keyed by artifactKey + typeId.
 - gate — PAUSE_BEFORE, PAUSE_AFTER, CHECKPOINT human-review hold points on workflow steps.
