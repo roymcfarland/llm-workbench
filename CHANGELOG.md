@@ -151,6 +151,11 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Changed
 
+- **Removed the React 19.3 Dependabot hold and the qs override.** Dependabot
+  can propose React 19.3 now that Fiber allows React <19.4. The example server's
+  Express moved to 4.22.3, which pins `qs ~6.16.0`, so the root qs override is
+  no longer needed. (#260)
+
 - **Removed unused Google Fonts hosts from the web CSP.** `style-src` no longer
   allows `fonts.googleapis.com`, and `font-src` no longer allows
   `fonts.gstatic.com`; self-hosted fonts remain covered by `'self'`.
