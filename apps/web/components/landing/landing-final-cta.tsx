@@ -42,8 +42,7 @@ export async function LandingFinalCta({ runsCount }: LandingFinalCtaProps) {
             Step into the playground, or drive the same contract from your agent.
           </h2>
           <p className="mt-4 max-w-xl text-[var(--color-muted-foreground)] md:text-lg">
-            Every surface — UI, HTTP, MCP — agrees on the same run bundle. Pick yours
-            and start persisting reality.
+            UI, HTTP, and MCP share one run model; <code>export_bundle</code> returns the integrity-hashed bundle.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="shadow-lg shadow-cyan-500/10">
@@ -61,12 +60,14 @@ export async function LandingFinalCta({ runsCount }: LandingFinalCtaProps) {
               </a>
             </Button>
           </div>
-          <p className="mt-8 font-mono text-[11px] text-[var(--color-muted-foreground)]">
-            <span className="text-[var(--color-foreground)]">
-              {runsCount === null ? "—" : runsCount.toLocaleString()}
-            </span>{" "}
-            runs on this plane
-          </p>
+          {runsCount !== null && runsCount > 0 ? (
+            <p className="mt-8 font-mono text-[11px] text-[var(--color-muted-foreground)]">
+              <span className="text-[var(--color-foreground)]">
+                {runsCount.toLocaleString()}
+              </span>{" "}
+              runs on this plane
+            </p>
+          ) : null}
         </div>
       </div>
     </section>

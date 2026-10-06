@@ -31,7 +31,6 @@ export async function GET(): Promise<Response> {
 
 /* SITE */
 
-  Last update: ${new Date().toISOString().slice(0, 10)}
   Standards: HTML5, CSS, OpenAPI 3.1, Model Context Protocol, RSS 2.0
   Components: Next.js 16 (App Router), React 19, Tailwind v4, Clerk, Supabase
   Software: Built with TypeScript, AI SDK v7, ${BRIGHTLINE_LABS_NAME} stack

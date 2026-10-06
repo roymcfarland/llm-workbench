@@ -51,10 +51,10 @@ stores a **\`RunStoreState\`** snapshot: maps for artifacts, gate state,
 idempotency keys, and step status — optimized for merging and optimistic
 concurrency. A **\`RunBundle\`**, by contrast, is the denormalized archive you
 hand to another system or verify offline. The runtime translates between them:
-export flattens maps to ordered arrays for signing; import rehydrates into
+export flattens maps to ordered arrays for hashing; import rehydrates into
 session state. When you read the OpenAPI spec, you are looking at **store** wire
 format, not necessarily a fully materialized bundle with \`integrity\` — use
-\`export_bundle\` via MCP (or equivalent) when you need a signed artifact.
+\`export_bundle\` via MCP (or equivalent) when you need an integrity-hashed artifact.
 
 ## Trace events
 
@@ -212,7 +212,7 @@ require a registered migration path; without one, migration throws \`UNSUPPORTED
 
 Two complementary surfaces are intended for agents and integrations:
 
-- **REST.** \`GET /api/runs\` lists runs for the caller's tenant; \`GET /api/runs/{runId}\` returns serialized **live state** (\`RunStoreState\` shape); \`PUT /api/runs/{runId}\` persists the next revision (same wire shape); \`DELETE /api/runs/{runId}\` removes it. Responses mirror what \`HttpRunRepository\` reads and writes — **not** automatically the signed bundle envelope unless your exporter wraps it. See \`/api/openapi.json\` for schemas.
+- **REST.** \`GET /api/runs\` lists runs for the caller's tenant; \`GET /api/runs/{runId}\` returns serialized **live state** (\`RunStoreState\` shape); \`PUT /api/runs/{runId}\` persists the next revision (same wire shape); \`DELETE /api/runs/{runId}\` removes it. Responses mirror what \`HttpRunRepository\` reads and writes — **not** automatically the integrity-hashed bundle envelope unless your exporter wraps it. See \`/api/openapi.json\` for schemas.
 - **MCP.** \`/api/mcp\` is a Streamable HTTP MCP endpoint. The \`@llm-workbench/mcp\` core registers \`list_runs\`, \`get_run\`, \`verify_run_integrity\`, and \`validate_run_bundle\`; this reference app adds \`start_run\`, \`resolve_gate\`, \`write_artifact\`, and \`export_bundle\` (tamper-evident **RunBundle** JSON with engine snapshot — use this when automation needs hashes, not only row state). Discovery lives at \`/.well-known/mcp.json\`.
 
 Both surfaces share Clerk-based auth and the tenant-scoping rules described in

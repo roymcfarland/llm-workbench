@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://www.llmworkbench.io",
   ),
   manifest: "/manifest.webmanifest",
-  applicationName: "LLM Control Plane",
+  applicationName: SITE_NAME,
   authors: [{ name: "LLM Workbench" }, { name: "Brightline Labs" }],
   creator: "Brightline Labs",
   publisher: "Brightline Labs",

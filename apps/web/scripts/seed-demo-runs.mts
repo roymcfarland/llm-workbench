@@ -7,9 +7,9 @@ import { WorkbenchRuntime, type RunStoreState } from "@llm-workbench/runtime";
 import { createClient } from "@supabase/supabase-js";
 
 import { demoScenarios } from "../lib/landing/scenarios/index";
+import { SEED_TENANT_ID as TENANT_ID } from "../lib/landing/seed-tenant";
 
 const TABLE = "runs";
-const TENANT_ID = "seed-demo";
 const DEFAULT_COUNT = 60;
 const MIN_COUNT = 1;
 const MAX_COUNT = 200;
