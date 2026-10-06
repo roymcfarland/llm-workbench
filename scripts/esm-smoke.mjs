@@ -51,10 +51,10 @@ s.completeStep("a");
 const bundle = await s.exportRunBundle({ profile: "full" });
 
 if (!bundle.integrity?.sha256 || bundle.trace.length === 0) {
-  console.error("ESM smoke FAILED: run did not produce a signed bundle");
+  console.error("ESM smoke FAILED: run did not produce an integrity-hashed bundle");
   process.exit(1);
 }
 console.log(
   `ESM smoke OK: runtime + ai-sdk + mcp import under plain Node; ` +
-    `drove a run (${bundle.trace.length} trace events, signed ${bundle.integrity.sha256.slice(0, 12)}…)`,
+    `drove a run (${bundle.trace.length} trace events, integrity ${bundle.integrity.sha256.slice(0, 12)}…)`,
 );
