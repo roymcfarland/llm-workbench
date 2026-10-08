@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 /** Monorepo root (avoids wrong Turbopack root when multiple lockfiles exist). */
 const monorepoRoot = path.join(
