@@ -82,5 +82,4 @@ const nextConfig = {
 export default withSentryConfig(nextConfig, {
   silent: true,
   widenClientFileUpload: true,
-  hideSourceMaps: true,
 });

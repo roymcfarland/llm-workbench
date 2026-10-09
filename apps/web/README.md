@@ -73,7 +73,7 @@ These are intentional entry points for crawlers, assistants, and integrations:
 
 ## Prerequisites
 
-- Node.js **22+** (matches monorepo `engines` and CI)
+- Node.js **22.22.2+ (22.x), 24.15+ (24.x), or 26+** (matches monorepo `engines`; CI runs on Node 22 and 24)
 - A Clerk application (publishable + secret key)
 - A Supabase project (URL + service-role key)
 - Vercel AI Gateway access (`AI_GATEWAY_API_KEY`, or OIDC if deployed on Vercel)
