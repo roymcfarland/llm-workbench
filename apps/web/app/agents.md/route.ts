@@ -64,7 +64,7 @@ a PR or use the REST PUT for everything else.
 The REST API requires a Clerk-issued session. On \`/api/mcp\`, discovery methods (\`initialize\`, \`ping\`, \`tools/list\`, \`resources/list\` and similar) are public, and every \`tools/call\` requires a session.
 
 - **Browser context:** Clerk's session cookie is forwarded automatically on \`fetch(..., { credentials: "include" })\`.
-- **Server-to-server / agent context:** issue a Clerk M2M token (or use a Clerk JWT template) and pass \`Authorization: Bearer <token>\` on every request. The MCP descriptor advertises \`auth.type = "clerk-bearer"\`.
+- **Programmatic / agent context:** send a signed-in user's Clerk session token via \`Authorization: Bearer <token>\` on every request. Session tokens are short-lived; callers must refresh them. The API uses Clerk's default session-token check and derives tenancy from \`userId\`/\`orgId\`, so Clerk machine tokens (M2M, API keys, OAuth access tokens) are not accepted. Custom JWT-template tokens are not session tokens; use a session token for this API. The MCP descriptor advertises \`auth.type = "clerk-bearer"\`.
 
 The runtime resolves \`tenantId = orgId ?? "user:" + userId\` and refuses to
 serve cross-tenant data. There is no public anonymous access to mutating

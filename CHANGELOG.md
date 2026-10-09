@@ -403,6 +403,10 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Fixed
 
+- **Corrected `agents.md` authentication guidance.** Removed advice to use
+  Clerk M2M/JWT-template tokens and documented Bearer session tokens, their
+  refresh requirement, and session-based tenancy.
+
 - **Corrected runtime and UI README claims.** Documented explicit schema
   validation helpers and SHA-256 integrity hashes, corrected both `esm-smoke`
   messages, and documented the UI rule-reorder helpers. (#258)
