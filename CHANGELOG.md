@@ -153,7 +153,7 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 - **Aligned the root Node floor with Vitest 5 and jsdom 30.** The root engine
   range is now `^22.22.2 || ^24.15.0 || >=26.0.0`; removed the ineffective Sentry
-  `hideSourceMaps` option from the web configuration.
+  `hideSourceMaps` option from the web configuration. (#266)
 
 - **Removed the React 19.3 Dependabot hold and the qs override.** Dependabot
   can propose React 19.3 now that Fiber allows React <19.4. The example server's
