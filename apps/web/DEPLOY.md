@@ -21,7 +21,7 @@ into production on Vercel + Supabase + Clerk + Vercel AI Gateway.
 
 | Tool                 | Why                                                  |
 | -------------------- | ---------------------------------------------------- |
-| Node **22+** (CI uses 22 & 24) | Build + runtime                               |
+| Node **22.22.2+ (22.x), 24.15+ (24.x), or 26+** (CI uses 22 & 24) | Build + runtime                               |
 | `npm` 10+            | Workspace install                                    |
 | `gh` CLI (optional)  | Linking the repo to Vercel via CLI                   |
 | `vercel` CLI         | `npm i -g vercel`                                    |

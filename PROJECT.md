@@ -15,7 +15,7 @@
 ## Stack
 
 - **Monorepo:** npm workspaces (no pnpm/yarn).
-- **Runtime:** Node `>=22` (CI matrix: 22 and 24).
+- **Runtime:** Node `^22.22.2 || ^24.15.0 || >=26.0.0` (CI matrix: 22 and 24).
 - **Core packages (`packages/*`):** TypeScript, Zod, Ajv, fast-json-patch.
 - **UI packages:** React 18.2+/19 (peer), scoped `lwb-` CSS, `@dnd-kit`, Monaco, React Flow.
 - **Hosted reference plane (`apps/web`):** Next.js 16 (App Router), React 19, Tailwind CSS v4.

@@ -301,7 +301,7 @@ npm run demo               # Vite demo app at http://localhost:5173
 npm run demo:http-server   # Reference REST store for HttpRunRepository
 ```
 
-Node.js **22+** is required (`engines` in root `package.json`). CI runs on **Node 22 and 24** (`.github/workflows/ci.yml`). See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
+Node.js **22.22.2+ (22.x), 24.15+ (24.x), or 26+** is required (`engines` in root `package.json`). CI runs on **Node 22 and 24** (`.github/workflows/ci.yml`). See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
 ## 60-Second Integration
 
