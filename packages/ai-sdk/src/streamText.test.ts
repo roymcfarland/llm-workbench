@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  SchemaRegistry,
   WorkbenchRuntime,
   type TraceEvent,
   type WorkbenchSession,
 } from "@llm-workbench/runtime";
 import { MockLanguageModelV4, simulateReadableStream } from "ai/test";
+import { z } from "zod";
 
 const { streamTextMock } = vi.hoisted(() => ({
   streamTextMock: vi.fn(),
@@ -42,6 +44,132 @@ function startSession(): { session: WorkbenchSession } {
 
 beforeEach(() => {
   streamTextMock.mockReset();
+});
+
+describe("tracedStreamText structured output with the real SDK", () => {
+  const schema = z.object({ name: z.string(), count: z.number() });
+  const object = { name: "Ada", count: 2 };
+
+  function structuredModel() {
+    return new MockLanguageModelV4({
+      provider: "mock-provider",
+      modelId: "mock-model",
+      doStream: {
+        stream: simulateReadableStream({
+          chunks: [
+            { type: "stream-start", warnings: [] },
+            { type: "text-start", id: "text-1" },
+            { type: "text-delta", id: "text-1", delta: '{"name":' },
+            { type: "text-delta", id: "text-1", delta: '"Ada",' },
+            { type: "text-delta", id: "text-1", delta: '"count":2}' },
+            { type: "text-end", id: "text-1" },
+            {
+              type: "finish", finishReason: { unified: "stop", raw: undefined },
+              usage: {
+                inputTokens: { total: 3, noCache: 3, cacheRead: undefined, cacheWrite: undefined },
+                outputTokens: { total: 2, text: 2, reasoning: undefined },
+              },
+            },
+          ],
+        }),
+      },
+    });
+  }
+
+  function artifactRegistry() {
+    const registry = new SchemaRegistry();
+    registry.registerArtifactType({
+      id: "profile",
+      schema: {
+        type: "object", properties: { name: { type: "string" }, count: { type: "number" } },
+        required: ["name", "count"], additionalProperties: false,
+      },
+    });
+    return registry;
+  }
+
+  async function realSdk() {
+    vi.doUnmock("ai");
+    vi.resetModules();
+    const [{ Output }, { tracedStreamText }] = await Promise.all([
+      import("ai"), import("./streamText.js"),
+    ]);
+    return { Output, tracedStreamText };
+  }
+
+  it("streams partial objects and projects the finish event's output into an artifact", async () => {
+    const { Output, tracedStreamText } = await realSdk();
+    const { session } = startSession();
+    const model = structuredModel();
+    const toData = vi.fn(({ text, result }: { text: string; result: unknown }) => {
+      expect(text).toBe(JSON.stringify(object));
+      expect(result).toMatchObject({ text, output: object });
+      // The wrapper exposes the finish event as unknown, not the stream handle.
+      return schema.parse((result as { output: unknown }).output);
+    });
+    const onFinish = vi.fn();
+    const stream = tracedStreamText(session, {
+      model, prompt: "Generate a profile", output: Output.object({ schema }), onFinish,
+      writeArtifact: { artifactKey: "profile", typeId: "profile", registry: artifactRegistry(), toData },
+    });
+    const partials: unknown[] = [];
+    for await (const partial of stream.partialOutputStream) partials.push(partial);
+
+    expect(partials.length).toBeGreaterThan(1);
+    expect(partials).toContainEqual({ name: "Ada" });
+    expect(partials.at(-1)).toEqual(object);
+    await expect(stream.output).resolves.toEqual(object);
+    expect(model.doStreamCalls).toHaveLength(1);
+    expect(model.doStreamCalls[0].responseFormat).toMatchObject({ type: "json" });
+    expect(toData).toHaveBeenCalledOnce();
+    expect(onFinish).toHaveBeenCalledOnce();
+    const traces = session.snapshot().trace.filter((e) => e.type === "model_io");
+    expect(traces[0]).toMatchObject({ direction: "request" });
+    expect(traces[0].correlationId).toBeDefined();
+    expect(traces.at(-1)).toMatchObject({
+      direction: "response", correlationId: traces[0].correlationId,
+      usage: { inputTokens: 3, outputTokens: 2, totalTokens: 5 },
+    });
+    expect(session.snapshot().trace.find((e) => e.type === "artifact_written"))
+      .toMatchObject({ artifact: { artifactKey: "profile", typeId: "profile", data: object } });
+  });
+
+  it("persists JSON text by default after consuming partialOutputStream", async () => {
+    const { Output, tracedStreamText } = await realSdk();
+    const { session } = startSession();
+    const stream = tracedStreamText(session, {
+      model: structuredModel(), prompt: "Generate a profile", output: Output.object({ schema }),
+      writeArtifact: { artifactKey: "profile", typeId: "profile" },
+    });
+    const partials: unknown[] = [];
+    for await (const partial of stream.partialOutputStream) partials.push(partial);
+    expect(partials.at(-1)).toEqual(object);
+    expect(session.snapshot().trace.find((e) => e.type === "artifact_written"))
+      .toMatchObject({ artifact: { data: JSON.stringify(object) } });
+  });
+
+  it("traces artifact validation failure without losing the final structured output", async () => {
+    const { Output, tracedStreamText } = await realSdk();
+    const { session } = startSession();
+    const stream = tracedStreamText(session, {
+      model: structuredModel(), prompt: "Generate a profile", output: Output.object({ schema }),
+      writeArtifact: {
+        artifactKey: "profile", typeId: "profile", registry: artifactRegistry(),
+        toData: () => ({ name: "Ada", count: "invalid" }),
+      },
+    });
+    const partials: unknown[] = [];
+    for await (const partial of stream.partialOutputStream) partials.push(partial);
+    expect(partials.at(-1)).toEqual(object);
+    expect(session.snapshot().trace.some((e) => e.type === "artifact_written")).toBe(false);
+    expect(session.snapshot().trace).toContainEqual(expect.objectContaining({
+      type: "model_io", direction: "stream_chunk",
+      summary: expect.stringContaining("artifact_write_failed: Artifact"),
+    }));
+    expect(session.snapshot().trace).toContainEqual(expect.objectContaining({
+      type: "model_io", direction: "response", usage: { inputTokens: 3, outputTokens: 2, totalTokens: 5 },
+    }));
+  });
 });
 
 describe("tracedStreamText", () => {

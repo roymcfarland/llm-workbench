@@ -58,6 +58,113 @@ beforeEach(() => {
   generateTextMock.mockReset();
 });
 
+describe("tracedGenerateText structured output with the real SDK", () => {
+  const schema = z.object({ name: z.string(), count: z.number() });
+  const object = { name: "Ada", count: 2 };
+
+  function structuredModel(value = object) {
+    return new MockLanguageModelV4({
+      provider: "mock-provider",
+      modelId: "mock-model",
+      doGenerate: {
+        content: [{ type: "text", text: JSON.stringify(value) }],
+        finishReason: { unified: "stop", raw: undefined },
+        usage: {
+          inputTokens: { total: 8, noCache: 8, cacheRead: undefined, cacheWrite: undefined },
+          outputTokens: { total: 5, text: 5, reasoning: undefined },
+        },
+        warnings: [],
+      },
+    });
+  }
+
+  function artifactRegistry() {
+    const registry = new SchemaRegistry();
+    registry.registerArtifactType({
+      id: "profile",
+      schema: {
+        type: "object",
+        properties: { name: { type: "string" }, count: { type: "number", minimum: 1 } },
+        required: ["name", "count"],
+        additionalProperties: false,
+      },
+    });
+    return registry;
+  }
+
+  async function realSdk() {
+    vi.doUnmock("ai");
+    vi.resetModules();
+    const [{ Output }, { tracedGenerateText }] = await Promise.all([
+      import("ai"), import("./generateText.js"),
+    ]);
+    return { Output, tracedGenerateText };
+  }
+
+  it("returns parsed output and persists it with correlated usage traces", async () => {
+    const { Output, tracedGenerateText } = await realSdk();
+    const model = structuredModel();
+    const { session } = startSession();
+    const result = await tracedGenerateText(session, {
+      model,
+      prompt: "Generate a profile",
+      output: Output.object({ schema }),
+      writeArtifact: {
+        artifactKey: "profile",
+        typeId: "profile",
+        registry: artifactRegistry(),
+        toData: (r) => r.output,
+      },
+    });
+
+    expect(model.doGenerateCalls).toHaveLength(1);
+    expect(model.doGenerateCalls[0].responseFormat).toMatchObject({ type: "json" });
+    expect(result.output).toEqual(object);
+    const traces = modelTraces(session);
+    expect(traces).toHaveLength(2);
+    expect(traces[0]).toMatchObject({ type: "model_io", direction: "request" });
+    expect(traces[1]).toMatchObject({
+      type: "model_io", direction: "response",
+      correlationId: traces[0].correlationId,
+      usage: { inputTokens: 8, outputTokens: 5, totalTokens: 13 },
+    });
+    expect(traces[0].correlationId).toBeDefined();
+    expect(session.snapshot().trace.find((e) => e.type === "artifact_written"))
+      .toMatchObject({ artifact: { artifactKey: "profile", typeId: "profile", data: object } });
+  });
+
+  it("rejects output that fails the artifact registry's stricter schema", async () => {
+    const { Output, tracedGenerateText } = await realSdk();
+    const { session } = startSession();
+    // This satisfies the SDK schema, but fails the registry's minimum count.
+    await expect(tracedGenerateText(session, {
+      model: structuredModel({ name: "Ada", count: -1 }),
+      prompt: "Generate a profile",
+      output: Output.object({ schema }),
+      writeArtifact: {
+        artifactKey: "profile", typeId: "profile", registry: artifactRegistry(),
+        toData: (r) => r.output,
+      },
+    })).rejects.toMatchObject({ code: "INVALID_INPUT", message: expect.stringContaining("failed validation") });
+    expect(session.snapshot().trace.some((e) => e.type === "artifact_written")).toBe(false);
+  });
+
+  it("persists JSON text by default even when output is a parsed object", async () => {
+    const { Output, tracedGenerateText } = await realSdk();
+    const { session } = startSession();
+    const result = await tracedGenerateText(session, {
+      model: structuredModel(),
+      prompt: "Generate a profile",
+      output: Output.object({ schema }),
+      writeArtifact: { artifactKey: "profile", typeId: "profile" },
+    });
+    expect(result.output).toEqual(object);
+    expect(result.text).toBe(JSON.stringify(object));
+    expect(session.snapshot().trace.find((e) => e.type === "artifact_written"))
+      .toMatchObject({ artifact: { data: JSON.stringify(object) } });
+  });
+});
+
 describe("tracedGenerateText", () => {
   it("emits correlated request and response model_io traces with durationMs", async () => {
     generateTextMock.mockResolvedValue({
