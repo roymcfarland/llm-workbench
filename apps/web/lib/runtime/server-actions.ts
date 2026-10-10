@@ -1,6 +1,6 @@
 "use server";
 
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 
 import { compiledProfileSchema, type CompiledProfile } from "@/lib/workflow/job-search";
 import { requireTenant } from "@/lib/auth/tenant";
@@ -45,9 +45,9 @@ export async function compileProfileAction(input: {
   const start = Date.now();
   // The AI SDK routes plain "provider/model" strings through Vercel AI Gateway.
   // The `gateway()` wrapper is only needed when configuring providerOptions.
-  const result = await generateObject({
+  const result = await generateText({
     model: DEMO_MODEL,
-    schema: compiledProfileSchema,
+    output: Output.object({ schema: compiledProfileSchema }),
     system: [
       "You are an assistant that turns raw resume text into a compact",
       "structured profile. Always return valid JSON matching the provided",
@@ -56,9 +56,13 @@ export async function compileProfileAction(input: {
     prompt: `Resume text:\n\n${trimmed}`,
   });
   const durationMs = Date.now() - start;
+  const profile = result.output;
+  if (profile === undefined) {
+    throw new Error("No compiled profile generated: output is undefined");
+  }
 
   return {
-    profile: result.object,
+    profile,
     modelIo: {
       provider: "anthropic",
       model: DEMO_MODEL,
