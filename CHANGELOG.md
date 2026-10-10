@@ -151,6 +151,11 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Changed
 
+- **Deprecated the AI SDK object wrappers without changing behavior.** Added
+  JSDoc deprecations and a tested migration guide for `tracedGenerateText` /
+  `tracedStreamText` with `Output.object`, including object artifact projection,
+  schema validation, and the AI SDK 5 compatibility caveat.
+
 - **Migrated resume compilation to `generateText` with `Output.object`.** The
   resume-compile server action no longer uses the deprecated `generateObject`.
   Empty responses now throw `NoOutputGeneratedError` ("No output generated.")

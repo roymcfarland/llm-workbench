@@ -18,6 +18,8 @@ type GenerateObjectResult = Awaited<ReturnType<typeof generateObject>>;
  * Options for {@link tracedGenerateObject}: every option supported by the
  * AI SDK `generateObject` (including `schema`, `mode`, etc.), plus tracing
  * and artifact hooks.
+ *
+ * @deprecated AI SDK deprecated `generateObject` in favor of `generateText` with an `output` setting; use {@link tracedGenerateText} and the [README migration section](https://github.com/roymcfarland/llm-workbench/blob/main/packages/ai-sdk/README.md#migrating-from-tracedgenerateobject--tracedstreamobject); this wrapper keeps working unchanged.
  */
 export type TracedGenerateObjectOptions = GenerateObjectFirstArg &
   WorkbenchTraceContext & {
@@ -32,6 +34,8 @@ export type TracedGenerateObjectOptions = GenerateObjectFirstArg &
  * Drop-in wrapper around AI SDK `generateObject` that emits LLM Workbench
  * `model_io` request/response trace events and optionally validates and
  * persists the structured `result.object` as a workbench artifact.
+ *
+ * @deprecated AI SDK deprecated `generateObject` in favor of `generateText` with an `output` setting; use {@link tracedGenerateText} and the [README migration section](https://github.com/roymcfarland/llm-workbench/blob/main/packages/ai-sdk/README.md#migrating-from-tracedgenerateobject--tracedstreamobject); this wrapper keeps working unchanged.
  *
  * @param session The active `WorkbenchSession` recording trace events.
  * @param opts AI SDK `generateObject` options plus optional tracing/artifact

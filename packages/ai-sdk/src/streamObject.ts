@@ -18,6 +18,8 @@ type StreamObjectResult = ReturnType<typeof streamObject>;
  * Options for {@link tracedStreamObject}: every option supported by the AI SDK
  * `streamObject`, plus tracing/artifact hooks. Caller-supplied `onFinish` and
  * `onError` callbacks are still invoked.
+ *
+ * @deprecated AI SDK deprecated `streamObject` in favor of `streamText` with an `output` setting; use {@link tracedStreamText} and the [README migration section](https://github.com/roymcfarland/llm-workbench/blob/main/packages/ai-sdk/README.md#migrating-from-tracedgenerateobject--tracedstreamobject); this wrapper keeps working unchanged.
  */
 export type TracedStreamObjectOptions = StreamObjectFirstArg &
   WorkbenchTraceContext & {
@@ -36,6 +38,8 @@ export type TracedStreamObjectOptions = StreamObjectFirstArg &
  * Returns the original `streamObject` result so callers iterate
  * `partialObjectStream`, await `object`/`usage`, etc., as if they had called
  * `streamObject` directly.
+ *
+ * @deprecated AI SDK deprecated `streamObject` in favor of `streamText` with an `output` setting; use {@link tracedStreamText} and the [README migration section](https://github.com/roymcfarland/llm-workbench/blob/main/packages/ai-sdk/README.md#migrating-from-tracedgenerateobject--tracedstreamobject); this wrapper keeps working unchanged.
  *
  * @param session The active `WorkbenchSession` recording trace events.
  * @param opts AI SDK `streamObject` options plus optional tracing/artifact
