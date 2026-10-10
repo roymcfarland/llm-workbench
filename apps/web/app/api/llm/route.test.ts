@@ -17,14 +17,18 @@ vi.mock("@/lib/supabase/runs-store", () => ({
   serializedToState: vi.fn(),
   stateToSerialized: vi.fn(),
 }));
-vi.mock("ai", () => ({ streamText: vi.fn(), generateObject: vi.fn() }));
+vi.mock("ai", () => ({
+  streamText: vi.fn(),
+  generateText: vi.fn(),
+  Output: { object: vi.fn(({ schema }) => ({ kind: "compiled-profile-output", schema })) },
+}));
 vi.mock("@llm-workbench/ai-sdk", () => ({ tracedStreamText: vi.fn() }));
 
 import { TenantAuthError, requireTenant } from "@/lib/auth/tenant";
 import * as store from "@/lib/supabase/runs-store";
 import { WorkbenchRuntime } from "@llm-workbench/runtime";
 import { initialRuleSet, jobSearchWorkflow } from "@/lib/workflow/job-search";
-import { streamText, generateObject } from "ai";
+import { streamText, generateText } from "ai";
 import { tracedStreamText } from "@llm-workbench/ai-sdk";
 import { POST } from "./route";
 
@@ -62,7 +66,7 @@ describe("POST /api/llm tenant boundary", () => {
     expectNoStoreCalls();
     expect(streamText).not.toHaveBeenCalled();
     expect(tracedStreamText).not.toHaveBeenCalled();
-    expect(generateObject).not.toHaveBeenCalled();
+    expect(generateText).not.toHaveBeenCalled();
   });
 
   it("loads the traced run in the caller's tenant before model access", async () => {

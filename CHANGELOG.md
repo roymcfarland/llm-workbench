@@ -151,6 +151,12 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Changed
 
+- **Migrated resume compilation to `generateText` with `Output.object`.** The
+  resume-compile server action no longer uses the deprecated `generateObject`.
+  Empty responses now throw `NoOutputGeneratedError` ("No output generated.")
+  instead of `NoObjectGeneratedError` ("No object generated: the model did not
+  return a response."); invalid-JSON and schema-validation failures are unchanged. (#270)
+
 - **Aligned the root Node floor with Vitest 5 and jsdom 30.** The root engine
   range is now `^22.22.2 || ^24.15.0 || >=26.0.0`; removed the ineffective Sentry
   `hideSourceMaps` option from the web configuration. (#266)
