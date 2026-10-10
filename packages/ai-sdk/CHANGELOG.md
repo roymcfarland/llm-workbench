@@ -1,5 +1,11 @@
 # @llm-workbench/ai-sdk
 
+## 0.3.5
+
+### Patch Changes
+
+- db06ff9: Deprecate tracedGenerateObject, tracedStreamObject, and their option types without changing their behavior or signatures. Document and test migration to tracedGenerateText and tracedStreamText with Output.object, including artifact projection and schema validation.
+
 ## 0.3.4
 
 ### Patch Changes
