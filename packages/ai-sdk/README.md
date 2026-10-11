@@ -25,8 +25,8 @@ AI SDK [deprecated `generateObject` and `streamObject` in version 6](https://ai-
 in favor of `generateText` / `streamText` with an `output` setting. The plain
 `output` API requires AI SDK 6 or later, including 7; use **AI SDK 7** with this
 package's current peer range, which excludes 6. AI SDK 5 uses
-`experimental_output` instead (verified against 5.0.273), so the after examples
-below do not apply to 5.
+`experimental_output` instead. Both versions preserve schema-inferred output
+through the text wrappers; the examples below identify the SDK they use.
 
 The deprecated wrappers keep working unchanged and will be removed only after
 AI SDK removes the underlying functions. No removal version has been announced
@@ -55,7 +55,7 @@ const result = await tracedGenerateObject(session, {
 const profile = schema.parse(result.object);
 ```
 
-After:
+After (AI SDK 7):
 
 ```ts
 import { tracedGenerateText } from "@llm-workbench/ai-sdk";
@@ -77,7 +77,7 @@ const result = await tracedGenerateText(session, {
     toData: (r) => r.output,
   },
 });
-const profile = schema.parse(result.output);
+const profile: z.infer<typeof schema> = result.output; // { name: string; count: number }
 ```
 
 **Supply `toData` when persisting an object.** The text wrappers' default
@@ -87,11 +87,39 @@ that projector. Adding a `registry` to `writeArtifact` validates the projected
 data against `typeId`; an invalid artifact throws `WorkbenchError` with code
 `INVALID_INPUT` for `tracedGenerateText`.
 
-The wrappers use `Parameters` / `ReturnType` rather than preserving the SDK's
-schema generic: `result.output` is loosely typed (`any`) through
-`tracedGenerateText`. Use `schema.parse(result.output)` to obtain a validated,
-schema-inferred value, as above. The runtime SDK still parses and validates
-the response against the `Output.object` schema.
+Previously, `tracedGenerateText` erased the output generic, so SDK 7's
+`result.output` was `any` and required `schema.parse(result.output)` to recover
+its type. It now infers `z.infer<typeof schema>` directly. SDK 5 likewise infers
+`result.experimental_output`. The SDK still parses and validates the response
+at runtime. Calls without an output specification, and options variables
+already annotated as `TracedGenerateTextOptions`, retain their existing result
+types. `writeArtifact.toData` keeps its existing loose parameter type; it does
+not infer the specific schema from the enclosing options.
+
+After (AI SDK 5.0.273):
+
+```ts
+import { tracedGenerateText } from "@llm-workbench/ai-sdk";
+import type { WorkbenchSession } from "@llm-workbench/runtime";
+import { Output, type LanguageModel } from "ai";
+import { z } from "zod";
+
+declare const session: WorkbenchSession;
+declare const model: LanguageModel;
+const schema = z.object({ name: z.string(), count: z.number() });
+
+const result = await tracedGenerateText(session, {
+  model,
+  prompt: "Generate a profile",
+  experimental_output: Output.object({ schema }),
+  writeArtifact: {
+    artifactKey: "profile",
+    typeId: "profile",
+    toData: (r) => schema.parse(r.experimental_output),
+  },
+});
+const profile: z.infer<typeof schema> = result.experimental_output;
+```
 
 ### Streaming an object
 
@@ -144,7 +172,7 @@ const stream = tracedStreamText(session, {
 for await (const partial of stream.partialOutputStream) {
   void partial; // Update your UI; partial values may have missing fields.
 }
-const profile = schema.parse(await stream.output);
+const profile: z.infer<typeof schema> = await stream.output;
 ```
 
 Consume `partialOutputStream` to completion so the stream finishes and emits
@@ -156,6 +184,45 @@ validate with `schema.parse`, as shown. Without `toData`, the artifact is again
 the JSON string. If registry validation or artifact persistence fails during
 streaming, the wrapper emits an `artifact_write_failed` trace; it does not
 reject the final structured output.
+
+Both versions infer the partial object fields in their output streams. SDK 7
+also infers the awaited `stream.output`, and the wrappers preserve the SDK's
+`Output.text()`, `Output.array()`, `Output.choice()`, and `Output.json()` types.
+SDK 5 supports `Output.text()` and `Output.object()`; it has no complete
+structured-output promise on the stream handle and no array/choice/json output
+factories.
+
+After (AI SDK 5.0.273):
+
+```ts
+import { tracedStreamText } from "@llm-workbench/ai-sdk";
+import type { WorkbenchSession } from "@llm-workbench/runtime";
+import { Output, type LanguageModel } from "ai";
+import { z } from "zod";
+
+declare const session: WorkbenchSession;
+declare const model: LanguageModel;
+const schema = z.object({ name: z.string(), count: z.number() });
+
+const stream = tracedStreamText(session, {
+  model,
+  prompt: "Generate a profile",
+  experimental_output: Output.object({ schema }),
+  writeArtifact: {
+    artifactKey: "profile",
+    typeId: "profile",
+    toData: ({ text }) => schema.parse(JSON.parse(text)),
+  },
+});
+for await (const partial of stream.experimental_partialOutputStream) {
+  const name: string | undefined = partial.name;
+  void name; // Update your UI with each partial object.
+}
+const profile = schema.parse(JSON.parse(await stream.text));
+```
+
+The SDK 5 example parses the completed text to obtain the final object and
+artifact data. Its default artifact projector still writes that text string.
 
 ## Docs
 

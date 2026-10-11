@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.types.json",
+  "include": ["dist/**/*.d.ts", "types-test/common.ts", "types-test/ai5.ts"]
+}
