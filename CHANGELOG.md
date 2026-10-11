@@ -155,7 +155,7 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
   `tracedGenerateText` and `tracedStreamText` infer schema output with AI SDK
   7 `output` and AI SDK 5 `experimental_output`, while calls without an output
   specification retain their existing types. Added compatibility checks for
-  both SDK versions without changing tracing or artifact behavior.
+  both SDK versions without changing tracing or artifact behavior. (#273)
 
 - **Deprecated the AI SDK object wrappers without changing behavior.** Added
   JSDoc deprecations and a tested migration guide for `tracedGenerateText` /
