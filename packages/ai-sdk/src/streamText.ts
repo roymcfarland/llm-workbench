@@ -10,6 +10,7 @@ import {
 } from "./internal.js";
 import { emitToolCallTraces, persistArtifact } from "./generateText.js";
 import type { WorkbenchTraceContext, WriteArtifactOptions } from "./types.js";
+import type { TypedStreamTextResult } from "./outputTypes.js";
 
 type StreamTextFirstArg = Parameters<typeof streamText>[0];
 type StreamTextResult = ReturnType<typeof streamText>;
@@ -48,6 +49,10 @@ export type TracedStreamTextOptions = StreamTextFirstArg &
  *   `textStream`/`stream` (`fullStream` is a deprecated alias) or read
  *   `usage` exactly as you would from a direct `streamText` call.
  */
+export function tracedStreamText<OPTS extends TracedStreamTextOptions>(
+  session: WorkbenchSession,
+  opts: OPTS,
+): TypedStreamTextResult<OPTS>;
 export function tracedStreamText(
   session: WorkbenchSession,
   opts: TracedStreamTextOptions,

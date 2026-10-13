@@ -9,6 +9,7 @@ import {
   usageFromAi,
 } from "./internal.js";
 import type { WorkbenchTraceContext, WriteArtifactOptions } from "./types.js";
+import type { TypedGenerateTextResult } from "./outputTypes.js";
 
 type GenerateTextFirstArg = Parameters<typeof generateText>[0];
 type GenerateTextResult = Awaited<ReturnType<typeof generateText>>;
@@ -47,6 +48,10 @@ export type TracedGenerateTextOptions = GenerateTextFirstArg &
  * @throws Rethrows any error from the underlying `generateText` call, after
  *   recording it as an `error`-summary `model_io` response event.
  */
+export function tracedGenerateText<OPTS extends TracedGenerateTextOptions>(
+  session: WorkbenchSession,
+  opts: OPTS,
+): Promise<TypedGenerateTextResult<OPTS>>;
 export async function tracedGenerateText(
   session: WorkbenchSession,
   opts: TracedGenerateTextOptions,

@@ -36,8 +36,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "test": "vitest run"
+    "build": "tsc -p tsconfig.build.json && node --input-type=module -e \"import { rmSync } from 'node:fs'; for (const path of ['dist/outputTypes.js', 'dist/outputTypes.js.map']) rmSync(path, { force: true });\"",
+    "test": "vitest run",
+    "typecheck:ai5": "node scripts/typecheck-ai5.mjs",
+    "typecheck:ai7": "tsc -p tsconfig.types.json"
   },
   "dependencies": {
     "@llm-workbench/runtime": "0.3.3"
