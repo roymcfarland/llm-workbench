@@ -1,5 +1,12 @@
 # @llm-workbench/web
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [3baac7a]
+  - @llm-workbench/ai-sdk@0.4.0
+
 ## 0.1.6
 
 ### Patch Changes
