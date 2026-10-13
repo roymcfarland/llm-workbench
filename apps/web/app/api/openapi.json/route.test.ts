@@ -130,6 +130,31 @@ async function documented(operation: Operation, response: Response, expected: nu
 }
 
 describe("OpenAPI structure", () => {
+  it("omits environment-variable-like tokens from every description", () => {
+    const offendingDescriptions: Array<{ path: string; description: string }> = [];
+    function walk(value: unknown, path = "#") {
+      if (Array.isArray(value)) {
+        value.forEach((child, index) => walk(child, `${path}/${index}`));
+        return;
+      }
+      if (!value || typeof value !== "object") return;
+      for (const [key, child] of Object.entries(value)) {
+        const childPath = `${path}/${key}`;
+        if (key === "description" && typeof child === "string" && /\b[A-Z][A-Z0-9]*_[A-Z0-9_]+\b/.test(child)) {
+          offendingDescriptions.push({ path: childPath, description: child });
+        }
+        walk(child, childPath);
+      }
+    }
+    walk(doc);
+    expect(offendingDescriptions, "Descriptions must omit environment-variable-like tokens").toEqual([]);
+  });
+
+  it("describes 503 using the caller-visible error text", () => {
+    const response = resolve("#/components/responses/ServiceUnavailable");
+    expect(response.description).toContain("Rate limiter not configured");
+  });
+
   it("resolves every component reference and has no unused shared responses", () => {
     expect(doc.openapi).toBe("3.1.0");
     const refs = new Set<string>();

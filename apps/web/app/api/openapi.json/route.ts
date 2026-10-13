@@ -299,7 +299,7 @@ function buildOpenApi(origin: string) {
           content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
         },
         ServiceUnavailable: {
-          description: "Rate limiter not configured in production, unless RATE_LIMIT_ALLOW_UNCONFIGURED=1",
+          description: "Rate limiter not configured. Retry after the interval given in Retry-After.",
           headers: {
             "Retry-After": {
               description: "Seconds until retry (60)",
