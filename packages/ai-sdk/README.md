@@ -19,6 +19,21 @@ Each `traced*` call takes a `WorkbenchSession` first, then an options object: fo
 
 Supported peers are `ai: ^5.0.0 || ^7.0.0` and `zod: ^3.23.8 || ^4.0.0`.
 
+### AI SDK 5 and `npm audit`
+
+As of October 13, 2026, AI SDK 5.0.223 through 5.0.274 produce `npm audit`
+findings through `ai@5` → `@ai-sdk/provider-utils@3.0.31–3.0.41` →
+`undici@5.29.0` → `@fastify/busboy@2.1.1`.
+Earlier published AI SDK 5.0.x releases (5.0.0 through 5.0.222) do not depend on
+`undici`.
+These findings originate in AI SDK 5's dependencies; this package declares no
+`undici` dependency.
+As of that date, `undici` 5.x has no patched release, and no AI SDK 5 release
+uses a newer `undici` version.
+To move off that dependency tree within this package's supported peers, upgrade
+to AI SDK 7.
+The peer range is unchanged, and AI SDK 5 remains supported as before.
+
 ## Migrating from `tracedGenerateObject` / `tracedStreamObject`
 
 AI SDK [deprecated `generateObject` and `streamObject` in version 6](https://ai-sdk.dev/docs/migration-guides/migration-guide-6-0#generateobject-and-streamobject-deprecation)

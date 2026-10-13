@@ -420,6 +420,11 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Fixed
 
+- **Documented AI SDK 5 upstream audit findings.** Added a dated note to the
+  `@llm-workbench/ai-sdk` README covering the affected releases, dependency
+  path, and upgrade to supported AI SDK 7; AI SDK 5 support and the peer range
+  are unchanged.
+
 - **Corrected `agents.md` authentication guidance.** Removed advice to use
   Clerk M2M/JWT-template tokens and documented Bearer session tokens, their
   refresh requirement, and session-based tenancy. (#268)
