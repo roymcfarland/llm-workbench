@@ -49,7 +49,7 @@ export type TracedStreamTextOptions = StreamTextFirstArg &
  *   `textStream`/`stream` (`fullStream` is a deprecated alias) or read
  *   `usage` exactly as you would from a direct `streamText` call.
  */
-export function tracedStreamText<const OPTS extends TracedStreamTextOptions>(
+export function tracedStreamText<OPTS extends TracedStreamTextOptions>(
   session: WorkbenchSession,
   opts: OPTS,
 ): TypedStreamTextResult<OPTS>;

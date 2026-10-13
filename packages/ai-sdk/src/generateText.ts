@@ -48,7 +48,7 @@ export type TracedGenerateTextOptions = GenerateTextFirstArg &
  * @throws Rethrows any error from the underlying `generateText` call, after
  *   recording it as an `error`-summary `model_io` response event.
  */
-export function tracedGenerateText<const OPTS extends TracedGenerateTextOptions>(
+export function tracedGenerateText<OPTS extends TracedGenerateTextOptions>(
   session: WorkbenchSession,
   opts: OPTS,
 ): Promise<TypedGenerateTextResult<OPTS>>;
