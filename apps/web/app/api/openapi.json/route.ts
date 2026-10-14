@@ -201,10 +201,10 @@ function buildOpenApi(origin: string) {
                 },
               },
             },
-            "401": {
-              description: "Unauthenticated",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
-            },
+            "401": { $ref: "#/components/responses/Unauthorized" },
+            "429": { $ref: "#/components/responses/RateLimited" },
+            "500": { $ref: "#/components/responses/InternalError" },
+            "503": { $ref: "#/components/responses/ServiceUnavailable" },
           },
         },
       },
@@ -230,6 +230,11 @@ function buildOpenApi(origin: string) {
               },
             },
             "404": { description: "Run not found" },
+            "400": { $ref: "#/components/responses/InvalidRunId" },
+            "401": { $ref: "#/components/responses/Unauthorized" },
+            "429": { $ref: "#/components/responses/RateLimited" },
+            "500": { $ref: "#/components/responses/InternalError" },
+            "503": { $ref: "#/components/responses/ServiceUnavailable" },
           },
         },
         put: {
@@ -246,29 +251,72 @@ function buildOpenApi(origin: string) {
           responses: {
             "204": { description: "Saved" },
             "400": {
-              description: "Invalid body or runId mismatch",
+              description: "Invalid run id, invalid JSON, body that fails run-state validation, state.run.id not matching the URL, or structural-invariant failures reported with a code",
               content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
             },
             "409": {
-              description: "Run id already in use by another tenant",
+              description: "Run id is unavailable to this tenant",
               content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
             },
             "413": {
               description: "Body too large (>25MB)",
               content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
             },
+            "401": { $ref: "#/components/responses/Unauthorized" },
+            "429": { $ref: "#/components/responses/RateLimited" },
+            "500": { $ref: "#/components/responses/InternalError" },
+            "503": { $ref: "#/components/responses/ServiceUnavailable" },
           },
         },
         delete: {
           summary: "Delete a run",
           operationId: "deleteRun",
           responses: {
-            "204": { description: "Deleted" },
+            "204": { description: "Deleted; deleting a run that does not exist also returns 204" },
+            "400": { $ref: "#/components/responses/InvalidRunId" },
+            "401": { $ref: "#/components/responses/Unauthorized" },
+            "429": { $ref: "#/components/responses/RateLimited" },
+            "500": { $ref: "#/components/responses/InternalError" },
+            "503": { $ref: "#/components/responses/ServiceUnavailable" },
           },
         },
       },
     },
     components: {
+      responses: {
+        Unauthorized: {
+          description: "Unauthenticated",
+          content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
+        },
+        RateLimited: {
+          description: "Too many requests",
+          headers: {
+            "Retry-After": {
+              description: "Seconds until retry, rounded up with a minimum of 1",
+              schema: { type: "string" },
+            },
+          },
+          content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
+        },
+        ServiceUnavailable: {
+          description: "Rate limiter not configured. Retry after the interval given in Retry-After.",
+          headers: {
+            "Retry-After": {
+              description: "Seconds until retry (60)",
+              schema: { type: "string" },
+            },
+          },
+          content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
+        },
+        InternalError: {
+          description: "Internal server error",
+          content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
+        },
+        InvalidRunId: {
+          description: "Invalid run id; WorkbenchError responses include a code",
+          content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorBody" } } },
+        },
+      },
       schemas: {
         SerializedRunStoreState,
         SavedRunMeta,
@@ -281,7 +329,7 @@ function buildOpenApi(origin: string) {
           in: "cookie",
           name: "__session",
           description:
-            "Clerk session cookie. For agent / server-to-server use, a Clerk-issued bearer token may be passed in the Authorization header.",
+            "Clerk session cookie. For agent / server-to-server use, send a signed-in user's Clerk session token via Authorization: Bearer <token>. Session tokens are short-lived and must be refreshed. Clerk machine tokens (M2M, API keys, OAuth access tokens) and custom JWT-template tokens are not accepted; use a session token.",
         },
       },
     },

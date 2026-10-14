@@ -420,6 +420,10 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Fixed
 
+- **Completed run endpoint OpenAPI responses.** Documented handler errors,
+  rate-limit responses and retry headers, missing-run deletion, and Clerk
+  session-token authentication; added structural and real-handler drift tests. (#277)
+
 - **Documented AI SDK 5 upstream audit findings.** Added a dated note to the
   `@llm-workbench/ai-sdk` README covering the affected releases, dependency
   path, and upgrade to supported AI SDK 7; AI SDK 5 support and the peer range
