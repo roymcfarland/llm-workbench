@@ -15,6 +15,10 @@
 #
 # Opens or updates one chore/audit-autofix PR. Does NOT auto-merge; merging
 # dependency changes remains a human decision.
+#
+# WHAT/WHY: an independent stale-pr-alert job fails when the open autofix PR
+# is older than 48 hours, or its age cannot be evaluated. Six days of silence
+# left the autofix PR waiting while the red audit gate blocked every other PR.
 name: Audit gate autofix
 
 on:
@@ -132,3 +136,23 @@ jobs:
                 '' \
                 'This PR was opened because the audit gate was red on `main` when this workflow ran. While the gate stays red, every PR is blocked; if it has since gone green, close this PR.')"
           fi
+
+  stale-pr-alert:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Check autofix PR age
+        run: node scripts/autofix-staleness.mjs
