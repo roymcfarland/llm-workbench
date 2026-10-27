@@ -9,3 +9,4 @@ dist
 .env*.local
 blog-autopublish-preview.md
 apps/web/.typedoc-cache/
+.claude/settings.local.json
