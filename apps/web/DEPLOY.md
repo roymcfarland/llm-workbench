@@ -231,6 +231,8 @@ npm run lighthouse:smoke
 
 This builds production, briefly runs `next start`, audits `/`, and writes `reports/LIGHTHOUSE.md` plus JSON (artifacts are gitignored by default). Requires a Chromium install compatible with Lighthouse.
 
+`LIGHTHOUSE_PORT` (default `47821`) and `LIGHTHOUSE_HOST` (default `localhost`) override where the script serves and audits.
+
 ---
 
 ## 6. Auto-provisioning via the Vercel Marketplace MCP plugins

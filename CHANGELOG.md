@@ -422,6 +422,8 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Fixed
 
+- Corrected qs, @sentry/node, postcss and sharp claims in audit comments and the roadmap, added the AI SDK 5/7 type compatibility CI step to contributor and README lists, and documented `LIGHTHOUSE_PORT` and `LIGHTHOUSE_HOST`. (#<pending>)
+
 - **Completed run endpoint OpenAPI responses.** Documented handler errors,
   rate-limit responses and retry headers, missing-run deletion, and Clerk
   session-token authentication; added structural and real-handler drift tests. (#277)

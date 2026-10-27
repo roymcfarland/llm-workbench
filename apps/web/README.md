@@ -106,6 +106,8 @@ npm run lighthouse:smoke
 
 Builds production, serves `next start` briefly, audits `/`, and writes scores under `reports/` (gitignored). Requires Chromium for headless Chrome.
 
+`LIGHTHOUSE_PORT` (default `47821`) and `LIGHTHOUSE_HOST` (default `localhost`) override where the script serves and audits.
+
 ## Deploying
 
 This app is designed to deploy on Vercel after configuring the required services
@@ -147,7 +149,7 @@ volume on the Supabase / Clerk / Vercel free tiers). End-to-end:
    your production URL. Optional: `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `CSP_EXTRA_CONNECT_SRC`.
    Upstash is required in production for rate limiting on proxy-matched `/api/*` routes (excluding `/api/health` and dotted paths such as `/api/openapi.json`), via `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` or Marketplace `KV_REST_API_URL`/`KV_REST_API_TOKEN`, unless `RATE_LIMIT_ALLOW_UNCONFIGURED=1`.
 6. **Deploy.** Push to `main` (or click Deploy). The first build typically
-   takes a few minutes; required CI jobs on Node 22 and 24 run package builds, ESM smoke, tests, web typecheck, web/package lint, the audit gate, and the production web build.
+   takes a few minutes; required CI jobs on Node 22 and 24 run package builds, AI SDK 5/7 type compatibility, ESM smoke, tests, web typecheck, web/package lint, the audit gate, and the production web build.
    The audit gate fails on high/critical advisories and unrecognised failures; registry outages warn and pass without evaluating. Coverage, Codecov uploads, and Playwright run on Node 24 only (see `.github/workflows/ci.yml`).
 
 > Cost expectation at design-partner volume: ~$0/month. Supabase free tier
