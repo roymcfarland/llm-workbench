@@ -11,6 +11,8 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Added
 
+- An independent `stale-pr-alert` job in `audit-autofix.yml` fails the run when the open autofix PR is older than 48 hours; unevaluable checks (gh failure, invalid JSON or PR dates) fail loudly instead of passing. (#<pending>)
+
 - Tenant-boundary unit tests cover `requireTenant`, signed-out 401s with no store or model access on `api/runs`, `api/runs/[runId]`, and `api/llm`, the server action rejecting before validation, and runs-store queries filtering by `tenant_id`; the `/runs` page inline query remains untested. (#212)
 
 - **`Audit gate autofix` workflow (`.github/workflows/audit-autofix.yml`).**

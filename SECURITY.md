@@ -80,6 +80,8 @@ are automation, not PR gates.
   an outage during the raw `audit:check` verification fails the job.
   `npm audit fix` can also change packages the gate did not require, so review
   all version moves. A red gate once froze the default branch for 21 days.
+  A separate job fails the run when the autofix PR has been open more than
+  48 hours (the daily 06:00 UTC cadence means it first fires on day 3).
 - **Static analysis** — CodeQL reports on first-party code
   (`javascript-typescript`) and the GitHub Actions workflows (`actions`).
   Workflow scanning covers issues such as generated strings expanding into
