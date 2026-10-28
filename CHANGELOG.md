@@ -153,6 +153,14 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Changed
 
+- Grouped npm minor/patch bump — 31 packages, all within-major, including `ai` 7.0.137 → 7.0.153,
+  `@sentry/nextjs` 11.6.0 → 11.9.0, `react` 19.3.0 → 19.3.1, `zod` 4.6.6 → 4.6.7,
+  `vitest` 5.0.3 → 5.0.5 and `jsdom` 30.1.2 → 30.1.3. (#286)
+
+- Grouped npm minor/patch bump — 8 packages, all within-major, including `ai` 7.0.131 → 7.0.137,
+  `zod` 4.6.5 → 4.6.6, `@clerk/nextjs` 7.9.11 → 7.9.14, `@sentry/nextjs` 11.5.0 → 11.6.0,
+  `@react-three/postprocessing` 3.1.3 → 3.2.0 and `@playwright/test` 1.63.0 → 1.64.0. (#278)
+
 - **Preserved structured output types through the AI SDK text wrappers.**
   `tracedGenerateText` and `tracedStreamText` infer schema output with AI SDK
   7 `output` and AI SDK 5 `experimental_output`, while calls without an output
@@ -170,9 +178,29 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
   instead of `NoObjectGeneratedError` ("No object generated: the model did not
   return a response."); invalid-JSON and schema-validation failures are unchanged. (#270)
 
+- Grouped npm minor/patch bump — 19 packages, all within-major, including `next` 16.3.8 → 16.4.0,
+  `ai` 7.0.127 → 7.0.131, `@sentry/nextjs` 11.4.0 → 11.5.0, `@modelcontextprotocol/sdk` 1.32.0 → 1.32.1,
+  `@radix-ui/react-dialog` 1.1.23 → 1.2.0 and `vite` 8.3.2 → 8.3.3. (#269)
+
 - **Aligned the root Node floor with Vitest 5 and jsdom 30.** The root engine
   range is now `^22.22.2 || ^24.15.0 || >=26.0.0`; removed the ineffective Sentry
   `hideSourceMaps` option from the web configuration. (#266)
+
+- Upgraded `jsdom` 29.1.1 → 30.1.2 (dev dependency), a major bump in `packages/adapters-react` and
+  `packages/ui`; updated both manifests and the lockfile. (#265)
+
+- Upgraded `@sentry/nextjs` 10.74.0 → 11.4.0, a major bump in `apps/web`: moved `withSentryConfig` to
+  `@sentry/nextjs/config` and explicitly pinned the v10 data-collection baseline in client, server and edge
+  initialization to avoid broader tenant-data collection. Added regression tests for all three paths and
+  updated the manifest and lockfile. (#263)
+
+- Upgraded `vitest` 4.1.11 → 5.0.3 (dev dependency), a major bump across seven manifests: moved the
+  `vitest` ranges from `^4.1.5` to `^5.0.3`, upgraded `@vitest/coverage-v8` 4.1.11 → 5.0.3 in the root and
+  `apps/web`, and refreshed the lockfile. (#262)
+
+- Grouped npm minor/patch bump — 5 packages, all within-major: `eslint` 10.11.0 → 10.12.0,
+  `react` and `react-dom` 19.2.8 → 19.3.0, `@modelcontextprotocol/sdk` 1.31.0 → 1.32.0 and
+  `lucide-react` 1.49.0 → 1.51.0. (#261)
 
 - **Removed the React 19.3 Dependabot hold and the qs override.** Dependabot
   can propose React 19.3 now that Fiber allows React <19.4. The example server's
@@ -188,6 +216,10 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
   production builds no longer depend on Google Fonts network availability.
   (#245)
 
+- Grouped npm minor/patch bump — 22 packages, all within-major, including `ai` 7.0.100 → 7.0.127,
+  `@modelcontextprotocol/sdk` 1.30.0 → 1.31.0, `@clerk/nextjs` 7.9.2 → 7.9.10, `vite` 8.3.0 → 8.3.2,
+  `eslint` 10.10.0 → 10.11.0 and `lighthouse` 13.4.1 → 13.5.0. (#243)
+
 - **Dependabot ignores `@types/node` majors above the Node 22 floor.**
   Ignores `>=23.0.0` to avoid typing APIs absent from the lowest supported
   runtime; 22.x minor/patch updates remain eligible. Remove the rule when the
@@ -197,6 +229,14 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
   pending a coupled CLI/`changesets/action` v2 migration verified by a real
   release run: v2 renames workflow inputs, and CI never exercises `release.yml`.
   CLI v2.x minor/patch updates remain eligible. (#225)
+
+- Grouped npm minor/patch bump — 4 packages, all within-major: `ai` 7.0.99 → 7.0.100, `zod` 4.6.3 → 4.6.5,
+  `@upstash/ratelimit` 2.0.8 → 2.1.0 and `lucide-react` 1.45.0 → 1.46.0. (#223)
+
+- Grouped npm minor/patch bump — 16 packages, all within-major, including `ai` 7.0.93 → 7.0.99,
+  `zod` 4.5.4 → 4.6.3, `vite` 8.2.2 → 8.3.0, `@clerk/nextjs` 7.9.1 → 7.9.2 and
+  `@sentry/nextjs` 10.73.0 → 10.74.0. Also added the Dependabot hold for React and React DOM, including their
+  types, pending Fiber peer compatibility. (#218)
 
 - Upgraded `@vitejs/plugin-react` to 6.1.1 (dev dependency): `apps/web` from 5.2.0 — a major bump that requires
   `vite@^8` (already resolved) and drops the Babel JSX-transform plugins and `react-refresh` from the lockfile — and
@@ -421,6 +461,9 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
   surface.
 
 ### Fixed
+
+- Backfilled the missing dependency entries for #218, #223, #243, #261, #262, #263, #265, #269, #278, #282 and #286
+  under Changed and Security to match the contributor changelog policy. (#<pending>)
 
 - Corrected qs, @sentry/node, postcss and sharp claims in audit comments and the roadmap, added the AI SDK 5/7 type compatibility CI step to contributor and README lists, and documented `LIGHTHOUSE_PORT` and `LIGHTHOUSE_HOST`. (#288)
 
@@ -659,6 +702,14 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
   bundles with a clean message and cap serialized input at 25 MiB.
 
 ### Security
+
+- **Refreshed the lockfile to clear audit-gate advisories (2026-10-27).** Lockfile-only: `next` 16.4.0 → 16.4.3
+  clears critical `GHSA-2464-fhr4-w9xw` and `GHSA-673q-mjm6-r5xr`, and high `GHSA-p3m5-59mp-jv5r`;
+  `body-parser` 1.20.8 → 1.20.9 and nested 2.3.0 → 2.4.0 clear high `GHSA-27r3-jxmh-p828`;
+  `markdown-it` 14.3.2 → 14.3.3 clears high `GHSA-gfr2-rv44-r23c`; `undici` 7.30.0 → 7.30.1 and
+  jsdom's nested 8.11.2 → 8.12.3 clear high `GHSA-xjj6-f33q-929c`. The `puppeteer-core` 25.12.0 → 25.16.0
+  and `chromium-bidi` 17.0.2 → 157.0.8090-0 updates remove nested `zod` 3.25.76 in favor of the existing
+  root `zod` 4.6.6, clearing high `GHSA-mrhx-c7xc-m3w5`. (#282)
 
 - **Refreshed the lockfile for `sharp` (2026-10-06).** Lockfile-only: `sharp`
   and its platform packages 0.35.4 → 0.35.5, bundled libvips 1.3.3 → 1.3.4;
