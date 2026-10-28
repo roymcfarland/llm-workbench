@@ -51,7 +51,7 @@ npm test
 ## Pull request checklist
 
 - [ ] `npm run ci` passes. It mirrors CI’s core sequence: build → plain-Node ESM smoke → tests → web typecheck → web/package lint → production build.
-      CI additionally runs the audit gate, plus coverage, Codecov uploads and Playwright on Node 24.
+      CI additionally runs AI SDK 5/7 type compatibility and the audit gate, plus coverage, Codecov uploads and Playwright on Node 24.
 - [ ] `node scripts/audit-gate.mjs --mode=gate` passes: it wraps audit-ci and `audit-ci.jsonc`, fails on high/critical advisories, and warns/passes without evaluation on registry outages.
 - [ ] New behavior is covered by tests.
 - [ ] `CHANGELOG.md` updated under `## [Unreleased]`. Dependency changes get their own entry too — for Dependabot

@@ -81,9 +81,10 @@ Not scheduled, but recorded so the reasoning is not lost:
   `cache-control: private, no-store` because Clerk in `proxy.ts` and a per-request
   CSP nonce run on the page routes matched by the proxy (excluding `_next`, dotted paths and `/api/health`). Measured cost is small (~200ms), and the change
   touches a security control.
-- **Override cleanup.** Root `overrides` retain security floors: `postcss@^8.5.23`
-  floors at Next.js's exact `8.5.23` pin but resolves the tree to `postcss@8.5.28`, while `sharp@^0.35.3` now trails
-  Next.js's `^0.35.4` requirement. Whether to retain or remove these overrides
+- **Override cleanup.** As of 2026-10-27, root `overrides` retain security floors:
+  `postcss@^8.5.23` floors at Next.js's exact `8.5.23` pin while the tree resolves
+  a newer 8.5.x; the `sharp@^0.35.3` override floor trails Next.js's current
+  `^0.35.5` requirement. Whether to retain or remove these overrides
   remains an open decision, not a tidy-up.
 - **ESLint compatibility pins.** The `minimatch@^10.2.5` override keeps
   `eslint-config-next`'s import, jsx-a11y and react plugin chains off `minimatch@3`
