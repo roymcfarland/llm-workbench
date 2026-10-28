@@ -463,7 +463,7 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 ### Fixed
 
 - Backfilled the missing dependency entries for #218, #223, #243, #261, #262, #263, #265, #269, #278, #282 and #286
-  under Changed and Security to match the contributor changelog policy. (#<pending>)
+  under Changed and Security to match the contributor changelog policy. (#289)
 
 - Corrected qs, @sentry/node, postcss and sharp claims in audit comments and the roadmap, added the AI SDK 5/7 type compatibility CI step to contributor and README lists, and documented `LIGHTHOUSE_PORT` and `LIGHTHOUSE_HOST`. (#288)
 
