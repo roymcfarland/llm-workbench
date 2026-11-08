@@ -703,6 +703,12 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Security
 
+- **Cleared all six moderate production npm audit findings.** Scoped `minimatch` 11
+  to ESLint and typescript-eslint consumers and `glob` 14 to Sentry’s bundler
+  plugins, and refreshed in-range dependencies including Sentry and
+  `@hono/node-server`. The full audit retains three moderate findings in the
+  dev-only TypeDoc chain and four low findings in the React Email chain.
+
 - **Refreshed the lockfile to clear audit-gate advisories (2026-10-27).** Lockfile-only: `next` 16.4.0 → 16.4.3
   clears critical `GHSA-2464-fhr4-w9xw` and `GHSA-673q-mjm6-r5xr`, and high `GHSA-p3m5-59mp-jv5r`;
   `body-parser` 1.20.8 → 1.20.9 and nested 2.3.0 → 2.4.0 clear high `GHSA-27r3-jxmh-p828`;

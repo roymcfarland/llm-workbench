@@ -9,12 +9,11 @@
   //      of npm dompurify. The npm entry is now RESOLVED: PR #200 removed it
   //      when monaco-editor moved from 0.56.0 to 0.53.0.
   //   2. NOT WORTH THE FIX — transitive advisories that a root `overrides` entry
-  //      COULD reach, but only by forcing a major version into a parent that
-  //      pins an exact older one. Root overrides DO reach nested transitives of
+  //      COULD reach, but only by forcing a major version outside the range
+  //      supported by its parent. Root overrides DO reach nested transitives of
   //      workspace dependencies (proven 2026-07-27, PR #150 -- an earlier note
   //      here claiming otherwise was wrong), so "no fix exists" is almost never
-  //      the real reason. State the actual cost/benefit instead. NO current
-  //      members -- kept as guidance for classifying future entries.
+  //      the real reason. State the actual cost/benefit instead.
   //   3. UNREACHABLE — the vulnerable code path is not imported by anything this
   //      repo actually uses (historical example: @hono/node-server below).
   //
@@ -24,6 +23,14 @@
   // rare, warrant breaking the build, and are usually fixable.
   // Current-tree snapshot (2026-10-04): one dated allowlist entry for the
   // unfixable dev-only braces advisory. Run `npm audit` for current findings.
+  //
+  // Current moderate advisory note (informational)
+  //   GHSA-g3hv-75wg-m249 remains in the dev-only TypeDoc chain. TypeDoc
+  //   0.28.20 requires minimatch ^10.2.5 and calls Minimatch.matchOne. A
+  //   global minimatch 11 override breaks docs:api because v11 makes that
+  //   method private. The full audit reports minimatch, typedoc, and
+  //   typedoc-plugin-markdown. The production audit has no moderate findings.
+  //   Revisit when TypeDoc supports minimatch 11 and build:web passes with it.
   //
   // RESOLVED moderate/low advisory notes (informational; not allowlist entries):
   //   - qs: GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g and GHSA-q8mj-m7cp-5q26.
