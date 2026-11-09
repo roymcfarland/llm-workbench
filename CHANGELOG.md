@@ -153,6 +153,10 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Changed
 
+- Grouped npm minor/patch bump — 22 updates, all within-major, including `ai` 7.0.153 → 7.0.163,
+  `next` 16.4.3 → 16.4.5, `@clerk/nextjs` 7.9.20 → 7.9.25, `eslint` 10.13.0 → 10.14.0,
+  `vitest` 5.0.5 → 5.1.0 and `lighthouse` 13.5.0 → 13.6.0. (#294)
+
 - Grouped npm minor/patch bump — 31 packages, all within-major, including `ai` 7.0.137 → 7.0.153,
   `@sentry/nextjs` 11.6.0 → 11.9.0, `react` 19.3.0 → 19.3.1, `zod` 4.6.6 → 4.6.7,
   `vitest` 5.0.3 → 5.0.5 and `jsdom` 30.1.2 → 30.1.3. (#286)
@@ -206,6 +210,8 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
   can propose React 19.3 now that Fiber allows React <19.4. The example server's
   Express moved to 4.22.3, which pins `qs ~6.16.0`, so the root qs override is
   no longer needed. (#260)
+
+- Recorded the dev-only `braces` audit allowlist entry as a parked roadmap item with a check for a patched release. (#248)
 
 - **Removed unused Google Fonts hosts from the web CSP.** `style-src` no longer
   allows `fonts.googleapis.com`, and `font-src` no longer allows
@@ -462,6 +468,8 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Fixed
 
+- Updated the roadmap and audit notes for the November dependency changes and backfilled missing changelog entries. (#296)
+
 - Backfilled the missing dependency entries for #218, #223, #243, #261, #262, #263, #265, #269, #278, #282 and #286
   under Changed and Security to match the contributor changelog policy. (#289)
 
@@ -479,6 +487,8 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 - **Corrected `agents.md` authentication guidance.** Removed advice to use
   Clerk M2M/JWT-template tokens and documented Bearer session tokens, their
   refresh requirement, and session-based tenancy. (#268)
+
+- Backfilled missing changelog entries and PR numbers and clarified where Changesets records package release history. (#259)
 
 - **Corrected runtime and UI README claims.** Documented explicit schema
   validation helpers and SHA-256 integrity hashes, corrected both `esm-smoke`
@@ -505,6 +515,8 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
   `postprocessing` 6.39.5 removes the duplicate `three` copy that triggered the
   console warning; `stats-gl` (a `drei` dependency) keeps its own nested
   0.170.0. (#249)
+
+- Updated the web E2E README to cover the font and style CSP smoke check and removed the outdated test count. (#247)
 
 - **Corrected `ROADMAP.md` against live state and backfilled missing dependency-bump changelog rows.** Removed
   the closed signed-in-E2E priority (#160), recorded the declined Changesets v3 majors (#178, #189), fixed the
@@ -703,11 +715,13 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Security
 
-- **Cleared all six moderate production npm audit findings.** Scoped `minimatch` 11
-  to ESLint and typescript-eslint consumers and `glob` 14 to Sentry’s bundler
-  plugins, and refreshed in-range dependencies including Sentry and
-  `@hono/node-server`. The full audit retains three moderate findings in the
-  dev-only TypeDoc chain and four low findings in the React Email chain.
+- **Cleared all six moderate production npm audit findings.** Removed the global
+  `minimatch` override and scoped `minimatch` 11 to ESLint and typescript-eslint
+  consumers and `glob` 14 to Sentry’s bundler plugins. The lockfile refresh moved
+  Sentry packages including `@sentry/nextjs` from 11.9.0 to 11.11.0,
+  `@hono/node-server` from 2.1.1 to 2.1.6, and `@react-email/render` from 2.1.1
+  to 2.2.0. The full audit retains three moderate findings in the dev-only
+  TypeDoc chain and four low findings in the React Email chain. (#293)
 
 - **Refreshed the lockfile to clear audit-gate advisories (2026-10-27).** Lockfile-only: `next` 16.4.0 → 16.4.3
   clears critical `GHSA-2464-fhr4-w9xw` and `GHSA-673q-mjm6-r5xr`, and high `GHSA-p3m5-59mp-jv5r`;

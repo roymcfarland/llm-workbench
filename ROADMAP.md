@@ -86,9 +86,12 @@ Not scheduled, but recorded so the reasoning is not lost:
   a newer 8.5.x; the `sharp@^0.35.3` override floor trails Next.js's current
   `^0.35.5` requirement. Whether to retain or remove these overrides
   remains an open decision, not a tidy-up.
-- **ESLint compatibility pins.** The `minimatch@^10.2.5` override keeps
-  `eslint-config-next`'s import, jsx-a11y and react plugin chains off `minimatch@3`
-  (`GHSA-mh99-v99m-4gvg`). The parser and React-version settings in
+- **ESLint compatibility pins.** PR #293 replaced the global `minimatch`
+  override with `minimatch@^11.0.5` overrides scoped to
+  `@typescript-eslint/typescript-estree`, `@eslint/config-array` and `eslint`,
+  plus a `glob@^14.0.4` override scoped to `@sentry/bundler-plugins`.
+  The import, jsx-a11y and react plugin chains in `eslint-config-next`
+  resolve `minimatch@3.1.5`. The parser and React-version settings in
   `apps/web/eslint.config.mjs` work around missing ESLint 10 support; revisit when the plugins update.
 - **`braces` audit allowlist entry (GHSA-vfj7-8cjw-p6xm).** The only allowlisted
   advisory (high; `braces <= 3.0.3`, dev-only via changesets and the ESLint config
