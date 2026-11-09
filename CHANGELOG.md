@@ -468,7 +468,7 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Fixed
 
-- Updated the roadmap and audit notes for the November dependency changes and backfilled missing changelog entries.
+- Updated the roadmap and audit notes for the November dependency changes and backfilled missing changelog entries. (#296)
 
 - Backfilled the missing dependency entries for #218, #223, #243, #261, #262, #263, #265, #269, #278, #282 and #286
   under Changed and Security to match the contributor changelog policy. (#289)
