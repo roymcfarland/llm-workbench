@@ -39,11 +39,10 @@
   //     retains a single qs 6.16.x copy without an override.
   //   - dompurify (via monaco-editor) was accepted as PHANTOM, class 1 above;
   //     now RESOLVED -- npm dompurify was removed by PR #200.
-  //   (@opentelemetry/core GHSA-8988-4f7v-96qf was accepted here as class 2 and is
-  //   now RESOLVED. Landed via PR #153. The current lighthouse@13.5.0 still
-  //   depends on @sentry/node ^10.0.0; lighthouse's @sentry/node is the only 10.x
-  //   copy (@sentry/nextjs carries its own nested 11.x). The lockfile has a single
-  //   @opentelemetry/core 2.x, with no nested 1.30.1 copies.)
+  //   - @opentelemetry/core GHSA-8988-4f7v-96qf was accepted as class 2 and
+  //     resolved in PR #153. PR #294 bumped Lighthouse to 13.6.0, which
+  //     requires @sentry/node ^11.8.0. It shares @sentry/node 11.11.0 with
+  //     @sentry/nextjs. The lockfile no longer contains @opentelemetry/core.
   //   - @hono/node-server GHSA-frvp-7c67-39w9 (<2.0.5, serve-static path
   //     traversal) was accepted as UNREACHABLE, class 3; now RESOLVED --
   //     PR #181 moved 1.19.14 to 2.1.1 on 2026-08-24, outside the affected range.
