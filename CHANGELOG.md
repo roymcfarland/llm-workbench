@@ -153,6 +153,10 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Changed
 
+- Scoped the `@react-email/components` renderer to the existing
+  `@react-email/render@2.2.0` to clear four low production audit findings.
+  Run-completion email HTML and plain text are byte-identical. (#300)
+
 - Removed the unused Sentry integration from the web app, including its three
   CSP connection sources. Error logging, responses, and the error boundary UI
   stay the same for deployments without a DSN. (#297)
