@@ -155,7 +155,7 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 - Removed the unused Sentry integration from the web app, including its three
   CSP connection sources. Error logging, responses, and the error boundary UI
-  stay the same for deployments without a DSN. (PR pending)
+  stay the same for deployments without a DSN. (#297)
 
 - Grouped npm minor/patch bump — 22 updates, all within-major, including `ai` 7.0.153 → 7.0.163,
   `next` 16.4.3 → 16.4.5, `@clerk/nextjs` 7.9.20 → 7.9.25, `eslint` 10.13.0 → 10.14.0,
