@@ -22,7 +22,7 @@
 - **Auth & Tenancy:** Clerk.
 - **Persistence:** Supabase (service-role + API-layer tenancy guard).
 - **LLM Gateway:** Vercel AI SDK (`ai`) + AI Gateway.
-- **Integrations:** Sentry and Resend are optional (env-gated). Upstash Redis is required in production for rate limiting on proxy-matched `/api/*` routes (excluding `/api/health` and dotted paths such as `/api/openapi.json`), unless `RATE_LIMIT_ALLOW_UNCONFIGURED=1`; missing configuration is a no-op in development and test.
+- **Integrations:** Resend is optional (env-gated). Upstash Redis is required in production for rate limiting on proxy-matched `/api/*` routes (excluding `/api/health` and dotted paths such as `/api/openapi.json`), unless `RATE_LIMIT_ALLOW_UNCONFIGURED=1`; missing configuration is a no-op in development and test.
 
 ---
 

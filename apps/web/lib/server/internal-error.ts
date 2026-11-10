@@ -1,7 +1,5 @@
 import "server-only";
 
-import * as Sentry from "@sentry/nextjs";
-
 const IS_PROD = process.env.NODE_ENV === "production";
 
 /**
@@ -12,7 +10,6 @@ const IS_PROD = process.env.NODE_ENV === "production";
 export function logInternalError(context: string, err: unknown): void {
   const e = err instanceof Error ? err : new Error(String(err));
   console.error(`[${context}]`, e);
-  Sentry.captureException(e, { tags: { context } });
 }
 
 export function publicInternalErrorMessage(

@@ -41,8 +41,8 @@
   //     now RESOLVED -- npm dompurify was removed by PR #200.
   //   - @opentelemetry/core GHSA-8988-4f7v-96qf was accepted as class 2 and
   //     resolved in PR #153. PR #294 bumped Lighthouse to 13.6.0, which
-  //     requires @sentry/node ^11.8.0. It shares @sentry/node 11.11.0 with
-  //     @sentry/nextjs. The lockfile no longer contains @opentelemetry/core.
+  //     retains its dev-only Node error reporting SDK (^11.8.0, locked to 11.11.0).
+  //     The lockfile no longer contains @opentelemetry/core.
   //   - @hono/node-server GHSA-frvp-7c67-39w9 (<2.0.5, serve-static path
   //     traversal) was accepted as UNREACHABLE, class 3; now RESOLVED --
   //     PR #181 moved 1.19.14 to 2.1.1 on 2026-08-24, outside the affected range.

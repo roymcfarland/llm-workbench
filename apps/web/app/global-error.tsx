@@ -1,8 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
-
 /**
  * Root error boundary — must render its own document shell (html + body).
  * Keeps production responses generic; surfaces details only in development.
@@ -14,9 +11,6 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
   return (
     <html lang="en">
       <body style={{ fontFamily: "system-ui", padding: "2rem", maxWidth: 480 }}>

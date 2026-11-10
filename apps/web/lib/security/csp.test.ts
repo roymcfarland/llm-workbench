@@ -252,7 +252,7 @@ describe("contentSecurityPolicy", () => {
         "style-src 'self' 'unsafe-inline'",
         "font-src 'self' data:",
         "img-src 'self' data: blob: https:",
-        "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev wss://*.clerk.com https://clerk-telemetry.com https://*.supabase.co wss://*.supabase.co wss://*.supabase.io https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://vercel.live https://*.vercel-insights.com https://vitals.vercel-insights.com https://*.vercel.com https://*.vercel.app https://*.vercel.sh",
+        "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev wss://*.clerk.com https://clerk-telemetry.com https://*.supabase.co wss://*.supabase.co wss://*.supabase.io https://vercel.live https://*.vercel-insights.com https://vitals.vercel-insights.com https://*.vercel.com https://*.vercel.app https://*.vercel.sh",
         "frame-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com",
         "worker-src 'self' blob:",
         "media-src 'self' blob:",
