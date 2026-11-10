@@ -1,7 +1,7 @@
 /**
  * Browser Content-Security-Policy for Clerk, Next.js hydration, fonts, Supabase,
- * Vercel instrumentation, and Sentry. Tuned for this app; extend connect-src
- * via `CSP_EXTRA_CONNECT_SRC` (space-separated origins) if you add new API hosts.
+ * and Vercel instrumentation. Extend this app’s connect-src via
+ * `CSP_EXTRA_CONNECT_SRC` (space-separated origins) if you add new API hosts.
  *
  * Development and no-nonce callers keep the legacy script policy so Turbopack
  * HMR and non-rendering response paths continue to work. Production HTML
@@ -59,9 +59,6 @@ export function contentSecurityPolicy(nonce?: string): string {
     "https://*.supabase.co",
     "wss://*.supabase.co",
     "wss://*.supabase.io",
-    "https://*.sentry.io",
-    "https://*.ingest.sentry.io",
-    "https://*.ingest.us.sentry.io",
     "https://vercel.live",
     "https://*.vercel-insights.com",
     "https://vitals.vercel-insights.com",

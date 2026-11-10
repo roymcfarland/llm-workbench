@@ -146,7 +146,7 @@ volume on the Supabase / Clerk / Vercel free tiers). End-to-end:
    [`vercel.json`](./vercel.json) (install + build run from the monorepo root
    via `cd ../..`). Paste env vars from [`.env.example`](./.env.example) into
    Project Settings → Environment Variables; set `NEXT_PUBLIC_SITE_ORIGIN` to
-   your production URL. Optional: `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `CSP_EXTRA_CONNECT_SRC`.
+   your production URL. Optionally set `CSP_EXTRA_CONNECT_SRC`.
    Upstash is required in production for rate limiting on proxy-matched `/api/*` routes (excluding `/api/health` and dotted paths such as `/api/openapi.json`), via `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` or Marketplace `KV_REST_API_URL`/`KV_REST_API_TOKEN`, unless `RATE_LIMIT_ALLOW_UNCONFIGURED=1`.
 6. **Deploy.** Push to `main` (or click Deploy). The first build typically
    takes a few minutes; required CI jobs on Node 22 and 24 run package builds, AI SDK 5/7 type compatibility, ESM smoke, tests, web typecheck, web/package lint, the audit gate, and the production web build.

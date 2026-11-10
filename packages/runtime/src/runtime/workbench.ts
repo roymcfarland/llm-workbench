@@ -67,7 +67,7 @@ export class WorkbenchRuntime {
   }
 
   /**
-   * Replace the global trace listener error handler (e.g. wire to Sentry after app bootstrap).
+   * Replace the global trace listener error handler (e.g. wire to an error reporter after app bootstrap).
    * Pass `undefined` to fall back to the default `console.error` logging only.
    */
   setOnTraceListenerError(handler: TraceListenerErrorHandler | undefined): void {
