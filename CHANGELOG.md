@@ -723,6 +723,11 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Security
 
+- **Retired the withdrawn `braces` advisory allowlist entry.** GitHub withdrew
+  `GHSA-vfj7-8cjw-p6xm` on 2026-10-23. The allowlist is empty, and the
+  high/critical threshold and exception policy are unchanged. `braces@3.0.3`
+  remains dev-only via Changesets (`npm ls braces --omit=dev` is empty).
+
 - **Cleared all six moderate production npm audit findings.** Removed the global
   `minimatch` override and scoped `minimatch` 11 to ESLint and typescript-eslint
   consumers and `glob` 14 to Sentry’s bundler plugins. The lockfile refresh moved
