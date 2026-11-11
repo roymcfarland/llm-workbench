@@ -53,6 +53,7 @@
   "high": true,
   // RESOLVED -- GHSA-vfj7-8cjw-p6xm was withdrawn upstream on 2026-10-23.
   // The entry was removed on 2026-11-11. braces 3.0.3 remains dev-only via
-  // @changesets/cli -> @changesets/config -> micromatch.
+  // @changesets/cli -> @changesets/config -> micromatch and
+  // eslint-config-next -> @next/eslint-plugin-next -> fast-glob -> micromatch.
   "allowlist": []
 }
