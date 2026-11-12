@@ -23,6 +23,11 @@ updates:
       # 22.x minor/patch still flows through the group.
       - dependency-name: "@types/node"
         versions: [">=23.0.0"]
+      # typescript-eslint 8.72.x caps its TypeScript peer below 6.1.0, and TypeScript 7 (native compiler) is not adopted:
+      # packages/ai-sdk/scripts/typecheck-ai5.mjs still writes baseUrl. ROADMAP.md records the decision. Remove this entry
+      # when typescript-eslint supports TypeScript 6.1+/7 and that script is reworked. 6.0.x patch updates still flow through the group.
+      - dependency-name: "typescript"
+        versions: [">=6.1.0"]
     groups:
       npm-minor-patch:
         update-types:
