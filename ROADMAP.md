@@ -51,9 +51,12 @@ decision is not re-litigated each time Dependabot reopens them:
   *lowest* supported runtime. `engines.node` is `^22.22.2 || ^24.15.0 || >=26.0.0`, so `^22.x` is correct;
   a newer major would type APIs that do not exist on a runtime CI actually tests
   against. Revisit when the engine floor moves. Enforced by a `@types/node >=23.0.0` ignore entry in `.github/dependabot.yml`; remove it together with this note when the floor moves.
-- **TypeScript 7.** Blocked upstream — `typedoc` and `typescript-eslint` both cap
-  below it. It is also a compiler port, which is a migration project rather than
-  a dependency bump.
+- **TypeScript 6.1 and newer.** `typescript-eslint` 8.72.x requires TypeScript
+  below 6.1.0. TypeScript 7 also requires a compiler migration. `typedoc` caps
+  below it, and `packages/ai-sdk/scripts/typecheck-ai5.mjs` still writes
+  `baseUrl`. The `typescript >=6.1.0` ignore in `.github/dependabot.yml` keeps
+  6.0.x patches eligible. Remove it when `typescript-eslint` supports TypeScript
+  6.1+/7 and the script no longer writes `baseUrl`.
 - **Express 5.** No advisory; confined to a private example workspace with no
   tests and no CI coverage, so there would be nothing to verify the upgrade
   against.
