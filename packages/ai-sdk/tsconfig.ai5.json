@@ -1,4 +1,7 @@
 {
   "extends": "./tsconfig.types.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  },
   "include": ["dist/**/*.d.ts", "types-test/common.ts", "types-test/ai5.ts"]
 }

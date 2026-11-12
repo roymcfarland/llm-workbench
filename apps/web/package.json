@@ -70,7 +70,7 @@
     "lighthouse": "^13.6.0",
     "postcss": "^8.5.32",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.6.3",
+    "typescript": "~6.0.3",
     "vitest": "^5.0.3"
   }
 }
