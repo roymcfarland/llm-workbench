@@ -155,7 +155,7 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 - Upgraded TypeScript from 5.9.3 to 6.0.3 across the workspace with `~6.0.3` ranges
   because `typescript-eslint` caps TypeScript below 6.1.0. The emitted files in all
-  five published packages are byte-identical. (#TBD)
+  five published packages are byte-identical. (#302)
 
 - Scoped the `@react-email/components` renderer to the existing
   `@react-email/render@2.2.0` to clear four low production audit findings.
