@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@llm-workbench/runtime.svg)](https://www.npmjs.com/package/@llm-workbench/runtime)
 [![CI](https://github.com/roymcfarland/llm-workbench/actions/workflows/ci.yml/badge.svg)](https://github.com/roymcfarland/llm-workbench/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node: tested on 22 and 24](https://img.shields.io/badge/node-tested_on_22_and_24-brightgreen.svg)](https://nodejs.org)
+[![Node: tested on 22, 24, and 26](https://img.shields.io/badge/node-tested_on_22%2C_24%2C_and_26-brightgreen.svg)](https://nodejs.org)
 [![codecov](https://codecov.io/gh/roymcfarland/llm-workbench/branch/main/graph/badge.svg)](https://codecov.io/gh/roymcfarland/llm-workbench)
 
 **An open-source control plane for LLM-powered products.**
@@ -98,7 +98,7 @@ npm install @llm-workbench/mcp                                 # expose runs ove
 
 All five libraries are published under the
 [`@llm-workbench`](https://www.npmjs.com/org/llm-workbench) scope (MIT, ESM,
-tested on Node 22 and 24). The runtime has no React or framework dependency — it runs in the
+tested on Node 22, 24, and 26). The runtime has no React or framework dependency — it runs in the
 browser, Node, or edge-style runtimes. Jump to the
 [60-second integration](#60-second-integration) for a complete example.
 
@@ -137,10 +137,10 @@ and push-triggered work; they are not PR gates. Defined in [`.github/workflows/`
 
 | Workflow | Checks or automation |
 | --- | --- |
-| `ci.yml` | Required build & test jobs on Node 22 and 24: build, AI SDK 5/7 type compatibility, ESM smoke, tests, typecheck, lint, audit gate and production build. CI runs `node scripts/audit-gate.mjs --mode=gate`, wrapping audit-ci and `audit-ci.jsonc`: high/critical advisories fail; registry outages warn and **pass without evaluating**; unrecognised failures fail. Coverage, Codecov uploads and Playwright run on Node 24 only. |
+| `ci.yml` | Build & test jobs on Node 22, 24, and 26: build, AI SDK 5/7 type compatibility, ESM smoke, tests, typecheck, lint, audit gate and production build. CI runs `node scripts/audit-gate.mjs --mode=gate`, wrapping audit-ci and `audit-ci.jsonc`: high/critical advisories fail; registry outages warn and **pass without evaluating**; unrecognised failures fail. Coverage, Codecov uploads and Playwright run on Node 24 only. |
 | `codeql.yml` | Reports static analysis of first-party code (`javascript-typescript`) and workflows (`actions`); not a required check and does not block merging. |
 | `gitleaks.yml` | Reports secrets on PRs and pushes to `main`; not a required check and does not block merging. |
-| `audit-autofix.yml` | Daily/manual gate check; opens or updates one `chore/audit-autofix` PR, never auto-merges. Verifies with a clean install, `npm run audit:check` and `npm run ci` on Node 24; the PR’s CI adds Node 22, coverage and Playwright. An unchanged fix fails for triage; registry failure during the gate check warns and opens no PR. Raw verification fails on registry outages. Review all version moves: `npm audit fix` can change packages the gate did not require. A separate job fails the run when the autofix PR has been open more than 48 hours (the daily 06:00 UTC cadence means it first fires on day 3). |
+| `audit-autofix.yml` | Daily/manual gate check; opens or updates one `chore/audit-autofix` PR, never auto-merges. Verifies with a clean install, `npm run audit:check` and `npm run ci` on Node 24; the PR’s CI adds Node 22 and 26 jobs, plus coverage and Playwright on Node 24. An unchanged fix fails for triage; registry failure during the gate check warns and opens no PR. Raw verification fails on registry outages. Review all version moves: `npm audit fix` can change packages the gate did not require. A separate job fails the run when the autofix PR has been open more than 48 hours (the daily 06:00 UTC cadence means it first fires on day 3). |
 | `blog-autopublish.yml` | Scheduled/manual weekly source-grounded blog publisher, not a PR gate (see [docs/blog-autopublish.md](docs/blog-autopublish.md)). |
 | `release.yml` | On pushes to `main`, when enabled, publishes packages to npm via OIDC trusted publishing with provenance; not a PR gate. |
 
@@ -301,7 +301,7 @@ npm run demo               # Vite demo app at http://localhost:5173
 npm run demo:http-server   # Reference REST store for HttpRunRepository
 ```
 
-Node.js **22.22.2+ (22.x), 24.15+ (24.x), or 26+** is required (`engines` in root `package.json`). CI runs on **Node 22 and 24** (`.github/workflows/ci.yml`). See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
+Node.js **22.22.2+ (22.x), 24.15+ (24.x), or 26+** is required (`engines` in root `package.json`). CI runs on **Node 22, 24, and 26** (`.github/workflows/ci.yml`). See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
 ## 60-Second Integration
 

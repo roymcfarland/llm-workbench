@@ -73,7 +73,7 @@ These are intentional entry points for crawlers, assistants, and integrations:
 
 ## Prerequisites
 
-- Node.js **22.22.2+ (22.x), 24.15+ (24.x), or 26+** (matches monorepo `engines`; CI runs on Node 22 and 24)
+- Node.js **22.22.2+ (22.x), 24.15+ (24.x), or 26+** (matches monorepo `engines`; CI runs on Node 22, 24, and 26)
 - A Clerk application (publishable + secret key)
 - A Supabase project (URL + service-role key)
 - Vercel AI Gateway access (`AI_GATEWAY_API_KEY`, or OIDC if deployed on Vercel)
@@ -149,7 +149,7 @@ volume on the Supabase / Clerk / Vercel free tiers). End-to-end:
    your production URL. Optionally set `CSP_EXTRA_CONNECT_SRC`.
    Upstash is required in production for rate limiting on proxy-matched `/api/*` routes (excluding `/api/health` and dotted paths such as `/api/openapi.json`), via `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` or Marketplace `KV_REST_API_URL`/`KV_REST_API_TOKEN`, unless `RATE_LIMIT_ALLOW_UNCONFIGURED=1`.
 6. **Deploy.** Push to `main` (or click Deploy). The first build typically
-   takes a few minutes; required CI jobs on Node 22 and 24 run package builds, AI SDK 5/7 type compatibility, ESM smoke, tests, web typecheck, web/package lint, the audit gate, and the production web build.
+   takes a few minutes; CI jobs on Node 22, 24, and 26 run package builds, AI SDK 5/7 type compatibility, ESM smoke, tests, web typecheck, web/package lint, the audit gate, and the production web build.
    The audit gate fails on high/critical advisories and unrecognised failures; registry outages warn and pass without evaluating. Coverage, Codecov uploads, and Playwright run on Node 24 only (see `.github/workflows/ci.yml`).
 
 > Cost expectation at design-partner volume: ~$0/month. Supabase free tier

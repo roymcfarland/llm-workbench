@@ -72,9 +72,9 @@ are automation, not PR gates.
 - **Automatic advisory remediation** — `audit-autofix.yml` checks daily (or on
   manual dispatch). An advisory finding triggers `npm audit fix`; verification
   removes `node_modules`, runs `npm ci`, then `npm run audit:check` and
-  `npm run ci`, on Node 24 only. The PR's own CI adds Node 22, coverage and
-  Playwright. The job opens or updates one `chore/audit-autofix` PR and never
-  auto-merges. If the fix changes nothing, it fails for human triage. If the
+  `npm run ci`, on Node 24 only. The PR's own CI adds Node 22 and 26 jobs, plus
+  coverage and Playwright on Node 24. The job opens or updates one
+  `chore/audit-autofix` PR and never auto-merges. If the fix changes nothing, it fails for human triage. If the
   registry is unreachable during the gate check, it warns and opens no PR;
   an outage during the raw `audit:check` verification fails the job.
   `npm audit fix` can also change packages the gate did not require, so review
