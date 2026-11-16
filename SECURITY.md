@@ -14,12 +14,9 @@ directly via the email on their GitHub profile
 (<https://github.com/roymcfarland>) with the subject line
 `security: llm-workbench`.
 
-We aim to acknowledge reports within 5 business days and to publish a
-fix or mitigation within 30 days for high-severity issues.
-
 ## Scope
 
-In scope:
+The five published npm packages and the hosted reference app are in scope.
 
 - `@llm-workbench/runtime` — bundle parsing, integrity verification,
   JSON Patch handling, schema validation, persistence adapter logic,
@@ -32,15 +29,27 @@ In scope:
   in the Vercel AI SDK wrappers.
 - `@llm-workbench/mcp` — MCP server factory and HTTP handler exposing the
   runtime over Model Context Protocol.
+- The code and configuration of `apps/web`, including its deployment at
+  [llmworkbench.io](https://llmworkbench.io), the maintainer's reference deployment.
 
-Out of scope (reportable to the relevant project, not here):
+When testing the hosted instance, stop at the minimal proof of concept needed
+to demonstrate the issue.
+
+Out of scope:
 
 - Vulnerabilities in `ajv`, `fast-json-patch`, `zod`, `react`, `vite`,
-  or `express` themselves.
+  or `express` themselves. Report these to the relevant project.
 - Misconfiguration of host applications that bypass the documented
   persistence-port contract (e.g. shipping `HttpRunRepository` without
   any authentication on the server side — see
   [the persistence and authentication guide](packages/runtime/src/persistence/AUTH.md)).
+- Vulnerabilities in third-party platforms themselves, including Vercel, Clerk,
+  Supabase, Upstash, Resend, and model providers. Report these directly to the
+  relevant vendor.
+- Volumetric denial of service.
+- Social engineering.
+- Automated scanning that degrades the service.
+- Issues that require an already-compromised account or device.
 
 ## Hardening expectations
 
