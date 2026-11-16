@@ -1,7 +1,8 @@
 # Supabase schema for the LLM Workbench reference app
 
-The migration in `migrations/0001_init.sql` creates the single `runs` table
-the reference app reads and writes through `HttpRunRepository`.
+The [initial migration](migrations/0001_init.sql) creates the `runs` table.
+The web app's server-side Supabase store reads and writes it. Clients using
+`HttpRunRepository` connect through the [web app's HTTP API](../README.md#http-apis).
 
 ## One-time setup
 
@@ -10,21 +11,23 @@ the reference app reads and writes through `HttpRunRepository`.
 # 2. Log in
 supabase login
 
-# 3. Link your local repo to a project (from the repo root, enter apps/web)
+# 3. Initialize the CLI config once, then link your project
 cd apps/web
+supabase init
 supabase link --project-ref <ref-from-dashboard-url>
 
 # 4. Apply the migration to the linked project
 supabase db push
 ```
 
-Re-running `supabase db push` is safe — the migration uses `create … if not
-exists` and `create or replace` patterns.
+`supabase db push` tracks applied migrations and applies pending ones. The
+repository tracks the SQL migration; `supabase init` generates the CLI config.
 
 ## Local development
 
-If you prefer a local Postgres while you iterate, `supabase start` will give
-you a local stack. Point the app at it by setting `NEXT_PUBLIC_SUPABASE_URL`
+For local Postgres, run `supabase init` once from `apps/web`, then run
+`supabase start` with a Docker-compatible container runtime running.
+See the [Supabase CLI setup](https://supabase.com/docs/guides/local-development/cli/getting-started). Point the app at it by setting `NEXT_PUBLIC_SUPABASE_URL`
 and `SUPABASE_SERVICE_ROLE_KEY` to the values printed by `supabase status`.
 
 ## Why the policy is mostly informational

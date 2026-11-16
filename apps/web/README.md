@@ -12,7 +12,7 @@ and the SQL migration, including the trade-offs below.
 
 ## Stack
 
-- **Next.js 16** (App Router; Cache Components intentionally off for Clerk compatibility — see `next.config.mjs`)
+- **Next.js 16 and React 19** (App Router; Cache Components intentionally off for Clerk compatibility — see [`next.config.mjs`](next.config.mjs))
 - **Tailwind CSS v4** (CSS-first `@theme` config) + **shadcn/ui** primitives
 - **Clerk** (`@clerk/nextjs`) for authentication and tenancy
 - **Supabase** (`@supabase/supabase-js`) for the `runs` table
@@ -46,8 +46,9 @@ and the SQL migration, including the trade-offs below.
 | --- | --- |
 | `GET /api/health` | Liveness check (**public**). |
 | `GET /api/runs?limit=N` | List runs for the caller’s tenant (`HttpRunRepository.list` shape). |
-| `GET/PUT/DELETE /api/runs/[runId]` | Single-run CRUD using the workbench wire format. |
-| `POST /api/llm` | AI Gateway streaming proxy (demo). |
+| `GET/PUT/DELETE /api/runs/[runId]` | Load, upsert, and delete a run in the caller's tenant using the workbench wire format. |
+| `POST /api/llm` | Authenticated AI Gateway streaming proxy for the demo. |
+| `GET/DELETE /api/mcp` | Stateless MCP transport operations. See the descriptor at `/.well-known/mcp.json` for discovery. |
 | `POST /api/mcp` | MCP JSON-RPC (`initialize`, `ping`, `tools/list`, `prompts/list`, `resources/list`, `resources/templates/list`, `completion/complete`, and notifications are public; every `tools/call` requires auth — see handler). |
 | `GET /api/openapi.json` | OpenAPI 3.1 for the run REST surface (**public**). |
 
@@ -73,7 +74,7 @@ These are intentional entry points for crawlers, assistants, and integrations:
 
 ## Prerequisites
 
-- Node.js **22.22.2+ (22.x), 24.15+ (24.x), or 26+** (matches monorepo `engines`; CI runs on Node 22, 24, and 26)
+- [Supported Node.js and npm setup](../../README.md#local-development)
 - A Clerk application (publishable + secret key)
 - A Supabase project (URL + service-role key)
 - Vercel AI Gateway access (`AI_GATEWAY_API_KEY`, or OIDC if deployed on Vercel)
@@ -81,24 +82,20 @@ These are intentional entry points for crawlers, assistants, and integrations:
 ## Local setup
 
 ```bash
-# 1. Install all workspace dependencies (run from the repo root)
-npm install
-
-# 2. Copy the env template and fill in real values
-cp apps/web/.env.example apps/web/.env.local
-
-# 3. Apply the database migration (see apps/web/supabase/README.md)
-cd apps/web && supabase db push && cd -
-
-# 4. Run the dev server
-npm run dev:web
+# Run from the repo root
+npm ci
+npm run build
 ```
 
-The app will be available at <http://localhost:3000>.
+Configure the [web app variables](../../README.md#web-app-environment) in
+`apps/web/.env.local`, then follow the [Supabase setup](supabase/README.md) to
+apply the migration. From the repo root, run `npm run dev:web` to start the
+app at <http://localhost:3000>.
 
 ### Lighthouse (optional)
 
-After `npm install` in the repo root, from `apps/web`:
+After installing and building the libraries from the repo root, run this
+from `apps/web`:
 
 ```bash
 npm run lighthouse:smoke
@@ -123,7 +120,7 @@ When deployed on Vercel, prefer OIDC-based auth for AI Gateway (`vercel env
 pull` will inject `VERCEL_OIDC_TOKEN`) so you do not have to rotate
 `AI_GATEWAY_API_KEY` manually.
 
-### Deploy in 10 minutes
+### Deploy from a fork
 
 The reference deployment is intentionally cheap (~$0/month at design-partner
 volume on the Supabase / Clerk / Vercel free tiers). End-to-end:
@@ -144,13 +141,15 @@ volume on the Supabase / Clerk / Vercel free tiers). End-to-end:
 5. **Vercel.** Import the repo. Set **Root
    Directory** to `apps/web` so Vercel picks up
    [`vercel.json`](./vercel.json) (install + build run from the monorepo root
-   via `cd ../..`). Paste env vars from [`.env.example`](./.env.example) into
-   Project Settings → Environment Variables; set `NEXT_PUBLIC_SITE_ORIGIN` to
+   via `cd ../..`). Add the [web app variables](../../README.md#web-app-environment)
+   in Project Settings → Environment Variables, and set `NEXT_PUBLIC_SITE_ORIGIN` to
    your production URL. Optionally set `CSP_EXTRA_CONNECT_SRC`.
    Upstash is required in production for rate limiting on proxy-matched `/api/*` routes (excluding `/api/health` and dotted paths such as `/api/openapi.json`), via `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` or Marketplace `KV_REST_API_URL`/`KV_REST_API_TOKEN`, unless `RATE_LIMIT_ALLOW_UNCONFIGURED=1`.
-6. **Deploy.** Push to `main` (or click Deploy). The first build typically
-   takes a few minutes; CI jobs on Node 22, 24, and 26 run package builds, AI SDK 5/7 type compatibility, ESM smoke, tests, web typecheck, web/package lint, the audit gate, and the production web build.
-   The audit gate fails on high/critical advisories and unrecognised failures; registry outages warn and pass without evaluating. Coverage, Codecov uploads, and Playwright run on Node 24 only (see `.github/workflows/ci.yml`).
+6. **Deploy.** Click Deploy to create the initial deployment. With Git
+   connected, open PRs for previews and merge into the configured production
+   branch to deploy updates. See the [deployment runbook](DEPLOY.md) for the
+   project settings and [CI workflow](../../.github/workflows/ci.yml) for
+   the checks run separately by GitHub.
 
 > Cost expectation at design-partner volume: ~$0/month. Supabase free tier
 > covers 500 MB Postgres + 2 GB egress; Clerk free tier covers 10 000 MAUs;
@@ -169,5 +168,5 @@ volume on the Supabase / Clerk / Vercel free tiers). End-to-end:
 - **Tenant key fallback.** When a Clerk user has no active org, we use
   `user:<userId>` as the tenant. That matches the personal-workspace model
   most demos want; multi-tenant production apps should require an org.
-- **Body limit.** API routes cap PUT bodies at 25 MB. Large run states
+- **Body limit.** The single-run PUT route caps the body at 25 MiB. Large run states
   should be summarized or chunked before persistence.
