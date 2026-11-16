@@ -1,6 +1,6 @@
 # Playwright smoke (`apps/web`)
 
-These tests assume a production build exists under `apps/web/.next`. CI runs **`npm run build:web`** with the same **`NEXT_PUBLIC_*`** values as Playwright — see `.github/workflows/ci.yml`.
+These tests assume a production build exists under `apps/web/.next`. CI runs **`npm run build:web`** with the same **`NEXT_PUBLIC_*`** values as Playwright — see the [CI workflow](../../../.github/workflows/ci.yml).
 
 ## Ports and hosts
 
@@ -9,6 +9,8 @@ These tests assume a production build exists under `apps/web/.next`. CI runs **`
 | `PLAYWRIGHT_WEB_PORT` | TCP port for `next start` (default **`3399`**). Used by `e2e/env.ts`. |
 | `NEXT_PUBLIC_SITE_ORIGIN` | Must be `http://localhost:<port>` matching `E2E_ORIGIN` / Playwright’s `baseURL`. CI sets both. |
 | `LLM_WB_E2E_DISABLE_DNS_SHIM` | Set to `1` to skip the Node `--import` DNS shim. CI sets this for Playwright: Linux resolves `localhost` and the shim can break Next 16’s internal proxy. |
+| `CI` | GitHub Actions provides this flag. Playwright enables a retry and GitHub reporter output, disables server reuse, and rejects focused tests. |
+| `PLAYWRIGHT_SKIP_WEBSERVER` | Use a matching web server that is already running. |
 | `LLM_WB_E2E_DNS_SHIM` | Set automatically by Playwright for `next start`; rewrites `localhost` → `127.0.0.1` at DNS lookup so Next 16’s internal middleware proxy does not hit `ENOTFOUND localhost`. |
 | GitHub Actions matrix | Playwright install + smoke run **only on Node 24**. All three legs (Node 22, 24, and 26) build and unit-test the repo. |
 
@@ -16,7 +18,8 @@ The smoke tests use `request.get` for `/api/health` and `/llms.txt`, plus unmatc
 
 ## Skip starting the server
 
-If you already run `npm run start` (with matching Clerk + origin env):
+From `apps/web`, if you already run `npm run start` with matching Clerk
+and origin variables:
 
 ```bash
 export PLAYWRIGHT_SKIP_WEBSERVER=1

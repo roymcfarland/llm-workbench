@@ -129,7 +129,7 @@ lives in its PR description. [VERIFIER-AUDIT-PR8.md](docs/process/VERIFIER-AUDIT
 and [VERIFIER-AUDIT-PR10.md](docs/process/VERIFIER-AUDIT-PR10.md) are independent
 verification transcripts from specific PRs.
 
-### Automated gates
+### Security and automation
 
 Alongside human/agent review, branch protection requires only `build & test (node 22)`
 and `build & test (node 24)`. Other workflows report findings or automate scheduled
@@ -137,15 +137,17 @@ and push-triggered work; they are not PR gates. Defined in [`.github/workflows/`
 
 | Workflow | Checks or automation |
 | --- | --- |
-| `ci.yml` | Build & test jobs on Node 22, 24, and 26: build, AI SDK 5/7 type compatibility, ESM smoke, tests, typecheck, lint, audit gate and production build. CI runs `node scripts/audit-gate.mjs --mode=gate`, wrapping audit-ci and `audit-ci.jsonc`: high/critical advisories fail; registry outages warn and **pass without evaluating**; unrecognised failures fail. Coverage, Codecov uploads and Playwright run on Node 24 only. |
+| `ci.yml` | Runs on PRs and pushes to `main` and `autopublish/**`. Build & test jobs on Node 22, 24, and 26: build, AI SDK 5/7 type compatibility, ESM smoke, tests, typecheck, lint, audit gate and production build. CI runs `node scripts/audit-gate.mjs --mode=gate`, wrapping audit-ci and `audit-ci.jsonc`: high/critical advisories fail; registry outages warn and **pass without evaluating**; unrecognised failures fail. Coverage, Codecov uploads and Playwright run on Node 24 only. |
 | `codeql.yml` | Reports static analysis of first-party code (`javascript-typescript`) and workflows (`actions`); not a required check and does not block merging. |
-| `gitleaks.yml` | Reports secrets on PRs and pushes to `main`; not a required check and does not block merging. |
+| `gitleaks.yml` | Secret scan checks commits on PRs and pushes to `main` using `gitleaks/gitleaks-action@v3` and the [test-placeholder allowlist](.gitleaks.toml). See [SECURITY.md](SECURITY.md) for private reporting. |
 | `audit-autofix.yml` | Daily/manual gate check; opens or updates one `chore/audit-autofix` PR, never auto-merges. Verifies with a clean install, `npm run audit:check` and `npm run ci` on Node 24; the PR’s CI adds Node 22 and 26 jobs, plus coverage and Playwright on Node 24. An unchanged fix fails for triage; registry failure during the gate check warns and opens no PR. Raw verification fails on registry outages. Review all version moves: `npm audit fix` can change packages the gate did not require. A separate job fails the run when the autofix PR has been open more than 48 hours (the daily 06:00 UTC cadence means it first fires on day 3). |
 | `blog-autopublish.yml` | Scheduled/manual weekly source-grounded blog publisher, not a PR gate (see [docs/blog-autopublish.md](docs/blog-autopublish.md)). |
 | `release.yml` | On pushes to `main`, when enabled, publishes packages to npm via OIDC trusted publishing with provenance; not a PR gate. |
 
-Dependency updates arrive via Dependabot and are triaged deliberately — see
-[ROADMAP.md](ROADMAP.md) for the standing policy on major upgrades.
+[Dependabot](.github/dependabot.yml) checks npm workspaces and GitHub Actions
+weekly. npm minor and patch updates are grouped, while eligible majors get
+individual PRs. See [ROADMAP.md](ROADMAP.md#standing-policy-dependency-upgrades)
+for the upgrade policy and current exceptions.
 
 ## Why It Exists
 
@@ -209,11 +211,9 @@ workflow state a first-class part of how your app runs — not a dashboard
 bolted on afterward. `WorkbenchRuntime` and `WorkbenchSession` are things you
 embed and call directly; `RunRepository` is pluggable (memory, IndexedDB,
 HTTP, or your own backend), so nothing leaves your infrastructure unless you
-choose a repository that sends it somewhere. Run bundles are SHA-256 hashed
-over canonical JSON specifically so "did a human actually approve this, and
-is this export exactly what happened" has a verifiable answer — that's an
-audit-trail property, not something the tracing tools above are built
-around.
+choose a repository that sends it somewhere. Run bundles carry a SHA-256 hash over canonical JSON, so a consumer can check
+the export against that hash. The recorded gate events capture the approval
+decision, while authenticating the producer is the host application's job.
 
 If you need eval scoring, dataset curation, or prompt experimentation,
 Langfuse or LangSmith will get you there faster — that's genuinely their job,
@@ -231,8 +231,10 @@ of that approval — that's what LLM Workbench is for.
   policies: `AUTO`, `PAUSE_BEFORE`, `PAUSE_AFTER`, and `CHECKPOINT`.
 - **Human review gates.** Pause before or after important steps, collect
   approvals, rejections, edits, and notes, then resume with traceable intent.
-- **Schema-validated artifacts and rules.** Bring JSON Schemas, validate data
-  through Ajv, patch artifacts safely, and export redacted user bundles.
+- **Schema validation for artifacts and rules.** Register JSON Schemas with
+  `SchemaRegistry` and use `validatedWriteArtifact` or
+  `validatedReplaceRuleSet` to validate with Ajv before writing. The runtime
+  also supports JSON Patch and redacted user-bundle exports.
 - **Tamper-evident run bundles.** Exports carry a SHA-256 integrity hash over
   canonical JSON. Imports verify integrity by default.
 - **Telemetry-ready traces.** Track provider, model, usage, duration, cost,
@@ -290,18 +292,62 @@ apps/
 
 ## Local Development
 
-To work on the monorepo itself (rather than consume the published packages),
-clone it and run:
+The workspace uses TypeScript 6 and Vitest 5. The hosted app uses Next.js 16,
+React 19, Tailwind CSS 4, Clerk, Supabase Postgres, and Vercel AI SDK 7. The UI
+and React adapter libraries support React 18 and 19 as peers.
+
+Use a Node.js release that satisfies `engines.node` in
+[package.json](package.json). CI exercises Node **22, 24, and 26**. Use the npm
+bundled with your supported Node installation for workspace commands
+and the [npm lockfile](package-lock.json).
 
 ```bash
-npm install
+npm ci
+npm run build              # Build the workspace libraries
 npm test
-npm run build
 npm run demo               # Vite demo app at http://localhost:5173
 npm run demo:http-server   # Reference REST store for HttpRunRepository
 ```
 
-Node.js **22.22.2+ (22.x), 24.15+ (24.x), or 26+** is required (`engines` in root `package.json`). CI runs on **Node 22, 24, and 26** (`.github/workflows/ci.yml`). See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
+The Vite demo and reference store run locally without service configuration.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the local CI sequence and PR process,
+and the [web app guide](apps/web/README.md) to run the hosted reference app locally.
+
+### Web app environment
+
+Set local app variables in `apps/web/.env.local` and hosted variables in the
+appropriate Vercel project environments. Keep server-side credentials scoped
+to the server.
+
+| Name | Purpose | Required? | Where to set |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | Clerk client and server authentication | Yes for the web app | Local, Vercel |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk's hosted app entry paths | Configure if needed for your Clerk instance | Local, Vercel |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL` | Clerk redirects when there is no return URL | No | Local, Vercel |
+| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase project URL and server-side run storage access | Yes for run persistence | Local, Vercel |
+| `AI_GATEWAY_API_KEY` | Authenticate model calls to Vercel AI Gateway | Yes for model calls without OIDC | Local, Vercel if using a key |
+| `VERCEL_OIDC_TOKEN` | Platform-managed authentication for AI Gateway | Alternative to the Gateway API key | Vercel supplies it when OIDC is enabled |
+| `NEXT_PUBLIC_SITE_ORIGIN` | Metadata base and origin fallback when there is no request host | Set for your own deployment | Local, Vercel |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` or `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Redis connection for API rate limiting | Yes for proxy-matched APIs under a production build unless explicitly opted out | Local for production-build testing, Vercel |
+| `RATE_LIMIT_ALLOW_UNCONFIGURED` | Allow proxy-matched APIs to run under a production build without Redis | No | Local for production-build testing, Vercel |
+| `CSP_EXTRA_CONNECT_SRC` | Allow additional CSP connection origins | No | Local, Vercel |
+| `RESEND_API_KEY`, `RESEND_FROM` | Enable and configure run-completion emails | Both needed for email | Local, Vercel |
+| `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`, `YANDEX_SITE_VERIFICATION` | Search engine verification metadata. The aliases `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_BING_SITE_VERIFICATION`, and `NEXT_PUBLIC_YANDEX_SITE_VERIFICATION` also work | No | Local, Vercel |
+
+Next.js sets `NODE_ENV`. Vercel provides `VERCEL` for hosted analytics and
+`VERCEL_ENV` for preview-specific CSP settings. See the
+[Playwright guide](apps/web/e2e/README.md), [web app guide](apps/web/README.md#lighthouse-optional),
+[HTTP example](examples/run-repo-server/README.md), and
+[blog automation guide](docs/blog-autopublish.md) for tool-specific variables.
+
+### Deploy flow
+
+Vercel builds preview deployments from PR branches and the production
+deployment from `main`. With `apps/web` as the project root,
+[vercel.json](apps/web/vercel.json) installs from the workspace root, builds the
+libraries, then generates the API reference and builds the web app.
+See the [deployment runbook](apps/web/DEPLOY.md) for project setup and
+[PROJECT.md](PROJECT.md) for architecture and scope.
 
 ## 60-Second Integration
 
@@ -311,6 +357,7 @@ import {
   SchemaRegistry,
   registerDemoSchemas,
   summarizeModelTelemetry,
+  validatedWriteArtifact,
 } from "@llm-workbench/runtime";
 
 const registry = new SchemaRegistry();
@@ -344,7 +391,7 @@ session.resolveGate({
 
 session.beginStep("parse");
 
-session.writeArtifact({
+validatedWriteArtifact(registry, session, {
   artifactKey: "compiledProfile",
   typeId: "compiledProfile",
   data: {

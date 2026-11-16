@@ -16,12 +16,13 @@ docs — are welcome.
 
 ## Development setup
 
-Prerequisites: Node.js **22.22.2+ (22.x), 24.15+ (24.x), or 26+** (CI runs on 22, 24, and 26), npm **10+** (workspaces, lockfile v3; root `overrides` need npm 8.3 or later).
+Use a Node version supported by [package.json](package.json) and its bundled
+npm. See [Local Development](README.md#local-development).
 
 ```bash
 git clone https://github.com/roymcfarland/llm-workbench
 cd llm-workbench
-npm install
+npm ci
 npm run build
 npm test
 ```
@@ -50,11 +51,17 @@ npm test
 
 ## Pull request checklist
 
+Open a PR from a topic branch. Merge changes through the PR and keep direct
+pushes off `main`. GitHub deletes merged PR branches automatically. From your
+primary checkout, remove a finished scratch checkout with
+`git worktree remove <path>`.
+
 - [ ] `npm run ci` passes. It mirrors CI’s core sequence: build → plain-Node ESM smoke → tests → web typecheck → web/package lint → production build.
       CI additionally runs AI SDK 5/7 type compatibility and the audit gate, plus coverage, Codecov uploads and Playwright on Node 24.
 - [ ] `node scripts/audit-gate.mjs --mode=gate` passes: it wraps audit-ci and `audit-ci.jsonc`, fails on high/critical advisories, and warns/passes without evaluation on registry outages.
 - [ ] New behavior is covered by tests.
-- [ ] `CHANGELOG.md` updated under `## [Unreleased]`. Dependency changes get their own entry too — for Dependabot
+- [ ] Update affected documentation and add a `CHANGELOG.md` entry under
+      `## [Unreleased]` in the same PR. Dependency changes get their own entry too — for Dependabot
       npm PRs the maintainer adds it at merge; GitHub Actions bumps and Version Packages PRs don't get one.
 - [ ] If you changed a published `packages/*` library, add a changeset (`npm run changeset`).
 

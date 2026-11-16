@@ -51,7 +51,7 @@ Scheduled runs are dormant by default. To turn them on:
   rotated before it lapses: expiry fails the weekly run at checkout. The same
   token is used by `audit-autofix.yml` for checkout and `GH_TOKEN`, so expiry
   also breaks the daily autofix.
-- Set the repository variable `BLOG_AUTOPUBLISH_ENABLED=true`.
+- Enable the schedule using the repository variable `BLOG_AUTOPUBLISH_ENABLED`.
 - Optionally set `BLOG_MODEL` to override the default
   `anthropic/claude-opus-4-8` model.
 
@@ -72,11 +72,9 @@ Use a manual dry run before enabling the weekly schedule:
 `apps/web/content/blog`.
 
 Select `fetch-only` to print the selected sources as JSON without generating a
-post. It needs no AI Gateway key. Locally, run:
-
-```bash
-BLOG_MODE=fetch-only npm run blog:autopublish
-```
+post. It needs no AI Gateway key. For local runs, `BLOG_MODE` selects the execution mode. Use `fetch-only`
+with `npm run blog:autopublish` to fetch sources. GitHub Actions supplies
+`GITHUB_OUTPUT` for reporting the generated file or skip reason.
 
 ## Schedule
 

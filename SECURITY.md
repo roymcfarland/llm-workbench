@@ -7,9 +7,9 @@ material a host application may consider sensitive (resumes, prompts,
 tool outputs). If you find a vulnerability, please report it privately
 **before** opening a public issue or PR.
 
-Preferred channel: open a
-[private security advisory](https://github.com/roymcfarland/llm-workbench/security/advisories/new)
-on GitHub. If that is not available to you, contact the maintainer
+On the repository's [Security Advisories page](https://github.com/roymcfarland/llm-workbench/security/advisories),
+select **Report a vulnerability** to submit a private report. Private
+vulnerability reporting is enabled for this repository. If that is not available to you, contact the maintainer
 directly via the email on their GitHub profile
 (<https://github.com/roymcfarland>) with the subject line
 `security: llm-workbench`.
@@ -40,7 +40,7 @@ Out of scope (reportable to the relevant project, not here):
 - Misconfiguration of host applications that bypass the documented
   persistence-port contract (e.g. shipping `HttpRunRepository` without
   any authentication on the server side — see
-  `packages/runtime/src/persistence/AUTH.md`).
+  [the persistence and authentication guide](packages/runtime/src/persistence/AUTH.md)).
 
 ## Hardening expectations
 
@@ -85,13 +85,15 @@ are automation, not PR gates.
   (`javascript-typescript`) and the GitHub Actions workflows (`actions`).
   Workflow scanning covers issues such as generated strings expanding into
   shell steps. It is not a required check.
-- **Secret scanning** — `gitleaks` runs on PRs and pushes to `main`, and is not
-  a required check. Known-benign test placeholders are allowlisted by
-  exact-string regex in `.gitleaks.toml`.
+- **Secret scanning** — the [Secret scan workflow](.github/workflows/gitleaks.yml)
+  uses `gitleaks/gitleaks-action@v3` on PRs and pushes to `main`. The workflow
+  references the action by major. [`.gitleaks.toml`](.gitleaks.toml) allowlists
+  known-benign test placeholders by exact-string regex.
 - **Supply chain** — on pushes to `main`, the enabled release workflow publishes
   packages to npm via OIDC trusted publishing with build provenance and no
-  long-lived token. Dependabot proposes updates, which are triaged deliberately
-  rather than merged for currency alone.
+  long-lived token. [Dependabot](.github/dependabot.yml) checks npm workspaces
+  and GitHub Actions weekly. See the [upgrade policy](ROADMAP.md#standing-policy-dependency-upgrades)
+  for how updates are triaged.
 
 If you're integrating LLM Workbench in a product that handles regulated
 data and want to discuss hardening, reach out via the maintainer's GitHub

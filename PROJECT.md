@@ -15,7 +15,7 @@
 ## Stack
 
 - **Monorepo:** npm workspaces (no pnpm/yarn).
-- **Runtime:** Node `^22.22.2 || ^24.15.0 || >=26.0.0` (CI matrix: 22, 24, and 26).
+- **Runtime:** Node per `engines.node` in [`package.json`](package.json) (CI matrix: 22, 24, and 26).
 - **Core packages (`packages/*`):** TypeScript, Zod, Ajv, fast-json-patch.
 - **UI packages:** React 18.2+/19 (peer), scoped `lwb-` CSS, `@dnd-kit`, Monaco, React Flow.
 - **Hosted reference plane (`apps/web`):** Next.js 16 (App Router), React 19, Tailwind CSS v4.
@@ -40,7 +40,7 @@ Tenancy is enforced at the API layer via `requireTenant()` in `apps/web/lib/auth
 
 - **Auth enforcement:** API routes must return structured JSON `401 Unauthorized` responses when unauthenticated, never HTML redirects.
 - **Proxy:** `apps/web/proxy.ts` enforces Clerk auth, a per-request CSP nonce, and rate limiting. It runs on all paths except `_next`, dotted paths, and `/api/health`; rate limiting applies to proxy-matched `/api/*` routes and fails closed in production without Upstash unless `RATE_LIMIT_ALLOW_UNCONFIGURED=1`.
-- **MCP discovery:** Protocol discovery routes (`/api/mcp` GET, `/.well-known/mcp.json`) and MCP discovery methods are public; every `tools/call` requires an authenticated session.
+- **MCP discovery:** The descriptor at `/.well-known/mcp.json` and MCP discovery methods sent by POST to `/api/mcp` are public. Every `tools/call` requires an authenticated session. The endpoint also accepts GET and DELETE as transport operations.
 - **Errors:** Internal errors are sanitized in production to avoid leaking stack traces; `WorkbenchError` is used for structured, stable error codes across package boundaries.
 - **Cross-controller method elevation:** When a refactor splits a class into multiple controllers and one controller's previously `private` method becomes a cross-controller dependency (i.e., other sibling controllers must call it), the elevated method must (a) carry a JSDoc comment that explicitly enumerates the sibling controllers permitted to call it, (b) state that the method is **not** part of the public surface reachable through any facade, and (c) be tagged `@internal` so it is excluded from generated `.d.ts` documentation. The Verifier should fail any PR that elevates such a method without all three. The first instance of this pattern is `RunLifecycleController.assertRunActive` (see `packages/runtime/src/runtime/runLifecycleController.ts`).
 - **Slice scope envelope and incidental cleanup:** A Builder slice's scope envelope is defined by the Builder prompt's authorized edits. Within that scope, the Builder may also remove imports, local helper type aliases, and other declarations that are *mechanically* rendered unused by the slice's exact authorized edit, in the same file as the edit, in the same PR. The Builder may not remove or refactor declarations that merely *happen* to be nearby, dead for unrelated reasons, or stylistically suboptimal. Any such incidental cleanup must be enumerated in the PR description's "Architectural choices" section with a one-sentence justification linking each removal to the authorized edit. The Verifier should fail any PR whose incidental cleanup cannot be justified as mechanically caused by the authorized edit. The first instance of this pattern is the removal of `TraceEvent`, `ArtifactStore`, and `CanStart` declarations in PR #10's `session.ts` constructor refactor (see `docs/process/VERIFIER-AUDIT-PR10.md` Concern A).

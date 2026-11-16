@@ -153,6 +153,8 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Changed
 
+- Audited repository documentation against the workspace, CI, hosting configuration, and runtime, and refreshed contributor setup, web environment requirements, and private vulnerability reporting. (#TBD)
+
 - Upgraded TypeScript from 5.9.3 to 6.0.3 across the workspace with `~6.0.3` ranges
   because `typescript-eslint` caps TypeScript below 6.1.0. The emitted files in all
   five published packages are byte-identical. (#302)

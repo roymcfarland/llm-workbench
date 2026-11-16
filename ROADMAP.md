@@ -48,7 +48,8 @@ Majors that have been evaluated and declined keep their reasoning here so the
 decision is not re-litigated each time Dependabot reopens them:
 
 - **`@types/node` beyond the engine floor.** These types should track the
-  *lowest* supported runtime. `engines.node` is `^22.22.2 || ^24.15.0 || >=26.0.0`, so `^22.x` is correct;
+  *lowest* supported runtime. The floor in [`package.json`](package.json) is
+  Node 22, so `^22.x` is correct;
   a newer major would type APIs that do not exist on a runtime CI actually tests
   against. Revisit when the engine floor moves. Enforced by a `@types/node >=23.0.0` ignore entry in `.github/dependabot.yml`; remove it together with this note when the floor moves.
 - **TypeScript 6.1 and newer.** `typescript-eslint` 8.72.x requires TypeScript
@@ -67,8 +68,9 @@ decision is not re-litigated each time Dependabot reopens them:
   when there are no changesets. CI never runs `release.yml`, so this needs one PR verified by a real release run.
   Declined 2026-09-12 (#178, #189).
 
-Declined majors are closed **without** `@dependabot ignore` directives, so they
-resurface if the blocking condition lifts.
+Declined majors outside the explicit ignores in
+[`.github/dependabot.yml`](.github/dependabot.yml) are closed without
+`@dependabot ignore` directives and can resurface in future update runs.
 
 ## Parked
 
