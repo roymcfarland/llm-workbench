@@ -153,6 +153,10 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Changed
 
+- Clarified the private vulnerability reporting scope for the five published
+  packages and the hosted reference app. Refreshed the README comparisons and
+  linked current provider pricing and deployment limits.
+
 - Audited repository documentation against the workspace, CI, hosting configuration, and runtime, and refreshed contributor setup, web environment requirements, and private vulnerability reporting. (#307)
 
 - Upgraded TypeScript from 5.9.3 to 6.0.3 across the workspace with `~6.0.3` ranges

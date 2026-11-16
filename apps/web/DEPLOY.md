@@ -26,9 +26,21 @@ into production on Vercel + Supabase + Clerk + Vercel AI Gateway.
 | `supabase` CLI       | `brew install supabase/tap/supabase` (or equivalent) |
 | A GitHub fork/branch | Vercel deploys from a Git remote                     |
 
-Five accounts: GitHub, Vercel, Supabase, Clerk, and an org with Vercel
-AI Gateway enabled (it's part of the standard Vercel offering as of 2026
-— no extra signup beyond `vercel link`).
+Use GitHub, Vercel, Supabase, and Clerk accounts. AI Gateway access is
+available to Vercel teams. For model calls from your local machine, see
+[AI Gateway authentication](#3-vercel-ai-gateway).
+
+### Plans and costs
+
+Plan details as of 2026-11 are available from the providers. Check eligible
+models, quotas, and any paid usage before choosing a plan.
+
+- Hosting and model calls ([Vercel pricing](https://vercel.com/pricing),
+  [AI Gateway pricing](https://vercel.com/docs/ai-gateway/pricing)).
+- Database ([Supabase pricing](https://supabase.com/pricing)).
+- Authentication ([Clerk pricing](https://clerk.com/pricing)).
+- Redis rate limiting ([Upstash Redis pricing](https://upstash.com/pricing/redis)).
+- Optional run-completion email ([Resend pricing](https://resend.com/pricing)).
 
 ---
 
@@ -38,9 +50,9 @@ AI Gateway enabled (it's part of the standard Vercel offering as of 2026
    - **Region**: pick the same region you intend to deploy on Vercel.
    - **Database password**: store it in a password manager; you only
      need it for `supabase db push` from your laptop.
-2. From **Project Settings → API**, copy:
+2. From the project’s [API settings](https://supabase.com/docs/guides/getting-started/api-keys), copy:
    - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
-   - `service_role` secret → `SUPABASE_SERVICE_ROLE_KEY`
+   - Legacy `service_role` key → `SUPABASE_SERVICE_ROLE_KEY`
 3. Apply the schema. From the repo root:
    ```bash
    cd apps/web
@@ -54,8 +66,10 @@ AI Gateway enabled (it's part of the standard Vercel offering as of 2026
 > The reference app uses the `service_role` key on the server and
 > enforces tenancy in application code (`lib/auth/tenant.ts`). RLS is
 > enabled as defense in depth. If you'd prefer to authenticate Supabase
-> calls as the end user, swap `lib/supabase/server.ts` to use the Clerk
-> JWT template — see `supabase/README.md`.
+> calls as the end user, use Supabase's
+> [Clerk third-party auth integration](https://supabase.com/docs/guides/auth/third-party/clerk)
+> with an end-user client and tenant-aware RLS policies. See the
+> [schema guide](supabase/README.md) for the reference app's tenancy model.
 
 ---
 
@@ -78,39 +92,38 @@ AI Gateway enabled (it's part of the standard Vercel offering as of 2026
 ### Sign-in methods: GitHub, Vercel, and email code
 
 The hosted sign-in/up pages render Clerk's prebuilt `<SignIn />` / `<SignUp />`
-components, which automatically show **every** authentication method you enable
-in the Clerk Dashboard — no application code or extra environment variables are
-required. On a **production** Clerk instance, social connections require your own
+components, which surface the sign-in methods configured in the Clerk Dashboard. On a **production** Clerk instance, social connections require your own
 OAuth credentials (Clerk's shared development credentials are dev-only).
 
 **GitHub (social sign-in).**
 
 1. Clerk Dashboard → **SSO Connections** → **Add connection** → **For all users** → **GitHub**.
-2. Toggle **Use custom credentials** on, then copy the **Authorized redirect URI**
-   Clerk displays (e.g. `https://clerk.<your-domain>/v1/oauth_callback`).
-3. In GitHub → **Settings → Developer settings → OAuth Apps → New OAuth App**, set
-   the **Authorization callback URL** to that redirect URI and the Homepage URL to
-   your site.
-4. Copy GitHub's **Client ID** and a generated **Client Secret** back into Clerk's
-   GitHub connection. Ensure **Enable for sign-up and sign-in** is on, then save.
+2. Enable **Use custom credentials** and **Enable for sign-up and sign-in**.
+   Select the app type and copy Clerk's **Authorization Callback URL**.
+3. Set up the matching GitHub OAuth App or GitHub App, using that URL as the
+   callback. Add the Client ID and Client Secret to the Clerk connection and
+   save. Follow [Clerk's GitHub setup guide](https://clerk.com/docs/guides/configure/auth-strategies/social-connections/github)
+   for the fields required by each app type.
 
 **Vercel (social sign-in).** "Sign in with Vercel" is a first-class Clerk social
 connection.
 
 1. Clerk Dashboard → **SSO Connections** → **Add connection** → **For all users** → **Vercel**.
-2. Toggle **Use custom credentials** on and copy the **Authorized redirect URI**.
-3. Create a Vercel App following
-   <https://vercel.com/docs/sign-in-with-vercel/manage-from-dashboard>: set its
-   authorization callback URL to Clerk's redirect URI, request the
-   `openid email profile` scopes, and generate a client secret.
+2. Enable **Use custom credentials** and copy Clerk's **Authorization Callback URL**.
+3. Create a Vercel App, add the callback URL, and enable the `openid`, `email`,
+   `profile`, and `offline_access` scopes. Configure client authentication
+   and generate a client secret. See
+   [Clerk's Vercel setup guide](https://clerk.com/docs/guides/configure/auth-strategies/social-connections/vercel)
+   and [Vercel's app settings guide](https://vercel.com/docs/sign-in-with-vercel/manage-from-dashboard).
 4. Copy Vercel's **Client ID** and **Client Secret** into Clerk's Vercel connection.
    Ensure **Enable for sign-up and sign-in** is on, then save.
 
 **Email verification code.**
 
 1. Clerk Dashboard → **User & Authentication → Email, Phone, Username**.
-2. Enable **Email address** as an identifier and set its verification method to
-   **Email verification code** (not the email link).
+2. Enable **Email address** as an identifier and select
+   [**Email verification code**](https://clerk.com/docs/guides/configure/auth-strategies/sign-up-sign-in-options#email)
+   as the verification method.
 3. For a passwordless flow, you may also disable **Password** in the same section.
 
 No `apps/web` code changes and no new environment variables are needed — the
@@ -121,10 +134,11 @@ dashboard.
 
 ## 3. Vercel AI Gateway
 
-The Gateway proxies model calls from your deployment to OpenAI, Anthropic,
-Google, etc. Per-tenant usage attribution requires passing tenant identifiers
-through `providerOptions.gateway.user` / `tags`; this reference app does not
-pass those options.
+The Gateway proxies model calls from your deployment to providers such as
+OpenAI, Anthropic, and Google. To attribute Gateway usage to a tenant, the
+host can pass an identifier through `providerOptions.gateway.user` or
+`providerOptions.gateway.tags`. The reference app leaves those options
+unset. See [AI Gateway custom reporting](https://vercel.com/docs/ai-gateway/observability-and-spend/custom-reporting).
 
 - **Local dev**: copy an `AI_GATEWAY_API_KEY` from
   <https://vercel.com/dashboard/ai/api-keys>. Set `AI_GATEWAY_API_KEY` in
@@ -132,7 +146,8 @@ pass those options.
 - **On Vercel**: prefer OIDC-based auth — the platform injects
   `VERCEL_OIDC_TOKEN` automatically and the Gateway honors it. You do
   *not* need to set `AI_GATEWAY_API_KEY` as a project env var when
-  deployed.
+  deployed with OIDC enabled. See
+  [AI Gateway authentication](https://vercel.com/docs/ai-gateway/authentication-and-byok).
 
 ---
 
@@ -221,23 +236,18 @@ This builds production, briefly runs `next start`, audits `/`, and writes `repor
 
 ---
 
-## 6. Auto-provisioning via the Vercel Marketplace MCP plugins
+## 6. Provisioning with vendor MCP servers
 
 > Optional — useful if you want the whole bootstrap driven by an agent.
 
-The `vercel`, `supabase`, and `clerk` Vercel Marketplace integrations
-expose MCP servers that an agent (Cursor, Claude Code, etc.) can call
-to provision resources without you clicking through dashboards. After
-running `vercel link`, the agent can:
-
-- Create a Supabase project and inject its connection strings as project
-  env vars.
-- Create a Clerk application and provision its publishable/secret keys
-  via the Marketplace.
-- Add `AI_GATEWAY_API_KEY` (or rely on OIDC).
-
-We document this so your bootstrap can be reduced to a single agent
-prompt; the manual steps above remain authoritative.
+The [Vercel](https://vercel.com/docs/agent-resources/vercel-mcp),
+[Supabase](https://supabase.com/docs/guides/ai-tools/mcp), and
+[Clerk](https://clerk.com/docs/guides/ai/mcp/clerk-mcp-server) MCP servers
+can assist with the bootstrap plan. Supabase and Clerk document tools for
+creating projects and applications, respectively, subject to the connection's
+permissions. Clerk's MCP server does not return instance secret keys. Follow
+the manual steps above for application keys and any configuration your MCP
+client cannot complete.
 
 ---
 
@@ -249,8 +259,9 @@ terminal status (`completed`, `failed`, `cancelled`), wire up Resend:
 1. Sign in to <https://resend.com>, then **Domains → Add Domain** and add
    the domain you intend to send from (e.g. `your-domain.com`). Copy the
    DKIM/SPF/Return-Path records into your DNS provider and wait for the
-   "Verified" badge — usually a few minutes. Resend rejects sends from
-   unverified domains with HTTP 403.
+   "Verified" badge. Resend rejects sends from unverified domains with
+   HTTP 403. See [verified domains](https://resend.com/docs/dashboard/domains/introduction)
+   and [API errors](https://resend.com/docs/api-reference/errors).
 2. **API Keys → Create API Key** with the **Sending access** scope and a
    restriction to the verified domain. Copy the resulting key.
 3. In your Vercel project, add two environment variables for **Production
@@ -266,8 +277,9 @@ How it behaves:
 
 - The send is fire-and-forget from the Supabase runs-store hot path, so a
   Resend outage cannot block a `PUT /api/runs/:id`.
-- Each `(runId, status)` pair carries an idempotency key, so retried
-  writes never deliver duplicate emails (Resend dedupes for 24 h).
+- Each `(runId, status)` pair carries an idempotency key. Resend deduplicates
+  send requests using the same key within its
+  [24-hour window](https://resend.com/docs/dashboard/emails/idempotency-keys).
 - Tenant scoping uses the `user:<clerkUserId>` form. Org tenants are skipped at v0
   (`skipped-org-tenant`); fanning out to org admins is not yet tracked.
 
@@ -279,18 +291,23 @@ because un-configuration is the supported opt-out, not an error.
 
 ## 7. Operational tips
 
-- **Body limits.** The single-run PUT route caps the body at 25 MiB. Large
-  `RunStoreState` payloads should externalize artifacts before
-  persistence — see `ArtifactStore` in `@llm-workbench/runtime`.
+- **Body limits.** The single-run PUT handler checks the declared body size
+  against 25 MiB and also checks the decoded text length against the same
+  numeric threshold. On the hosted deployment, Vercel Functions enforce
+  their own [request-body limit](https://vercel.com/docs/functions/limitations#request-body-size)
+  of 4.5 MB before the handler can accept larger uploads. Externalize
+  artifacts before persisting large `RunStoreState` payloads. See
+  `ArtifactStore` in `@llm-workbench/runtime`.
 - **Custom artifact storage.** Wire any S3-compatible bucket (or Vercel
   Blob, Cloudflare R2, Supabase Storage) into a `ArtifactStore`
   implementation and pass it to `new WorkbenchRuntime({ artifactStore })`.
 - **Observability.** Use `traceEventsToOtelSpans()` to map trace events to
   OpenTelemetry span records for export through your own telemetry pipeline.
-- **Cost guardrails.** AI SDK calls go through the Gateway. Use AI Gateway
-  team budgets, or project budgets for OIDC deployments, in the Vercel
-  dashboard. These do not automatically cap spend per Clerk tenant; this
-  reference app sends no `providerOptions.gateway.user` / `tags` attribution.
+- **Cost guardrails.** AI SDK calls go through the Gateway. In the Vercel
+  dashboard, team budgets cover the team and project budgets cover calls made
+  with the project's OIDC tokens or project-scoped API keys. Those scopes
+  apply independently of the app's Clerk tenants.
+  See [AI Gateway budgets](https://vercel.com/docs/ai-gateway/observability-and-spend/budgets).
 
 ---
 
