@@ -733,6 +733,12 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Security
 
+- **Accepted one dev-only `picomatch` advisory (2026-11-18).** Allowlisted
+  `GHSA-fc5q-39xc-vjpf`, a high-severity ReDoS advisory affecting development
+  tooling. `npm audit --omit=dev` reports zero vulnerabilities and
+  `npm ls picomatch --omit=dev` is empty. The latest release is `4.0.7` and no
+  patched version exists. The exception includes a runnable REVISIT check.
+
 - **Retired the withdrawn `braces` advisory allowlist entry.** GitHub withdrew
   `GHSA-vfj7-8cjw-p6xm` on 2026-10-23. The allowlist is empty, and the
   high/critical threshold and exception policy are unchanged. `braces@3.0.3`

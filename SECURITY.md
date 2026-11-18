@@ -75,8 +75,9 @@ are automation, not PR gates.
   critical** advisories across the full dependency graph exit 1. If the npm
   advisory registry is unreachable, it makes two attempts 30 seconds apart,
   then emits `Audit gate not evaluated` and **passes (exit 0) without evaluating
-  advisories**. Unrecognised failures exit 1. The allowlist is empty. Each
-  accepted exception, if any, must carry a dated reason and a runnable
+  advisories**. Unrecognised failures exit 1. The allowlist has one entry dated
+  2026-11-18 for GHSA-fc5q-39xc-vjpf (dev-only `picomatch` with no patched
+  release). Each accepted exception must carry a dated reason and a runnable
   REVISIT check. The file's header documents the accept/decline policy.
 - **Automatic advisory remediation** — `audit-autofix.yml` checks daily (or on
   manual dispatch). An advisory finding triggers `npm audit fix`; verification

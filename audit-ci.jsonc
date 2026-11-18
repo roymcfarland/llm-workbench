@@ -21,7 +21,8 @@
   // and trains force-merging -- a worse security posture than green CI that fails
   // only on what is actually severe and actionable. High/critical advisories are
   // rare, warrant breaking the build, and are usually fixable.
-  // Current-tree snapshot (2026-11-11): the allowlist is empty.
+  // Current-tree snapshot (2026-11-18): one dated allowlist entry for the
+  // unfixable dev-only picomatch advisory.
   // Run `npm audit` for current findings.
   //
   // Current moderate advisory note (informational)
@@ -55,5 +56,28 @@
   // The entry was removed on 2026-11-11. braces 3.0.3 remains dev-only via
   // @changesets/cli -> @changesets/config -> micromatch and
   // eslint-config-next -> @next/eslint-plugin-next -> fast-glob -> micromatch.
-  "allowlist": []
+  //
+  // Accepted 2026-11-18: GHSA-fc5q-39xc-vjpf (high) — ReDoS through
+  // single-branch repeated extglobs in picomatch <=4.0.7.
+  // Class 3 UNREACHABLE in production / dev-only. Dependency paths:
+  //   @changesets/cli -> @changesets/config -> micromatch -> picomatch
+  //   eslint-config-next -> @next/eslint-plugin-next -> fast-glob -> micromatch -> picomatch
+  //   eslint-config-next -> eslint-import-resolver-typescript -> tinyglobby -> picomatch
+  //   typescript-eslint -> @typescript-eslint/typescript-estree -> tinyglobby -> picomatch
+  //   @vitest/coverage-v8 -> vitest -> tinyglobby -> picomatch
+  //   vite and vitest -> picomatch directly, and tinyglobby -> fdir -> picomatch
+  // Evidence: `npm audit --omit=dev` is clean and `npm ls picomatch --omit=dev`
+  // returns an empty tree. None of the five published packages (runtime, ui,
+  // adapters-react, ai-sdk, mcp) declares picomatch or micromatch.
+  // Reachability grep for picomatch or micromatch found zero matches in
+  // packages/*/src, apps/*/src, apps/*/app and examples.
+  // The ReDoS requires an attacker-controlled extglob pattern, and these tools
+  // take their patterns from maintainer-authored configs.
+  // No patched release exists; `npm view picomatch version` reports 4.0.7 latest.
+  // REVISIT: npm view picomatch versions --json | tail -3
+  // Remove this entry once a version greater than 4.0.7 exists, then run
+  // `npm update picomatch --package-lock-only` and `npm run audit:check`.
+  // The 2.3.2 copy under micromatch must also move to a patched release or
+  // be removed by its parent.
+  "allowlist": ["GHSA-fc5q-39xc-vjpf"]
 }
