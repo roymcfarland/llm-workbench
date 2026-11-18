@@ -98,4 +98,11 @@ Not scheduled, but recorded so the reasoning is not lost:
   The import, jsx-a11y and react plugin chains in `eslint-config-next`
   resolve `minimatch@3.1.5`. The parser and React-version settings in
   `apps/web/eslint.config.mjs` work around missing ESLint 10 support; revisit when the plugins update.
+- **`picomatch` audit allowlist entry (GHSA-fc5q-39xc-vjpf).** The only
+  allowlisted advisory (high, `picomatch <= 4.0.7`, dev-only, no patched release).
+  Revisit when `npm view picomatch versions --json | tail -3` shows a version
+  above 4.0.7. Remove the entry from `audit-ci.jsonc`, run
+  `npm update picomatch --package-lock-only`, then `npm run audit:check`.
+  Check that the 2.3.2 copy under micromatch also moves to a patched release or
+  is removed by its parent.
 - Larger file-size splits.
