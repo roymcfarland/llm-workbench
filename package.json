@@ -35,7 +35,7 @@
     "@changesets/cli": "^2.31.1",
     "@vitest/coverage-v8": "^5.1.0",
     "audit-ci": "^7.1.0",
-    "eslint": "^10.14.0",
+    "eslint": "^10.15.0",
     "rss-parser": "^3.13.0",
     "typedoc": "^0.28.20",
     "typedoc-plugin-markdown": "^4.14.1",
