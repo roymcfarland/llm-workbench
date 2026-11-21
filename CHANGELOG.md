@@ -153,6 +153,26 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Changed
 
+- CI now runs the build and test matrix on Node 26 as well as 22 and 24. The
+  coverage, Codecov and Playwright steps remain Node 24 only, and the contributor
+  and deployment docs describe the new leg. (#305)
+
+- Dependabot now ignores TypeScript 6.1 and newer: typescript-eslint 8.72.x caps
+  its TypeScript peer below 6.1.0 and TypeScript 7 is not adopted yet, so only
+  6.0.x patch updates flow through the group. ROADMAP.md records the decision.
+  (#303)
+
+- Grouped npm minor/patch bumps, all within-major: `@tailwindcss/postcss` and
+  `tailwindcss` 4.3.4 → 4.3.5, `ai` 7.0.163 → 7.0.173, `lucide-react` 1.69.0 →
+  1.73.0, `next` and `eslint-config-next` 16.4.5 → 16.4.6, `vite` 8.3.6 → 8.3.8,
+  `typescript-eslint` 8.72.1 → 8.72.2, `@vitejs/plugin-react` 6.2.1 → 6.3.0,
+  `@clerk/nextjs` 7.9.25 → 7.10.0, `eslint` 10.14.0 → 10.15.0,
+  `@playwright/test` 1.65.0 → 1.65.1, `resend` 6.37.0 → 6.38.1 and
+  `@react-email/render` 2.2.0 → 2.3.1, plus smaller updates. (#298, #304, #310)
+
+- `jsdom` 30.1.3 → 31.0.0 (dev dependency; 31.0.1 followed in #310) and `hono`
+  4.13.14 → 4.13.18. (#299, #306)
+
 - Clarified the private vulnerability reporting scope for the five published
   packages and the hosted reference app. Refreshed the README comparisons and
   linked current provider pricing and deployment limits.
@@ -747,7 +767,8 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 - **Cleared all six moderate production npm audit findings.** Removed the global
   `minimatch` override and scoped `minimatch` 11 to ESLint and typescript-eslint
-  consumers and `glob` 14 to Sentry’s bundler plugins. The lockfile refresh moved
+  consumers and `glob` 14 to Sentry’s bundler plugins (the `glob` override was
+  removed with the Sentry integration in #297). The lockfile refresh moved
   Sentry packages including `@sentry/nextjs` from 11.9.0 to 11.11.0,
   `@hono/node-server` from 2.1.1 to 2.1.6, and `@react-email/render` from 2.1.1
   to 2.2.0. The full audit retains three moderate findings in the dev-only

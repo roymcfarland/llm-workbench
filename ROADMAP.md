@@ -93,8 +93,9 @@ Not scheduled, but recorded so the reasoning is not lost:
   remains an open decision, not a tidy-up.
 - **ESLint compatibility pins.** PR #293 replaced the global `minimatch`
   override with `minimatch@^11.0.5` overrides scoped to
-  `@typescript-eslint/typescript-estree`, `@eslint/config-array` and `eslint`,
-  plus a `glob@^14.0.4` override scoped to `@sentry/bundler-plugins`.
+  `@typescript-eslint/typescript-estree`, `@eslint/config-array` and `eslint`
+  (#293 also added a `glob@^14.0.4` override scoped to `@sentry/bundler-plugins`;
+  it was removed together with the Sentry integration in #297).
   The import, jsx-a11y and react plugin chains in `eslint-config-next`
   resolve `minimatch@3.1.5`. The parser and React-version settings in
   `apps/web/eslint.config.mjs` work around missing ESLint 10 support; revisit when the plugins update.
