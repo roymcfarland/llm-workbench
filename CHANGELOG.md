@@ -506,6 +506,8 @@ own `CHANGELOG.md`; this file records repo-level changes since 0.2.0.
 
 ### Fixed
 
+- The AI SDK 7 type test (`packages/ai-sdk/tsconfig.types.json`) no longer inherits declaration output from the root config. It emits nothing, and with `declaration` on, `ai` 7.0.179 made it fail with TS2883 because the inferred result types reference `ResponseMessage`, which that release keeps in an internal chunk and does not export. The published `@llm-workbench/ai-sdk` types are unaffected; this unblocks the grouped Dependabot update (#314).
+
 - Updated the roadmap and audit notes for the November dependency changes and backfilled missing changelog entries. (#296)
 
 - Backfilled the missing dependency entries for #218, #223, #243, #261, #262, #263, #265, #269, #278, #282 and #286
